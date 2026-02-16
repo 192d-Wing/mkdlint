@@ -3,7 +3,7 @@
 [![docs.rs](https://img.shields.io/docsrs/mkdlint?style=for-the-badge&logo=rust)](https://docs.rs/ntp-usg/latest/mkdlint)
 [![Crates.io](https://img.shields.io/crates/v/mkdlint.svg?style=for-the-badge&logo=rust)](https://crates.io/crates/mkdlint)
 ![Crates.io Total Downloads](https://img.shields.io/crates/d/mkdlint?style=for-the-badge&logo=rust)
-[![License](https://img.shields.io/crates/l/mkdlint.svg?style=for-the-badge)](https://github.com/192d-Wing/mkdlint#license)
+[![GitHub License](https://img.shields.io/github/license/192d-Wing/mkdlint?style=for-the-badge)](https://github.com/192d-Wing/mkdlint/blob/main/LICENSE)
 [![Security Audit](https://img.shields.io/github/actions/workflow/status/192d-Wing/mkdlint/security.yml?branch=main&style=for-the-badge&logo=github&label=Security%20Audit)](https://github.com/192d-Wing/mkdlint/actions/workflows/security.yml)
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/192d-Wing/mkdlint/ci.yml?branch=main&style=for-the-badge&logo=github)](https://github.com/192d-Wing/mkdlint/actions/workflows/ci.yml)
 [![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/192d-Wing/mkdlint?style=for-the-badge&logo=github)](https://github.com/192d-Wing/mkdlint/issues)
