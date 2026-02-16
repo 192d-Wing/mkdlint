@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Enhanced CLI Features**:
+  - `mdlint init` subcommand to create configuration file templates (JSON/YAML/TOML)
+  - `--stdin` flag for reading input from standard input (Unix pipeline support)
+  - `--list-rules` flag to display all available rules with descriptions
+  - `--enable/--disable` flags for per-invocation rule overrides
+  - `--verbose` flag for detailed error statistics and summaries
+  - `--quiet` flag for minimal output (only filenames with errors)
+  - Optional FILES argument (not required with --stdin or --list-rules)
+  - Better stdin/stdout integration for pipeline workflows
+
 - **GitHub Actions CI/CD Pipeline**:
   - Multi-platform testing (Ubuntu, macOS, Windows) on every push and PR
   - Automated linting with rustfmt and clippy
