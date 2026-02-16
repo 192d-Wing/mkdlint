@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-02-16
+
+### Added
+
+- **Enhanced Error Messages with Actionable Suggestions**:
+  - New `suggestion` field in `LintError` provides helpful hints for fixing issues
+  - Suggestions displayed with 💡 icon in text formatter
+  - "Fix available" indicator (🔧) for auto-fixable errors
+  - Context-aware suggestions for common rules (MD018, MD041, MD042)
+  - Improved user experience with clear, actionable error messages
+
+### Changed
+
+- **Text formatter improvements**:
+  - Shows helpful suggestions inline with errors
+  - Displays fix availability indicator
+  - Better visual hierarchy with icons and colors
+  - More informative error output
+
+### Performance
+
+- **Regex optimization analysis**:
+  - Verified all 16 static regexes are properly cached with `once_cell::Lazy`
+  - Config-dependent regexes (MD001, MD036) correctly avoid caching
+  - No performance improvements needed - already optimal
+
 ## [0.4.2] - 2026-02-16
 
 ### Added
@@ -252,7 +278,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parallel file processing
 - Inline configuration comments support
 
-[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/192d-Wing/mkdlint/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/192d-Wing/mkdlint/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/192d-Wing/mkdlint/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/192d-Wing/mkdlint/compare/v0.3.2...v0.4.0
