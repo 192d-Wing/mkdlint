@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+
+- **Comprehensive IDE Integration Guide** 📝
+  - Expanded USER_GUIDE.md IDE section from ~60 to ~550 lines
+  - Copy-paste ready configurations for 6 major editors:
+    - VS Code (tasks, auto-run, watch mode, keybindings)
+    - Neovim/Vim (ALE, null-ls, autocmd, custom commands)
+    - Emacs (Flycheck, auto-fix, compilation mode)
+    - Zed (tasks configuration)
+    - Sublime Text (build system)
+    - Generic LSP (future-ready)
+  - Each editor has 3-4 integration methods for different workflows
+  - Extensive troubleshooting section with 8+ common issues
+  - Recommended workflows for beginners, power users, and teams
+  - **Completes v0.7.0 roadmap milestone** ✅
+
 ## [0.7.1] - 2026-02-16
 
 ### Added
