@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-16
+
+### Added
+
+- **Language Server Protocol (LSP) Support**:
+  - New `mkdlint-lsp` binary providing full LSP implementation
+  - Real-time diagnostics as you type with 300ms debouncing
+  - Quick-fix code actions for all auto-fixable rules
+  - Configuration auto-discovery from workspace root
+  - Thread-safe document management with DashMap
+  - Support for VS Code, Neovim, and all LSP-compatible editors
+  - Full document synchronization (didOpen, didChange, didSave, didClose)
+  - Install with: `cargo install mkdlint --features lsp`
+
+- **GitHub Action with SARIF Integration**:
+  - Native GitHub Actions support at `.github/actions/mkdlint`
+  - Pre-built binaries for 5 platforms (Linux x86_64/aarch64, macOS x86_64/aarch64, Windows x86_64)
+  - Automatic binary caching for 10-100x faster subsequent runs (1-2s vs 5-10s vs 60-90s cargo build)
+  - SARIF output with automatic Code Scanning upload
+  - Auto-fix support with commit integration capabilities
+  - Cargo build fallback if binary download fails
+  - 20 configuration inputs for complete control
+  - 6 outputs for workflow integration
+  - Comprehensive test workflow with 18 test jobs
+  - Usage: `uses: 192d-Wing/mkdlint/.github/actions/mkdlint@main`
+
+- **Auto-fix support** for 7 additional rules (34 total fixable, 63% coverage):
+  - MD014: Dollar signs before commands - removes `$` or `$` prefix from code blocks
+  - MD020: No space inside closed ATX headings - inserts missing spaces after/before `#`
+  - MD021: Multiple spaces inside closed ATX headings - removes extra spaces
+  - MD028: Blank line inside blockquote - deletes blank lines within blockquotes
+  - MD030: List marker spacing - adjusts spaces after list markers (already had fix_info, added "fixable" tag)
+  - MD036: Emphasis as heading - converts emphasis/strong to `## heading`
+  - MD042: Empty links - replaces empty URLs with `#link` placeholder (inline links only)
+
+### Changed
+
+- **Auto-fix coverage increased** from 27 to 34 rules (50% → 63%)
+- **LSP dependencies** added under optional `lsp` feature flag
+- **Documentation** updated with LSP setup, GitHub Action usage, and new auto-fix rules
+
+### Technical Details
+
+- New LSP modules: `backend`, `document`, `diagnostics`, `code_actions`, `utils`
+- GitHub Action shell script with platform detection, version resolution, and SARIF parsing
+- All 429 tests passing with zero clippy warnings
+- 16 conventional commits for Phase 1-3 implementation
+
 ## [0.3.2] - 2026-02-16
 
 ### Fixed
@@ -156,7 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parallel file processing
 - Inline configuration comments support
 
-[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/192d-Wing/mkdlint/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/192d-Wing/mkdlint/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/192d-Wing/mkdlint/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/192d-Wing/mkdlint/compare/v0.2.0...v0.3.0
