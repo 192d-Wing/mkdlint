@@ -15,7 +15,8 @@ A fast Markdown linter written in Rust, inspired by [markdownlint](https://githu
 ## Features
 
 - **54 lint rules** (MD001-MD060) enforcing Markdown best practices
-- **Automatic fixing** for 34 rules (63% coverage) with `--fix` flag
+- **🎉 Automatic fixing** for **43 rules (80% coverage)** with `--fix` flag
+- **💡 Helpful suggestions** for all rules with actionable guidance
 - **Language Server Protocol (LSP)** — real-time linting in VS Code, Neovim, and other editors
 - **GitHub Action** — native integration with SARIF Code Scanning
 - **Rich error display** with source context and colored underlines pointing to errors
@@ -23,6 +24,62 @@ A fast Markdown linter written in Rust, inspired by [markdownlint](https://githu
 - **Configuration** via JSON, YAML, or TOML files with auto-discovery
 - **High performance** — parallel file processing with optimized rules
 - **Library + CLI** — use as a Rust crate or standalone command-line tool
+
+## Auto-Fix Showcase
+
+mkdlint can automatically fix **43 out of 54 rules (80%)**! Here are some examples:
+
+### Before Auto-Fix
+
+```markdown
+#Missing space after hash
+
+![](image.png)
+
+# Title
+# Another Title
+
+>Blockquote with  trailing spaces
+>
+>And blank lines inside
+
+[link](http://example.com)
+http://example.com
+
+$ npm install
+$ echo "commands with dollar signs"
+```
+
+### After `mkdlint --fix`
+
+```markdown
+# Missing space after hash
+
+![image](image.png)
+
+# Title
+
+## Another Title
+
+> Blockquote with trailing spaces
+> And blank lines inside
+
+[link](http://example.com)
+<http://example.com>
+
+npm install
+echo "commands with dollar signs"
+```
+
+### What Gets Fixed Automatically
+
+- **Headings**: spacing, levels, ATX style consistency
+- **Links & Images**: alt text, bare URLs, unused references
+- **Lists**: indentation, marker consistency, spacing
+- **Code**: fence styles, dollar sign prefixes, language tags
+- **Whitespace**: trailing spaces, blank lines, tabs
+- **Tables**: pipe consistency, surrounding blank lines
+- And much more!
 
 ## Installation
 
@@ -61,13 +118,13 @@ See [GitHub Action documentation](.github/actions/mkdlint/README.md) for full de
 
 ```toml
 [dependencies]
-mkdlint = "0.4"
+mkdlint = "0.6"
 
 # With async support
-mkdlint = { version = "0.4", features = ["async"] }
+mkdlint = { version = "0.6", features = ["async"] }
 
 # With LSP support
-mkdlint = { version = "0.4", features = ["lsp"] }
+mkdlint = { version = "0.6", features = ["lsp"] }
 ```
 
 ## CLI Usage
