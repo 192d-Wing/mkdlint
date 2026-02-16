@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-02-16
+
+### Added
+
+- **Near 80% Auto-Fix Coverage!** 🎉
+  - **MD060 Auto-Fix** - Remove dollar signs in code blocks:
+    - Automatically removes `$` or `$ ` prefix from commands in fenced code blocks
+    - Handles indented commands correctly
+    - Useful for cleaning up copy-pasted terminal examples
+  - **MD053 Auto-Fix** - Remove unused link definitions:
+    - Automatically deletes unused link reference definitions
+    - Keeps markdown files clean and maintainable
+    - Respects `ignored_definitions` config (defaults to `["//"]`)
+  - **MD055 Auto-Fix** - Fix table pipe style:
+    - Automatically adds missing leading or trailing pipes to table rows
+    - Normalizes tables to consistent pipe style (both ends or neither)
+    - Handles indented tables correctly
+  - **Auto-fix coverage: 43/54 rules (80%)** - up from 40/54 (74%)
+  - Only 11 rules remaining without auto-fix (most are infeasible)
+
+### Changed
+
+- All three new fixable rules include helpful suggestions
+- Improved table formatting consistency
+
 ## [0.5.3] - 2026-02-16
 
 ### Added
@@ -325,7 +350,8 @@ This release makes existing auto-fixes discoverable by properly tagging them. No
 - Parallel file processing
 - Inline configuration comments support
 
-[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.5.3...HEAD
+[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/192d-Wing/mkdlint/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/192d-Wing/mkdlint/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/192d-Wing/mkdlint/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/192d-Wing/mkdlint/compare/v0.5.0...v0.5.1
