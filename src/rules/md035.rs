@@ -1,7 +1,7 @@
 //! MD035 - Horizontal rule style
 
 use crate::parser::TokenExt;
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 
 pub struct MD035;
 
@@ -59,8 +59,13 @@ impl Rule for MD035 {
                     error_detail: Some(format!("Expected: {}; Actual: {}", style, text)),
                     error_context: Some(text.clone()),
                     rule_information: self.information().map(|s| s.to_string()),
-                    error_range: None,
-                    fix_info: None,
+                    error_range: Some((1, text.len())),
+                    fix_info: Some(FixInfo {
+                        line_number: Some(line_number),
+                        edit_column: Some(1),
+                        delete_count: Some(text.len() as i32),
+                        insert_text: Some(style.clone()),
+                    }),
                     severity: Severity::Error,
                 });
             }
@@ -300,5 +305,54 @@ mod tests {
         let rule = MD035;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
+    }
+
+    #[test]
+    fn test_md035_fix_info() {
+        let tokens = vec![
+            Token {
+                token_type: "thematicBreak".to_string(),
+                start_line: 1,
+                start_column: 1,
+                end_line: 1,
+                end_column: 4,
+                text: "---".to_string(),
+                children: vec![],
+                parent: None,
+                metadata: HashMap::new(),
+            },
+            Token {
+                token_type: "thematicBreak".to_string(),
+                start_line: 3,
+                start_column: 1,
+                end_line: 3,
+                end_column: 4,
+                text: "***".to_string(),
+                children: vec![],
+                parent: None,
+                metadata: HashMap::new(),
+            },
+        ];
+
+        let lines = vec!["---\n".to_string(), "\n".to_string(), "***\n".to_string()];
+
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &tokens,
+            config: &HashMap::new(),
+        };
+
+        let rule = MD035;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+
+        let fix = errors[0].fix_info.as_ref().expect("Should have fix_info");
+        assert_eq!(fix.line_number, Some(3));
+        assert_eq!(fix.edit_column, Some(1));
+        assert_eq!(fix.delete_count, Some(3));
+        assert_eq!(fix.insert_text, Some("---".to_string()));
     }
 }

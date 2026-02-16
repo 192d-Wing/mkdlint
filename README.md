@@ -5,7 +5,7 @@ A fast Markdown linter written in Rust, inspired by [markdownlint](https://githu
 ## Features
 
 - **54 lint rules** (MD001-MD060) enforcing Markdown best practices
-- **Automatic fixing** for 20+ rules with `--fix` flag
+- **Automatic fixing** for 22+ rules with `--fix` flag
 - **Rich error display** with source context and colored underlines pointing to errors
 - **Multiple output formats** — text (default), JSON, or SARIF
 - **Configuration** via JSON, YAML, or TOML files with auto-discovery
@@ -144,7 +144,7 @@ Rules can be enabled/disabled by name (`"MD013"`) or alias (`"line-length"`). Pa
 | MD014 | commands-show-output | Dollar signs used before commands | |
 | MD018 | no-missing-space-atx | No space after hash on atx heading | Yes |
 | MD019 | no-multiple-space-atx | Multiple spaces after hash on atx heading | Yes |
-| MD022 | blanks-around-headings | Headings should be surrounded by blank lines | Partial |
+| MD022 | blanks-around-headings | Headings should be surrounded by blank lines | Yes |
 | MD023 | heading-start-left | Headings must start at the beginning of the line | **Yes** |
 | MD024 | no-duplicate-heading | No duplicate heading content | |
 | MD025 | single-title | Single title / single h1 | |
@@ -154,10 +154,10 @@ Rules can be enabled/disabled by name (`"MD013"`) or alias (`"line-length"`). Pa
 | MD029 | ol-prefix | Ordered list item prefix | Yes |
 | MD030 | list-marker-space | Spaces after list markers | |
 | MD031 | blanks-around-fences | Fenced code blocks should be surrounded by blank lines | Yes |
-| MD032 | blanks-around-lists | Lists should be surrounded by blank lines | |
+| MD032 | blanks-around-lists | Lists should be surrounded by blank lines | Yes |
 | MD033 | no-inline-html | Inline HTML | |
 | MD034 | no-bare-urls | Bare URL used | **Yes** |
-| MD035 | hr-style | Horizontal rule style | |
+| MD035 | hr-style | Horizontal rule style | **Yes** |
 | MD036 | no-emphasis-as-heading | Emphasis used instead of a heading | |
 | MD037 | no-space-in-emphasis | Spaces inside emphasis markers | **Yes** |
 | MD038 | no-space-in-code | Spaces inside code span elements | **Yes** |
@@ -169,7 +169,7 @@ Rules can be enabled/disabled by name (`"MD013"`) or alias (`"line-length"`). Pa
 | MD045 | no-alt-text | Images should have alternate text | |
 | MD046 | code-block-style | Code block style | |
 | MD047 | single-trailing-newline | Files should end with a single trailing newline | Yes |
-| MD048 | code-fence-style | Code fence style | |
+| MD048 | code-fence-style | Code fence style | **Yes** |
 | MD049 | emphasis-style | Emphasis style | **Yes** |
 | MD050 | strong-style | Strong style | **Yes** |
 | MD051 | link-fragments | Link fragments should be valid | |

@@ -9,15 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Auto-fix support** for 10 additional rules:
+- **Auto-fix support** for 12 additional rules:
   - MD011: Reversed link syntax - automatically swaps text and URL
   - MD023: Indented headings - removes leading whitespace
   - MD026: Trailing punctuation in headings - removes punctuation
   - MD034: Bare URLs - wraps URLs in angle brackets
+  - MD035: Horizontal rule style - converts to consistent style
   - MD037: Spaces inside emphasis markers - trims spaces
   - MD038: Spaces inside code spans - trims spaces
   - MD039: Spaces inside link text - trims spaces
   - MD044: Proper names capitalization - fixes per-occurrence
+  - MD048: Code fence style - converts ``` to ~~~ or vice versa
   - MD049: Emphasis style consistency - converts to preferred style
   - MD050: Strong style consistency - converts to preferred style
 
@@ -44,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **MD022 enhanced** to fix both before and after violations:
+  - Previously only "before heading" was fixable
+  - Now both "blank line before" and "blank line after" are auto-fixable
+
 - **MD049 and MD050 completely rewritten**:
   - Now detect per-occurrence violations instead of aggregate counts
   - Provide accurate column ranges for each error
@@ -54,6 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Reports each incorrectly-cased occurrence separately
   - Shows actual vs expected casing in error_detail
   - Provides fix_info with exact column and replacement text
+
+- **MD035 and MD048 auto-fix**:
+  - MD035 converts horizontal rules to consistent style (e.g., all to `---`)
+  - MD048 converts code fence markers to consistent style (all to ``` or ~~~)
 
 ### Performance
 

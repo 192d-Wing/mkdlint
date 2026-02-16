@@ -1,6 +1,6 @@
 //! MD048 - Code fence style
 
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 
 pub struct MD048;
 
@@ -27,40 +27,72 @@ impl Rule for MD048 {
 
     fn lint(&self, params: &RuleParams) -> Vec<LintError> {
         let mut errors = Vec::new();
-        let mut backtick_count = 0;
-        let mut tilde_count = 0;
+        let mut backtick_lines = Vec::new();
+        let mut tilde_lines = Vec::new();
         let mut first_style_line = 0;
+        let mut first_style = "";
 
         for (idx, line) in params.lines.iter().enumerate() {
             let line_number = idx + 1;
             let trimmed = line.trim();
 
             if trimmed.starts_with("```") {
-                if backtick_count == 0 && tilde_count == 0 {
+                if first_style_line == 0 {
                     first_style_line = line_number;
+                    first_style = "```";
                 }
-                backtick_count += 1;
+                backtick_lines.push(line_number);
             } else if trimmed.starts_with("~~~") {
-                if backtick_count == 0 && tilde_count == 0 {
+                if first_style_line == 0 {
                     first_style_line = line_number;
+                    first_style = "~~~";
                 }
-                tilde_count += 1;
+                tilde_lines.push(line_number);
             }
         }
 
-        // If both styles are used, report error
-        if backtick_count > 0 && tilde_count > 0 {
-            errors.push(LintError {
-                line_number: first_style_line,
-                rule_names: self.names().iter().map(|s| s.to_string()).collect(),
-                rule_description: self.description().to_string(),
-                error_detail: Some("Mixed fence styles (``` and ~~~)".to_string()),
-                error_context: None,
-                rule_information: self.information().map(|s| s.to_string()),
-                error_range: None,
-                fix_info: None,
-                severity: Severity::Error,
-            });
+        // If both styles are used, convert all to the first style encountered
+        if !backtick_lines.is_empty() && !tilde_lines.is_empty() {
+            // Report errors for each line that needs to be converted
+            let lines_to_fix = if first_style == "```" {
+                &tilde_lines
+            } else {
+                &backtick_lines
+            };
+
+            for &line_num in lines_to_fix {
+                let line_idx = line_num - 1;
+                let line = &params.lines[line_idx];
+                let trimmed = line.trim();
+
+                // Determine what to replace
+                let (old_fence, new_fence) = if trimmed.starts_with("~~~") {
+                    ("~~~", "```")
+                } else {
+                    ("```", "~~~")
+                };
+
+                // Find the fence prefix (could be `~~~rust` or `~~~`)
+                let fence_len = old_fence.len();
+                let leading_spaces = line.len() - line.trim_start().len();
+
+                errors.push(LintError {
+                    line_number: line_num,
+                    rule_names: self.names().iter().map(|s| s.to_string()).collect(),
+                    rule_description: self.description().to_string(),
+                    error_detail: Some(format!("Expected: {}; Actual: {}", first_style, old_fence)),
+                    error_context: Some(trimmed.to_string()),
+                    rule_information: self.information().map(|s| s.to_string()),
+                    error_range: Some((leading_spaces + 1, fence_len)),
+                    fix_info: Some(FixInfo {
+                        line_number: Some(line_num),
+                        edit_column: Some(leading_spaces + 1),
+                        delete_count: Some(fence_len as i32),
+                        insert_text: Some(new_fence.to_string()),
+                    }),
+                    severity: Severity::Error,
+                });
+            }
         }
 
         errors
@@ -141,6 +173,42 @@ mod tests {
         let config = HashMap::new();
         let params = make_params(&lines, &tokens, &config);
         let errors = rule.lint(&params);
-        assert_eq!(errors.len(), 1);
+        // Should report 2 errors - both tilde fences need to be converted to backticks
+        assert_eq!(errors.len(), 2);
+        assert_eq!(errors[0].line_number, 5);
+        assert_eq!(errors[1].line_number, 7);
+    }
+
+    #[test]
+    fn test_md048_fix_info() {
+        let rule = MD048;
+        let lines: Vec<String> = vec![
+            "```rust\n".to_string(),
+            "let x = 5;\n".to_string(),
+            "```\n".to_string(),
+            "\n".to_string(),
+            "~~~python\n".to_string(),
+            "y = 10\n".to_string(),
+            "~~~\n".to_string(),
+        ];
+        let tokens = vec![];
+        let config = HashMap::new();
+        let params = make_params(&lines, &tokens, &config);
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 2);
+
+        // Check first tilde fence fix_info
+        let fix1 = errors[0].fix_info.as_ref().expect("Should have fix_info");
+        assert_eq!(fix1.line_number, Some(5));
+        assert_eq!(fix1.edit_column, Some(1));
+        assert_eq!(fix1.delete_count, Some(3));
+        assert_eq!(fix1.insert_text, Some("```".to_string()));
+
+        // Check second tilde fence fix_info
+        let fix2 = errors[1].fix_info.as_ref().expect("Should have fix_info");
+        assert_eq!(fix2.line_number, Some(7));
+        assert_eq!(fix2.edit_column, Some(1));
+        assert_eq!(fix2.delete_count, Some(3));
+        assert_eq!(fix2.insert_text, Some("```".to_string()));
     }
 }
