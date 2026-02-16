@@ -4,15 +4,11 @@
 [![Crates.io](https://img.shields.io/crates/v/mkdlint.svg?style=for-the-badge&logo=rust)](https://crates.io/crates/mkdlint)
 ![Crates.io Total Downloads](https://img.shields.io/crates/d/mkdlint?style=for-the-badge&logo=rust)
 [![License](https://img.shields.io/crates/l/mkdlint.svg?style=for-the-badge)](https://github.com/192d-Wing/mkdlint#license)
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/192d-Wing/mkdlint/ci.yml?branch=master&style=for-the-badge&logo=github)](https://github.com/192d-Wing/mkdlint/actions/workflows/ci.yml)
+[![Security Audit](https://img.shields.io/github/actions/workflow/status/192d-Wing/mkdlint/security.yml?branch=main&style=for-the-badge&logo=github&label=Security%20Audit)](https://github.com/192d-Wing/mkdlint/actions/workflows/security.yml)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/192d-Wing/mkdlint/ci.yml?branch=main&style=for-the-badge&logo=github)](https://github.com/192d-Wing/mkdlint/actions/workflows/ci.yml)
 [![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/192d-Wing/mkdlint?style=for-the-badge&logo=github)](https://github.com/192d-Wing/mkdlint/issues)
 [![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr/192d-Wing/mkdlint?style=for-the-badge&logo=github)](https://github.com/192d-Wing/mkdlint/pulls)
-
-<!--
-[![Security Audit](https://github.com/192d-Wing/mkdlint/workflows/Security%20Audit/badge.svg)](https://github.com/192d-Wing/mkdlint/actions/workflows/security.yml)
-[![codecov](https://codecov.io/gh/192d-Wing/mkdlint/branch/main/graph/badge.svg)](https://codecov.io/gh/192d-Wing/mkdlint)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
--->
+[![Codecov](https://img.shields.io/codecov/c/github/192d-Wing/mkdlint?style=for-the-badge&logo=codecov)](https://codecov.io/github/192d-Wing/mkdlint)
 
 A fast Markdown linter written in Rust, inspired by [markdownlint](https://github.com/DavidAnson/markdownlint).
 
