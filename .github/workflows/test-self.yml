@@ -1,0 +1,26 @@
+name: Self-Test GitHub Action
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-action-self:
+    name: Test Action on Self
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run mkdlint action on repository
+        uses: ./.github/actions/mkdlint
+        with:
+          files: '.'
+          ignore: '**/node_modules/** **/target/**'
+          fail-on-error: false
+          upload-sarif: true
