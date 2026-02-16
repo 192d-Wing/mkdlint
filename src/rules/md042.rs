@@ -2,7 +2,7 @@
 //!
 //! This rule checks for links with no URL or only a fragment (#).
 
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::HashMap;
@@ -65,7 +65,7 @@ impl Rule for MD042 {
     }
 
     fn tags(&self) -> &[&'static str] {
-        &["links"]
+        &["links", "fixable"]
     }
 
     fn parser_type(&self) -> ParserType {
@@ -104,6 +104,11 @@ impl Rule for MD042 {
                 let url = cap.get(2).unwrap().as_str();
 
                 if Self::is_empty_or_fragment_only(url) {
+                    // Calculate position for fix
+                    let paren_content = cap.get(2).unwrap();
+                    let url_start = paren_content.start();
+                    let url_col = url_start + 1; // 1-based column
+
                     errors.push(LintError {
                         line_number,
                         rule_names: self.names().iter().map(|s| s.to_string()).collect(),
@@ -112,7 +117,12 @@ impl Rule for MD042 {
                         error_context: Some(full_match.as_str().to_string()),
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: Some((full_match.start() + 1, full_match.len())),
-                        fix_info: None,
+                        fix_info: Some(FixInfo {
+                            line_number: None,
+                            edit_column: Some(url_col),
+                            delete_count: Some(url.len() as i32),
+                            insert_text: Some("#link".to_string()),
+                        }),
                         severity: Severity::Error,
                     });
                 }
@@ -393,5 +403,73 @@ mod tests {
                 .unwrap()
                 .contains("[text2]()")
         );
+    }
+
+    #[test]
+    fn test_md042_fix_empty_inline_link() {
+        let lines = vec!["[text]()\n".to_string()];
+
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+
+        let rule = MD042;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        assert_eq!(fix.edit_column, Some(8)); // After "("
+        assert_eq!(fix.delete_count, Some(0)); // Empty URL
+        assert_eq!(fix.insert_text, Some("#link".to_string()));
+    }
+
+    #[test]
+    fn test_md042_fix_fragment_only() {
+        let lines = vec!["[text](#)\n".to_string()];
+
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+
+        let rule = MD042;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        assert_eq!(fix.edit_column, Some(8)); // After "("
+        assert_eq!(fix.delete_count, Some(1)); // Delete "#"
+        assert_eq!(fix.insert_text, Some("#link".to_string()));
+    }
+
+    #[test]
+    fn test_md042_no_fix_reference_link() {
+        let lines = vec![
+            "[text][frag]\n".to_string(),
+            "\n".to_string(),
+            "[frag]: #\n".to_string(),
+        ];
+
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+
+        let rule = MD042;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+        // Reference links should not have fix_info
+        assert!(errors[0].fix_info.is_none());
     }
 }
