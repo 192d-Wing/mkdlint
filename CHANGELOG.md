@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-02-16
+
+### Added
+
+- **VS Code Extension** (`editors/vscode/`)
+  - TypeScript extension wrapping the `mkdlint-lsp` binary
+  - 3-tier binary resolution: user setting, bundled, PATH lookup
+  - Status bar with live diagnostic counts
+  - Commands: Fix All, Restart Server, Show Output
+  - Configurable LSP trace level for debugging
+  - Published to VS Code Marketplace via CI
+
+- **GitHub Action Enhancements**
+  - Rich markdown job summary with error/warning counts, duration, and top 5 violated rules table
+  - Performance timing with nanosecond precision (`duration-ms` output)
+  - Incremental linting via `changed-only` input: detects changed `.md` files in PRs using git diff
+  - New inputs: `changed-only`, `job-summary`
+  - New outputs: `warning-count`, `duration-ms`
+
+- **Docker Support**
+  - Multi-platform Docker image (amd64/arm64) published to `ghcr.io/192d-wing/mkdlint`
+  - `Dockerfile` and `.dockerignore` for local builds
+  - Automatic image publishing on release with `latest` and version tags
+
+- **Ecosystem Integration**
+  - Pre-commit hooks config (`.pre-commit-hooks.yaml`)
+  - Homebrew formula (`Formula/mkdlint.rb`)
+
+### Changed
+
+- **Performance**: ~5-8% improvement on single-file linting benchmarks
+  - Skip parser when no enabled rules need tokens (~400µs/file savings)
+  - Use `&'static str` in `LintError` for rule metadata (eliminates ~3 heap allocs per error)
+  - Avoid cloning rule config `HashMap` per rule (~50 clones/file eliminated)
+  - Zero-copy line splitting with `split_inclusive`
+  - New benchmarks: `lint_realistic_md`, `lint_multi_100_files`
+
+### Documentation
+
+- Updated README with current stats (53 rules, 45 fixes, 84.9% coverage)
+- Added VS Code extension section and expanded installation methods
+- Updated USER_GUIDE for current feature set
+
 ## [0.9.1] - 2026-02-16
 
 ### Added
@@ -506,7 +549,14 @@ This release makes existing auto-fixes discoverable by properly tagging them. No
 - Parallel file processing
 - Inline configuration comments support
 
-[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/192d-Wing/mkdlint/compare/v0.9.1...v0.10.0
+[0.9.1]: https://github.com/192d-Wing/mkdlint/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/192d-Wing/mkdlint/compare/v0.8.1...v0.9.0
+[0.8.1]: https://github.com/192d-Wing/mkdlint/compare/v0.8.0...v0.8.1
+[0.8.0]: https://github.com/192d-Wing/mkdlint/compare/v0.7.1...v0.8.0
+[0.7.1]: https://github.com/192d-Wing/mkdlint/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/192d-Wing/mkdlint/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/192d-Wing/mkdlint/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/192d-Wing/mkdlint/compare/v0.5.3...v0.6.0
 [0.5.3]: https://github.com/192d-Wing/mkdlint/compare/v0.5.2...v0.5.3
