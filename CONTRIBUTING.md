@@ -6,22 +6,27 @@ Thank you for your interest in contributing to mkdlint! This document provides g
 
 ### Prerequisites
 
-- Rust 1.70 or later
+- Rust 1.93 or later
 - Git
 
 ### Setting Up Your Development Environment
 
 1. Fork the repository on GitHub
 2. Clone your fork:
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/mkdlint.git
    cd mkdlint
    ```
+
 3. Add the upstream repository:
+
    ```bash
    git remote add upstream https://github.com/192d-Wing/mkdlint.git
    ```
+
 4. Install dependencies and run tests:
+
    ```bash
    cargo test
    ```
@@ -100,6 +105,7 @@ cargo run -- --config .markdownlint.json path/to/test.md
 ## Pull Request Process
 
 1. **Create a branch** for your changes:
+
    ```bash
    git checkout -b feature/my-new-feature
    ```
@@ -111,6 +117,7 @@ cargo run -- --config .markdownlint.json path/to/test.md
 4. **Update documentation** (README, CHANGELOG, doc comments)
 
 5. **Run tests and linting**:
+
    ```bash
    cargo test
    cargo fmt
@@ -118,6 +125,7 @@ cargo run -- --config .markdownlint.json path/to/test.md
    ```
 
 6. **Commit your changes** with clear, descriptive messages:
+
    ```bash
    git commit -m "feat: add support for XYZ"
    ```
@@ -131,6 +139,7 @@ cargo run -- --config .markdownlint.json path/to/test.md
    - `perf:` for performance improvements
 
 7. **Push to your fork**:
+
    ```bash
    git push origin feature/my-new-feature
    ```

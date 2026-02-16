@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-02-16
+
+### Changed
+
+- **Auto-fix Coverage Boost** - Added "fixable" tag to 27 additional rules:
+  - All rules that already had `fix_info` implementations now properly tagged as fixable
+  - Includes: MD004, MD005, MD007, MD009, MD010, MD011, MD012, MD018, MD019, MD022, MD023, MD026, MD027, MD029, MD031, MD032, MD034, MD035, MD037, MD038, MD039, MD040, MD044, MD048, MD049, MD050, MD058
+  - **Auto-fix coverage: 38/54 rules (70%)** - up from 35/54 (65%)
+  - These rules already had working auto-fixes, just missing the documentation tag
+
+### Note
+
+This release makes existing auto-fixes discoverable by properly tagging them. No new fix implementations were added - these 27 rules have had working fixes all along.
+
 ## [0.5.1] - 2026-02-16
 
 ### Added
@@ -294,7 +308,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parallel file processing
 - Inline configuration comments support
 
-[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/192d-Wing/mkdlint/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/192d-Wing/mkdlint/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/192d-Wing/mkdlint/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/192d-Wing/mkdlint/compare/v0.4.1...v0.4.2
