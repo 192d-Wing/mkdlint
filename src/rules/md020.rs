@@ -58,7 +58,7 @@ impl Rule for MD020 {
                                 delete_count: None,
                                 insert_text: Some(" ".to_string()),
                             }),
-                            suggestion: None,
+                            suggestion: Some("Add space after opening #".to_string()),
                             severity: Severity::Error,
                         });
                     }
@@ -79,7 +79,7 @@ impl Rule for MD020 {
                                 delete_count: None,
                                 insert_text: Some(" ".to_string()),
                             }),
-                            suggestion: None,
+                            suggestion: Some("Add space before closing #".to_string()),
                             severity: Severity::Error,
                         });
                     }
