@@ -181,6 +181,9 @@ fn lint_content(
     // Split into lines (zero-copy, preserving line endings)
     let lines: Vec<&str> = content.split_inclusive('\n').collect();
 
+    // Parse inline configuration directives (<!-- markdownlint-disable/enable -->)
+    let inline_config = InlineConfig::parse(&lines);
+
     let mut all_errors = Vec::new();
 
     // Only parse if at least one enabled rule needs tokens
@@ -215,10 +218,195 @@ fn lint_content(
         all_errors.extend(errors);
     }
 
+    // Filter out errors suppressed by inline configuration
+    if inline_config.has_directives {
+        all_errors.retain(|error| !inline_config.is_disabled(error.line_number, error.rule_names));
+    }
+
     // Sort errors by line number
     all_errors.sort_by_key(|e| e.line_number);
 
     Ok(all_errors)
+}
+
+// ---------------------------------------------------------------------------
+// Inline configuration directives
+// ---------------------------------------------------------------------------
+
+/// Parsed inline configuration state.
+///
+/// Supports the following HTML comment directives:
+/// - `<!-- markdownlint-disable MD001 MD002 -->` — disable specific rules
+/// - `<!-- markdownlint-disable -->` — disable all rules
+/// - `<!-- markdownlint-enable MD001 -->` — re-enable specific rules
+/// - `<!-- markdownlint-enable -->` — re-enable all rules
+/// - `<!-- markdownlint-disable-next-line MD001 -->` — disable for next line only
+/// - `<!-- markdownlint-disable-file MD001 -->` — disable for entire file
+/// - `<!-- markdownlint-enable-file MD001 -->` — re-enable for rest of file
+struct InlineConfig {
+    /// Whether any directives were found (fast path for skipping filter).
+    has_directives: bool,
+    /// Per-line set of disabled rule IDs. Empty string means "all rules".
+    disabled_at: HashMap<usize, HashSet<String>>,
+}
+
+use std::collections::HashMap;
+use std::collections::HashSet;
+
+impl InlineConfig {
+    /// Parse inline directives from document lines.
+    fn parse(lines: &[&str]) -> Self {
+        let mut has_directives = false;
+        let mut disabled_at: HashMap<usize, HashSet<String>> = HashMap::new();
+        // Currently disabled rules (sticky across lines until re-enabled).
+        // Empty string "" means "all rules".
+        let mut active_disabled: HashSet<String> = HashSet::new();
+        // Rules disabled for the entire file
+        let mut file_disabled: HashSet<String> = HashSet::new();
+        // "disable-next-line" applies to the NEXT non-directive line
+        let mut disable_next_line: Option<Vec<String>> = None;
+
+        for (idx, line) in lines.iter().enumerate() {
+            let line_number = idx + 1;
+            let trimmed = line.trim();
+
+            // Check for inline directive
+            if let Some(directive) = Self::parse_directive(trimmed) {
+                has_directives = true;
+                match directive {
+                    Directive::Disable(rules) => {
+                        if rules.is_empty() {
+                            active_disabled.insert(String::new());
+                        } else {
+                            for r in rules {
+                                active_disabled.insert(r);
+                            }
+                        }
+                    }
+                    Directive::Enable(rules) => {
+                        if rules.is_empty() {
+                            active_disabled.clear();
+                        } else {
+                            for r in &rules {
+                                active_disabled.remove(r);
+                            }
+                        }
+                    }
+                    Directive::DisableNextLine(rules) => {
+                        disable_next_line = Some(rules);
+                    }
+                    Directive::DisableFile(rules) => {
+                        if rules.is_empty() {
+                            file_disabled.insert(String::new());
+                        } else {
+                            for r in rules {
+                                file_disabled.insert(r);
+                            }
+                        }
+                    }
+                    Directive::EnableFile(rules) => {
+                        if rules.is_empty() {
+                            file_disabled.clear();
+                        } else {
+                            for r in &rules {
+                                file_disabled.remove(r);
+                            }
+                        }
+                    }
+                }
+                continue;
+            }
+
+            // Build the disabled set for this line
+            let mut line_disabled = HashSet::new();
+
+            // File-level disables
+            for r in &file_disabled {
+                line_disabled.insert(r.clone());
+            }
+
+            // Sticky disable/enable
+            for r in &active_disabled {
+                line_disabled.insert(r.clone());
+            }
+
+            // disable-next-line (consumed after one non-directive line)
+            if let Some(ref next_rules) = disable_next_line {
+                if next_rules.is_empty() {
+                    line_disabled.insert(String::new());
+                } else {
+                    for r in next_rules {
+                        line_disabled.insert(r.clone());
+                    }
+                }
+                disable_next_line = None;
+            }
+
+            if !line_disabled.is_empty() {
+                disabled_at.insert(line_number, line_disabled);
+            }
+        }
+
+        InlineConfig {
+            has_directives,
+            disabled_at,
+        }
+    }
+
+    /// Check if a rule is disabled at a given line.
+    fn is_disabled(&self, line_number: usize, rule_names: &[&str]) -> bool {
+        if let Some(disabled) = self.disabled_at.get(&line_number) {
+            // Empty string means "all rules disabled"
+            if disabled.contains("") {
+                return true;
+            }
+            // Check if any of the rule's names/aliases match
+            for name in rule_names {
+                if disabled.contains(*name) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    /// Parse a single directive from a trimmed line.
+    fn parse_directive(line: &str) -> Option<Directive> {
+        // Must be an HTML comment: <!-- markdownlint-xxx ... -->
+        let inner = line.strip_prefix("<!--")?.strip_suffix("-->")?.trim();
+
+        if let Some(rest) = inner.strip_prefix("markdownlint-disable-next-line") {
+            let rules = Self::parse_rule_list(rest);
+            Some(Directive::DisableNextLine(rules))
+        } else if let Some(rest) = inner.strip_prefix("markdownlint-disable-file") {
+            let rules = Self::parse_rule_list(rest);
+            Some(Directive::DisableFile(rules))
+        } else if let Some(rest) = inner.strip_prefix("markdownlint-enable-file") {
+            let rules = Self::parse_rule_list(rest);
+            Some(Directive::EnableFile(rules))
+        } else if let Some(rest) = inner.strip_prefix("markdownlint-disable") {
+            let rules = Self::parse_rule_list(rest);
+            Some(Directive::Disable(rules))
+        } else if let Some(rest) = inner.strip_prefix("markdownlint-enable") {
+            let rules = Self::parse_rule_list(rest);
+            Some(Directive::Enable(rules))
+        } else {
+            None
+        }
+    }
+
+    /// Parse a space-separated list of rule IDs from directive content.
+    fn parse_rule_list(s: &str) -> Vec<String> {
+        s.split_whitespace().map(|r| r.to_uppercase()).collect()
+    }
+}
+
+enum Directive {
+    Disable(Vec<String>),
+    Enable(Vec<String>),
+    DisableNextLine(Vec<String>),
+    DisableFile(Vec<String>),
+    EnableFile(Vec<String>),
 }
 
 /// Apply fixes to markdown content
@@ -266,8 +454,11 @@ pub fn apply_fixes(content: &str, errors: &[LintError]) -> String {
         })
     });
 
-    // Track which lines have been deleted to avoid double-processing
+    // Track which lines have been deleted or structurally modified
     let mut deleted_lines: std::collections::HashSet<usize> = std::collections::HashSet::new();
+    // Lines where a newline was inserted — subsequent fixes would operate on
+    // shifted content, so we skip them (they'll be caught on the next lint pass).
+    let mut restructured_lines: std::collections::HashSet<usize> = std::collections::HashSet::new();
 
     for (line_num, fix) in &fixable {
         let line_idx = line_num.saturating_sub(1);
@@ -280,7 +471,10 @@ pub fn apply_fixes(content: &str, errors: &[LintError]) -> String {
             continue;
         }
 
-        if line_idx >= lines.len() || deleted_lines.contains(&line_idx) {
+        if line_idx >= lines.len()
+            || deleted_lines.contains(&line_idx)
+            || restructured_lines.contains(&line_idx)
+        {
             continue;
         }
 
@@ -298,7 +492,19 @@ pub fn apply_fixes(content: &str, errors: &[LintError]) -> String {
         // Insert text if specified
         if let Some(ref text) = fix.insert_text {
             let insert_pos = col_idx.min(line.len());
-            line.insert_str(insert_pos, text);
+            // Normalize newlines in inserted text to match the document's style
+            if line_ending == "\r\n" && text.contains('\n') && !text.contains("\r\n") {
+                let normalized = text.replace('\n', "\r\n");
+                line.insert_str(insert_pos, &normalized);
+            } else {
+                line.insert_str(insert_pos, text);
+            }
+
+            // If inserted text contains a newline, mark the line as restructured
+            // so subsequent fixes don't operate on shifted content
+            if text.contains('\n') {
+                restructured_lines.insert(line_idx);
+            }
         }
     }
 
@@ -493,5 +699,56 @@ mod tests {
         let content = "hello\n";
         let result = apply_fixes(content, &[]);
         assert_eq!(result, "hello\n");
+    }
+
+    #[test]
+    fn test_apply_fixes_crlf_trailing_whitespace() {
+        // MD009 pattern with CRLF line endings
+        let content = "hello   \r\nworld\r\n";
+        let errors = vec![make_error(
+            1,
+            FixInfo {
+                line_number: None,
+                edit_column: Some(6),
+                delete_count: Some(3),
+                insert_text: None,
+            },
+        )];
+        let result = apply_fixes(content, &errors);
+        assert_eq!(result, "hello\r\nworld\r\n");
+    }
+
+    #[test]
+    fn test_apply_fixes_crlf_insert_newline() {
+        // MD047/MD022 pattern: inserting "\n" in CRLF document should become "\r\n"
+        let content = "# Title\r\nhello";
+        let errors = vec![make_error(
+            2,
+            FixInfo {
+                line_number: Some(2),
+                edit_column: Some(6),
+                delete_count: None,
+                insert_text: Some("\n".to_string()),
+            },
+        )];
+        let result = apply_fixes(content, &errors);
+        assert_eq!(result, "# Title\r\nhello\r\n");
+    }
+
+    #[test]
+    fn test_apply_fixes_crlf_insert_multiline() {
+        // MD041 pattern: inserting "# Title\n\n" in CRLF document
+        let content = "Some text\r\n";
+        let errors = vec![make_error(
+            1,
+            FixInfo {
+                line_number: Some(1),
+                edit_column: Some(1),
+                delete_count: None,
+                insert_text: Some("# Title\n\n".to_string()),
+            },
+        )];
+        let result = apply_fixes(content, &errors);
+        assert_eq!(result, "# Title\r\n\r\nSome text\r\n");
     }
 }

@@ -195,13 +195,14 @@ proptest! {
 }
 
 // ===========================================================================
-// Property 7: apply_fixes preserves LF line endings
+// Property 7: apply_fixes preserves line ending style
 // ===========================================================================
-//
-// CRLF preservation has a known limitation: rules see lines from
-// split_inclusive('\n') which includes the \r, but apply_fixes splits
-// on "\r\n". Some fix_info column offsets can mismatch. We test the
-// simpler — and more common — LF case here.
+
+/// Convert an LF document to CRLF.
+fn to_crlf(doc: &str) -> String {
+    // First remove any existing \r\n to avoid doubling, then convert \n to \r\n
+    doc.replace("\r\n", "\n").replace('\n', "\r\n")
+}
 
 proptest! {
     #![proptest_config(ProptestConfig::with_cases(200))]
@@ -214,6 +215,24 @@ proptest! {
             !fixed.contains("\r\n"),
             "LF document should not gain CRLF after fix"
         );
+    }
+
+    #[test]
+    fn fixes_preserve_crlf_line_endings(doc in md_document()) {
+        let crlf_doc = to_crlf(&doc);
+        let errors = lint_string(&crlf_doc);
+        let fixed = apply_fixes(&crlf_doc, &errors);
+        // Every \n in the output should be preceded by \r (i.e., all newlines are \r\n)
+        for (i, byte) in fixed.bytes().enumerate() {
+            if byte == b'\n' && i > 0 {
+                prop_assert!(
+                    fixed.as_bytes()[i - 1] == b'\r',
+                    "CRLF document should not gain bare LF after fix. \
+                     Found bare \\n at byte {}. Fixed content: {:?}",
+                    i, &fixed[..fixed.len().min(200)]
+                );
+            }
+        }
     }
 }
 

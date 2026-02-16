@@ -518,3 +518,146 @@ fn test_md042_reference_empty_via_lint_sync() {
         "MD042 should fire for reference link pointing to empty fragment"
     );
 }
+
+// ---- Inline configuration directives ----
+
+#[test]
+fn test_inline_disable_specific_rule() {
+    let markdown = "# Title\n\n<!-- markdownlint-disable MD009 -->\nText with spaces   \n<!-- markdownlint-enable MD009 -->\n";
+    let errors = lint_string(markdown);
+    assert!(
+        !has_rule(&errors, "MD009"),
+        "MD009 should be disabled by inline directive"
+    );
+}
+
+#[test]
+fn test_inline_disable_all_rules() {
+    // Start with a heading so MD041 doesn't fire on line 1
+    let markdown = "# Title\n\n<!-- markdownlint-disable -->\n#no space\ntext   \n\ttab\n<!-- markdownlint-enable -->\n";
+    let errors = lint_string(markdown);
+    // Lines 4-6 should have no errors (all rules disabled)
+    let errors_in_range: Vec<_> = errors
+        .iter()
+        .filter(|e| e.line_number >= 4 && e.line_number <= 6)
+        .collect();
+    assert!(
+        errors_in_range.is_empty(),
+        "All rules disabled between directives, expected 0 errors in range but got {}: {:?}",
+        errors_in_range.len(),
+        errors_in_range
+            .iter()
+            .map(|e| (e.line_number, &e.rule_names))
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn test_inline_disable_next_line() {
+    let markdown = "# Title\n\n<!-- markdownlint-disable-next-line MD009 -->\nText with spaces   \nMore spaces   \n";
+    let errors = lint_string(markdown);
+    let md009_errors: Vec<_> = errors
+        .iter()
+        .filter(|e| e.rule_names.contains(&"MD009"))
+        .collect();
+    // Only the second line with trailing spaces should report MD009
+    assert_eq!(
+        md009_errors.len(),
+        1,
+        "Only one MD009 error expected (next-line only disables one line)"
+    );
+    assert_eq!(
+        md009_errors[0].line_number, 5,
+        "MD009 should fire on line 5 (not line 4)"
+    );
+}
+
+#[test]
+fn test_inline_disable_file() {
+    let markdown = "# Title\n\n<!-- markdownlint-disable-file MD009 -->\nText   \nMore   \n";
+    let errors = lint_string(markdown);
+    assert!(
+        !has_rule(&errors, "MD009"),
+        "MD009 should be disabled for entire file"
+    );
+}
+
+#[test]
+fn test_inline_disable_does_not_affect_other_rules() {
+    let markdown = "# Title\n\n<!-- markdownlint-disable MD009 -->\nText   \n\ttab\n<!-- markdownlint-enable -->\n";
+    let errors = lint_string(markdown);
+    assert!(!has_rule(&errors, "MD009"), "MD009 should be disabled");
+    assert!(
+        has_rule(&errors, "MD010"),
+        "MD010 should still fire (only MD009 was disabled)"
+    );
+}
+
+#[test]
+fn test_inline_disable_multiple_rules() {
+    let markdown = "# Title\n\n<!-- markdownlint-disable MD009 MD010 -->\nText   \n\ttab\n<!-- markdownlint-enable -->\n";
+    let errors = lint_string(markdown);
+    assert!(!has_rule(&errors, "MD009"), "MD009 should be disabled");
+    assert!(!has_rule(&errors, "MD010"), "MD010 should be disabled");
+}
+
+#[test]
+fn test_inline_enable_re_enables_after_disable() {
+    let markdown = "# Title\n\n<!-- markdownlint-disable MD009 -->\nText   \n<!-- markdownlint-enable MD009 -->\nMore text   \n";
+    let errors = lint_string(markdown);
+    let md009_errors: Vec<_> = errors
+        .iter()
+        .filter(|e| e.rule_names.contains(&"MD009"))
+        .collect();
+    assert_eq!(md009_errors.len(), 1, "Only one MD009 after re-enable");
+    assert_eq!(
+        md009_errors[0].line_number, 6,
+        "MD009 should fire on line 6 (after enable)"
+    );
+}
+
+// ---- CRLF line ending support ----
+
+#[test]
+fn test_crlf_apply_fixes_preserves_crlf() {
+    let crlf_doc = "# Title\r\nSome text  \r\n";
+    let errors = lint_string(crlf_doc);
+    assert!(has_rule(&errors, "MD009"), "Should detect trailing spaces");
+    let fixed = apply_fixes(crlf_doc, &errors);
+    // All newlines should be CRLF
+    for (i, byte) in fixed.bytes().enumerate() {
+        if byte == b'\n' && i > 0 {
+            assert_eq!(
+                fixed.as_bytes()[i - 1],
+                b'\r',
+                "Bare \\n at byte {}: {:?}",
+                i,
+                &fixed
+            );
+        }
+    }
+    assert!(
+        !has_rule(&lint_string(&fixed), "MD009"),
+        "MD009 should be fixed"
+    );
+}
+
+#[test]
+fn test_crlf_conflicting_fixes_no_corruption() {
+    // Input triggers MD009, MD022, and MD025 — all targeting line 2
+    let crlf_doc = "# \r\n# \r\n";
+    let errors = lint_string(crlf_doc);
+    let fixed = apply_fixes(crlf_doc, &errors);
+    // Must not produce bare \n in CRLF document
+    for (i, byte) in fixed.bytes().enumerate() {
+        if byte == b'\n' && i > 0 {
+            assert_eq!(
+                fixed.as_bytes()[i - 1],
+                b'\r',
+                "Bare \\n at byte {}: {:?}",
+                i,
+                &fixed
+            );
+        }
+    }
+}
