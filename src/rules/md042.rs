@@ -3,8 +3,8 @@
 //! This rule checks for links with no URL or only a fragment (#).
 
 use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 use std::collections::HashMap;
 
 static INLINE_LINK_RE: Lazy<Regex> = Lazy::new(|| {
@@ -45,7 +45,8 @@ impl MD042 {
         if let Some(after_hash) = trimmed.strip_prefix('#') {
             let after_hash = after_hash.trim();
             // If nothing after # or if it starts with a quote (title), it's empty
-            if after_hash.is_empty() || after_hash.starts_with('"') || after_hash.starts_with('\'') {
+            if after_hash.is_empty() || after_hash.starts_with('"') || after_hash.starts_with('\'')
+            {
                 return true;
             }
         }
@@ -145,19 +146,20 @@ impl Rule for MD042 {
 
                 // Check if this reference exists and if it points to an empty URL
                 if let Some(url) = definitions.get(&ref_key)
-                    && Self::is_empty_or_fragment_only(url) {
-                        errors.push(LintError {
-                            line_number,
-                            rule_names: self.names().iter().map(|s| s.to_string()).collect(),
-                            rule_description: self.description().to_string(),
-                            error_detail: None,
-                            error_context: Some(full_match.as_str().to_string()),
-                            rule_information: self.information().map(|s| s.to_string()),
-                            error_range: Some((full_match.start() + 1, full_match.len())),
-                            fix_info: None,
-                            severity: Severity::Error,
-                        });
-                    }
+                    && Self::is_empty_or_fragment_only(url)
+                {
+                    errors.push(LintError {
+                        line_number,
+                        rule_names: self.names().iter().map(|s| s.to_string()).collect(),
+                        rule_description: self.description().to_string(),
+                        error_detail: None,
+                        error_context: Some(full_match.as_str().to_string()),
+                        rule_information: self.information().map(|s| s.to_string()),
+                        error_range: Some((full_match.start() + 1, full_match.len())),
+                        fix_info: None,
+                        severity: Severity::Error,
+                    });
+                }
             }
         }
 
@@ -384,6 +386,12 @@ mod tests {
         let rule = MD042;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-        assert!(errors[0].error_context.as_ref().unwrap().contains("[text2]()"));
+        assert!(
+            errors[0]
+                .error_context
+                .as_ref()
+                .unwrap()
+                .contains("[text2]()")
+        );
     }
 }

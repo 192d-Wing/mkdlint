@@ -1,12 +1,10 @@
 //! MD038 - Spaces inside code span elements
 
 use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 
-static CODE_SPACE_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"`( +[^`]+?[^ `]+ +)`").unwrap()
-});
+static CODE_SPACE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"`( +[^`]+?[^ `]+ +)`").unwrap());
 
 pub struct MD038;
 
@@ -71,7 +69,11 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(lines: &'a [String], tokens: &'a [crate::parser::Token], config: &'a HashMap<String, serde_json::Value>) -> crate::types::RuleParams<'a> {
+    fn make_params<'a>(
+        lines: &'a [String],
+        tokens: &'a [crate::parser::Token],
+        config: &'a HashMap<String, serde_json::Value>,
+    ) -> crate::types::RuleParams<'a> {
         crate::types::RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -95,7 +97,10 @@ mod tests {
 
     #[test]
     fn test_md038_with_spaces() {
-        let lines: Vec<String> = "Use ` code ` here\n".lines().map(|l| l.to_string()).collect();
+        let lines: Vec<String> = "Use ` code ` here\n"
+            .lines()
+            .map(|l| l.to_string())
+            .collect();
         let tokens = vec![];
         let config = HashMap::new();
         let params = make_params(&lines, &tokens, &config);
@@ -115,7 +120,10 @@ mod tests {
         let rule = MD038;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-        let fix = errors[0].fix_info.as_ref().expect("fix_info should be present");
+        let fix = errors[0]
+            .fix_info
+            .as_ref()
+            .expect("fix_info should be present");
         assert_eq!(fix.line_number, None);
         // match starts at byte offset 4 => 1-based column 5
         assert_eq!(fix.edit_column, Some(5));
@@ -135,7 +143,10 @@ mod tests {
         let rule = MD038;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-        let fix = errors[0].fix_info.as_ref().expect("fix_info should be present");
+        let fix = errors[0]
+            .fix_info
+            .as_ref()
+            .expect("fix_info should be present");
         assert_eq!(fix.line_number, None);
         assert_eq!(fix.edit_column, Some(7));
         assert_eq!(fix.delete_count, Some(13));

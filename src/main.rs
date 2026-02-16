@@ -4,7 +4,7 @@
 use clap::Parser;
 
 #[cfg(feature = "cli")]
-use mkdlint::{apply_fixes, formatters, lint_sync, LintOptions};
+use mkdlint::{LintOptions, apply_fixes, formatters, lint_sync};
 
 #[cfg(feature = "cli")]
 #[derive(clap::ValueEnum, Clone, Debug, Default)]
@@ -105,9 +105,10 @@ fn expand_paths(paths: &[String]) -> Vec<String> {
                 let ep = entry.path();
                 if ep.is_file()
                     && let Some(ext) = ep.extension().and_then(|e| e.to_str())
-                        && (ext == "md" || ext == "markdown") {
-                            expanded.push(ep.to_string_lossy().to_string());
-                        }
+                    && (ext == "md" || ext == "markdown")
+                {
+                    expanded.push(ep.to_string_lossy().to_string());
+                }
             }
         } else {
             expanded.push(path.clone());
@@ -119,7 +120,10 @@ fn expand_paths(paths: &[String]) -> Vec<String> {
 
 /// Filter files by ignore glob patterns
 #[cfg(feature = "cli")]
-fn filter_ignored(files: Vec<String>, ignore_patterns: &[String]) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+fn filter_ignored(
+    files: Vec<String>,
+    ignore_patterns: &[String],
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     if ignore_patterns.is_empty() {
         return Ok(files);
     }
@@ -132,7 +136,10 @@ fn filter_ignored(files: Vec<String>, ignore_patterns: &[String]) -> Result<Vec<
     }
     let ignore_set = builder.build()?;
 
-    Ok(files.into_iter().filter(|f| !ignore_set.is_match(f)).collect())
+    Ok(files
+        .into_iter()
+        .filter(|f| !ignore_set.is_match(f))
+        .collect())
 }
 
 /// Initialize a new configuration file
@@ -143,15 +150,18 @@ fn init_config(output_path: &str, format: &str) -> Result<(), Box<dyn std::error
 
     // Check if file already exists
     if Path::new(output_path).exists() {
-        eprintln!("{} Configuration file '{}' already exists.", "Error:".red().bold(), output_path);
+        eprintln!(
+            "{} Configuration file '{}' already exists.",
+            "Error:".red().bold(),
+            output_path
+        );
         eprintln!("Remove it first or choose a different output path with --output");
         std::process::exit(1);
     }
 
     // Create a useful default configuration with examples
     let content = match format {
-        "json" => {
-            r#"{
+        "json" => r#"{
   "default": true,
   "MD013": {
     "line_length": 120,
@@ -164,10 +174,9 @@ fn init_config(output_path: &str, format: &str) -> Result<(), Box<dyn std::error
   "MD040": {
     "default_language": "text"
   }
-}"#.to_string()
-        }
-        "yaml" | "yml" => {
-            r#"# Markdownlint configuration
+}"#
+        .to_string(),
+        "yaml" | "yml" => r#"# Markdownlint configuration
 default: true
 
 # Line length
@@ -187,10 +196,9 @@ MD033:
 # Fenced code language
 MD040:
   default_language: text
-"#.to_string()
-        }
-        "toml" => {
-            r#"# Markdownlint configuration
+"#
+        .to_string(),
+        "toml" => r#"# Markdownlint configuration
 default = true
 
 [MD013]
@@ -203,10 +211,14 @@ allowed_elements = ["br", "img", "details", "summary"]
 
 [MD040]
 default_language = "text"
-"#.to_string()
-        }
+"#
+        .to_string(),
         _ => {
-            eprintln!("{} Unsupported format '{}'. Use json, yaml, or toml.", "Error:".red().bold(), format);
+            eprintln!(
+                "{} Unsupported format '{}'. Use json, yaml, or toml.",
+                "Error:".red().bold(),
+                format
+            );
             std::process::exit(1);
         }
     };
@@ -214,11 +226,20 @@ default_language = "text"
     // Write to file
     std::fs::write(output_path, content)?;
 
-    println!("{} Created configuration file: {}", "✓".green().bold(), output_path.cyan());
+    println!(
+        "{} Created configuration file: {}",
+        "✓".green().bold(),
+        output_path.cyan()
+    );
     println!();
     println!("Next steps:");
     println!("  1. Edit {} to customize rules", output_path.cyan());
-    println!("  2. Run: {} {} {}", "mkdlint".cyan(), "--config".yellow(), output_path.cyan());
+    println!(
+        "  2. Run: {} {} {}",
+        "mkdlint".cyan(),
+        "--config".yellow(),
+        output_path.cyan()
+    );
 
     Ok(())
 }
@@ -226,37 +247,67 @@ default_language = "text"
 /// List all available linting rules
 #[cfg(feature = "cli")]
 fn list_rules() {
-    use mkdlint::rules::get_rules;
     use colored::Colorize;
+    use mkdlint::rules::get_rules;
 
     println!("{}", "Available Linting Rules".bold().underline());
     println!();
 
     let rules = get_rules();
-    let mut rules_info: Vec<_> = rules.iter().map(|r| {
-        let names = r.names();
-        let description = r.description();
-        let tags = r.tags();
-        let fixable = if tags.contains(&"fixable") { "✓" } else { " " };
-        let alias = if names.len() > 1 { names[1] } else { "" };
-        (names[0].to_string(), alias.to_string(), description.to_string(), fixable.to_string())
-    }).collect();
+    let mut rules_info: Vec<_> = rules
+        .iter()
+        .map(|r| {
+            let names = r.names();
+            let description = r.description();
+            let tags = r.tags();
+            let fixable = if tags.contains(&"fixable") {
+                "✓"
+            } else {
+                " "
+            };
+            let alias = if names.len() > 1 { names[1] } else { "" };
+            (
+                names[0].to_string(),
+                alias.to_string(),
+                description.to_string(),
+                fixable.to_string(),
+            )
+        })
+        .collect();
 
     // Sort by rule number (MD001, MD002, etc.)
     rules_info.sort_by(|(a, _, _, _), (b, _, _, _)| a.cmp(b));
 
-    println!("{:8} {:30} {:8} {}", "Rule".bold(), "Alias".bold(), "Fixable".bold(), "Description".bold());
+    println!(
+        "{:8} {:30} {:8} {}",
+        "Rule".bold(),
+        "Alias".bold(),
+        "Fixable".bold(),
+        "Description".bold()
+    );
     println!("{}", "─".repeat(80));
 
     for (rule_id, alias, description, fixable) in &rules_info {
-        let fixable_mark = if fixable == "✓" { fixable.green() } else { fixable.normal() };
-        println!("{:8} {:30} {:^8} {}", rule_id.cyan(), alias.yellow(), fixable_mark, description);
+        let fixable_mark = if fixable == "✓" {
+            fixable.green()
+        } else {
+            fixable.normal()
+        };
+        println!(
+            "{:8} {:30} {:^8} {}",
+            rule_id.cyan(),
+            alias.yellow(),
+            fixable_mark,
+            description
+        );
     }
 
     println!();
-    println!("Total: {} rules ({} fixable)",
+    println!(
+        "Total: {} rules ({} fixable)",
         rules.len(),
-        rules_info.iter().filter(|(_, _, _, f)| f == "✓").count());
+        rules_info.iter().filter(|(_, _, _, f)| f == "✓").count()
+    );
 }
 
 #[cfg(feature = "cli")]
@@ -286,7 +337,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Handle stdin input
     let (files, stdin_content) = if args.stdin {
-        (vec!["-".to_string()], Some(std::io::read_to_string(std::io::stdin())?))
+        (
+            vec!["-".to_string()],
+            Some(std::io::read_to_string(std::io::stdin())?),
+        )
     } else {
         // Expand directories and filter ignored files
         let files = expand_paths(&args.files);
@@ -311,10 +365,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Apply --enable and --disable flags
     use mkdlint::RuleConfig;
     for rule in &args.enable {
-        config.rules.insert(rule.to_uppercase(), RuleConfig::Enabled(true));
+        config
+            .rules
+            .insert(rule.to_uppercase(), RuleConfig::Enabled(true));
     }
     for rule in &args.disable {
-        config.rules.insert(rule.to_uppercase(), RuleConfig::Enabled(false));
+        config
+            .rules
+            .insert(rule.to_uppercase(), RuleConfig::Enabled(false));
     }
 
     let mut strings = std::collections::HashMap::new();
@@ -415,7 +473,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if args.verbose {
                         let total_errors: usize = results.results.values().map(|e| e.len()).sum();
                         let total_files = results.results.len();
-                        format!("{}\n\nSummary: {} error(s) in {} file(s)", formatted, total_errors, total_files)
+                        format!(
+                            "{}\n\nSummary: {} error(s) in {} file(s)",
+                            formatted, total_errors, total_files
+                        )
                     } else {
                         formatted
                     }

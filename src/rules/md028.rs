@@ -69,7 +69,11 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(lines: &'a [String], tokens: &'a [crate::parser::Token], config: &'a HashMap<String, serde_json::Value>) -> crate::types::RuleParams<'a> {
+    fn make_params<'a>(
+        lines: &'a [String],
+        tokens: &'a [crate::parser::Token],
+        config: &'a HashMap<String, serde_json::Value>,
+    ) -> crate::types::RuleParams<'a> {
         crate::types::RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -82,7 +86,10 @@ mod tests {
 
     #[test]
     fn test_md028_no_blank_in_quote() {
-        let lines: Vec<String> = "> line 1\n> line 2\n".lines().map(|l| l.to_string()).collect();
+        let lines: Vec<String> = "> line 1\n> line 2\n"
+            .lines()
+            .map(|l| l.to_string())
+            .collect();
         let tokens = vec![];
         let config = HashMap::new();
         let params = make_params(&lines, &tokens, &config);
@@ -93,7 +100,10 @@ mod tests {
 
     #[test]
     fn test_md028_blank_in_quote() {
-        let lines: Vec<String> = "> line 1\n\n> line 2\n".lines().map(|l| l.to_string()).collect();
+        let lines: Vec<String> = "> line 1\n\n> line 2\n"
+            .lines()
+            .map(|l| l.to_string())
+            .collect();
         let tokens = vec![];
         let config = HashMap::new();
         let params = make_params(&lines, &tokens, &config);
@@ -105,7 +115,10 @@ mod tests {
 
     #[test]
     fn test_md028_not_blockquote() {
-        let lines: Vec<String> = "normal text\n\nmore text\n".lines().map(|l| l.to_string()).collect();
+        let lines: Vec<String> = "normal text\n\nmore text\n"
+            .lines()
+            .map(|l| l.to_string())
+            .collect();
         let tokens = vec![];
         let config = HashMap::new();
         let params = make_params(&lines, &tokens, &config);

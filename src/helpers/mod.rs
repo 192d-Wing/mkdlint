@@ -22,10 +22,7 @@ pub fn detect_line_ending(content: &str) -> &str {
 /// Split content into lines preserving line endings
 pub fn split_lines(content: &str) -> Vec<String> {
     let line_ending = detect_line_ending(content);
-    content
-        .split(line_ending)
-        .map(|s| s.to_string())
-        .collect()
+    content.split(line_ending).map(|s| s.to_string()).collect()
 }
 
 #[cfg(test)]

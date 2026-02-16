@@ -141,7 +141,10 @@ mod tests {
         let params = make_params(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-        assert_eq!(errors[0].error_detail, Some("Expected blank line before table".to_string()));
+        assert_eq!(
+            errors[0].error_detail,
+            Some("Expected blank line before table".to_string())
+        );
     }
 
     #[test]
@@ -159,7 +162,10 @@ mod tests {
         let params = make_params(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-        assert_eq!(errors[0].error_detail, Some("Expected blank line after table".to_string()));
+        assert_eq!(
+            errors[0].error_detail,
+            Some("Expected blank line after table".to_string())
+        );
     }
 
     #[test]

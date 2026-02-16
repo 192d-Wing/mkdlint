@@ -81,14 +81,18 @@ impl Rule for MD001 {
             // Only report error if level increases by more than 1
             if level > prev_level.saturating_add(1) {
                 let expected_level = prev_level + 1;
-                let is_setext = heading.metadata.get("setext")
+                let is_setext = heading
+                    .metadata
+                    .get("setext")
                     .and_then(|v| v.parse::<bool>().ok())
                     .unwrap_or(false);
 
                 // Generate fix_info to adjust the heading level
                 let fix_info = if !is_setext {
                     // ATX heading: change the number of # characters
-                    let line = params.lines.get(heading.start_line - 1)
+                    let line = params
+                        .lines
+                        .get(heading.start_line - 1)
                         .map(|s| s.as_str())
                         .unwrap_or("");
 
@@ -107,7 +111,9 @@ impl Rule for MD001 {
                 } else {
                     // Setext heading: convert to ATX format
                     // Replace both the heading line and the underline
-                    let line = params.lines.get(heading.start_line - 1)
+                    let line = params
+                        .lines
+                        .get(heading.start_line - 1)
                         .map(|s| s.trim_end())
                         .unwrap_or("");
 
@@ -124,7 +130,10 @@ impl Rule for MD001 {
                     line_number: heading.start_line,
                     rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                     rule_description: self.description().to_string(),
-                    error_detail: Some(format!("Expected: h{}; Actual: h{}", expected_level, level)),
+                    error_detail: Some(format!(
+                        "Expected: h{}; Actual: h{}",
+                        expected_level, level
+                    )),
                     error_context: None,
                     rule_information: self.information().map(|s| s.to_string()),
                     error_range: None,
@@ -199,10 +208,7 @@ mod tests {
             create_heading(2, 3, false), // Skip from h1 to h3
         ];
 
-        let lines = vec![
-            "# Heading 1\n".to_string(),
-            "### Heading 3\n".to_string(),
-        ];
+        let lines = vec!["# Heading 1\n".to_string(), "### Heading 3\n".to_string()];
 
         let params = RuleParams {
             name: "test.md",
@@ -218,7 +224,10 @@ mod tests {
 
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 2);
-        assert_eq!(errors[0].error_detail, Some("Expected: h2; Actual: h3".to_string()));
+        assert_eq!(
+            errors[0].error_detail,
+            Some("Expected: h2; Actual: h3".to_string())
+        );
     }
 
     #[test]
@@ -264,9 +273,7 @@ mod tests {
             "## Heading 2\n".to_string(),
         ];
 
-        let front_matter = vec![
-            "title: Document Title\n".to_string(),
-        ];
+        let front_matter = vec!["title: Document Title\n".to_string()];
 
         let params = RuleParams {
             name: "test.md",
@@ -284,10 +291,7 @@ mod tests {
 
     #[test]
     fn test_md001_setext_headings() {
-        let tokens = vec![
-            create_heading(1, 1, true),
-            create_heading(4, 2, true),
-        ];
+        let tokens = vec![create_heading(1, 1, true), create_heading(4, 2, true)];
 
         let lines = vec![
             "Heading 1\n".to_string(),
@@ -349,10 +353,7 @@ mod tests {
             create_heading(2, 3, false), // Skip from h1 to h3
         ];
 
-        let lines = vec![
-            "# Heading 1\n".to_string(),
-            "### Heading 3\n".to_string(),
-        ];
+        let lines = vec!["# Heading 1\n".to_string(), "### Heading 3\n".to_string()];
 
         let params = RuleParams {
             name: "test.md",

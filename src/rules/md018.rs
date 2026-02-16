@@ -39,13 +39,18 @@ impl Rule for MD018 {
                 let hash_count = trimmed.chars().take_while(|&c| c == '#').count();
                 if hash_count > 0 && hash_count <= 6 {
                     let after_hash = &trimmed[hash_count..];
-                    if !after_hash.is_empty() && !after_hash.starts_with(' ') && !after_hash.starts_with('\t') {
+                    if !after_hash.is_empty()
+                        && !after_hash.starts_with(' ')
+                        && !after_hash.starts_with('\t')
+                    {
                         errors.push(LintError {
                             line_number,
                             rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                             rule_description: self.description().to_string(),
                             error_detail: None,
-                            error_context: Some(trimmed[..hash_count + 10.min(after_hash.len())].to_string()),
+                            error_context: Some(
+                                trimmed[..hash_count + 10.min(after_hash.len())].to_string(),
+                            ),
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: Some((hash_count + 1, 1)),
                             fix_info: Some(FixInfo {

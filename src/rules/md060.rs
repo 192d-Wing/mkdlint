@@ -108,9 +108,7 @@ mod tests {
     #[test]
     fn test_md060_dollar_sign_outside_code_block() {
         let rule = MD060;
-        let lines: Vec<String> = vec![
-            "$ echo hello\n".to_string(),
-        ];
+        let lines: Vec<String> = vec!["$ echo hello\n".to_string()];
         let tokens = vec![];
         let config = HashMap::new();
         let params = make_params(&lines, &tokens, &config);

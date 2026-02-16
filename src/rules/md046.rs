@@ -157,7 +157,11 @@ mod tests {
         };
 
         let errors = MD046.lint(&params);
-        assert_eq!(errors.len(), 1, "Tilde fenced + indented should trigger mixed style error");
+        assert_eq!(
+            errors.len(),
+            1,
+            "Tilde fenced + indented should trigger mixed style error"
+        );
     }
 
     #[test]
@@ -199,6 +203,9 @@ mod tests {
 
         let errors = MD046.lint(&params);
         assert_eq!(errors.len(), 1);
-        assert!(errors[0].fix_info.is_none(), "MD046 should not have fix_info");
+        assert!(
+            errors[0].fix_info.is_none(),
+            "MD046 should not have fix_info"
+        );
     }
 }

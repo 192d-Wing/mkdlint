@@ -65,7 +65,9 @@ fn get_heading_style(lines: &[String], start_line: usize, end_line: usize) -> He
         let underline = lines[underline_idx].trim();
 
         // Check if the next line is all = or all -
-        if !underline.is_empty() && (underline.chars().all(|c| c == '=') || underline.chars().all(|c| c == '-')) {
+        if !underline.is_empty()
+            && (underline.chars().all(|c| c == '=') || underline.chars().all(|c| c == '-'))
+        {
             return HeadingStyle::Setext;
         }
     }
@@ -156,7 +158,11 @@ impl Rule for MD003 {
                             line_number: heading.start_line,
                             rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                             rule_description: self.description().to_string(),
-                            error_detail: Some(format!("Expected: {}; Actual: {}", first.as_str(), style.as_str())),
+                            error_detail: Some(format!(
+                                "Expected: {}; Actual: {}",
+                                first.as_str(),
+                                style.as_str()
+                            )),
                             error_context: None,
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: None,
@@ -228,7 +234,11 @@ impl Rule for MD003 {
                         line_number: heading.start_line,
                         rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                         rule_description: self.description().to_string(),
-                        error_detail: Some(format!("Expected: {}; Actual: {}", expected, actual.as_str())),
+                        error_detail: Some(format!(
+                            "Expected: {}; Actual: {}",
+                            expected,
+                            actual.as_str()
+                        )),
                         error_context: None,
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: None,
@@ -298,10 +308,7 @@ mod tests {
 
     #[test]
     fn test_md003_consistent_mixed_styles() {
-        let tokens = vec![
-            create_heading_token(1, 1),
-            create_heading_token(3, 4),
-        ];
+        let tokens = vec![create_heading_token(1, 1), create_heading_token(3, 4)];
 
         let lines = vec![
             "# Heading 1\n".to_string(),
@@ -332,10 +339,7 @@ mod tests {
 
     #[test]
     fn test_md003_atx_style() {
-        let tokens = vec![
-            create_heading_token(1, 1),
-            create_heading_token(3, 4),
-        ];
+        let tokens = vec![create_heading_token(1, 1), create_heading_token(3, 4)];
 
         let lines = vec![
             "# Heading 1\n".to_string(),
@@ -364,10 +368,7 @@ mod tests {
 
     #[test]
     fn test_md003_setext_style() {
-        let tokens = vec![
-            create_heading_token(1, 2),
-            create_heading_token(4, 4),
-        ];
+        let tokens = vec![create_heading_token(1, 2), create_heading_token(4, 4)];
 
         let lines = vec![
             "Heading 1\n".to_string(),
@@ -396,10 +397,7 @@ mod tests {
 
     #[test]
     fn test_md003_atx_closed_style() {
-        let tokens = vec![
-            create_heading_token(1, 1),
-            create_heading_token(3, 3),
-        ];
+        let tokens = vec![create_heading_token(1, 1), create_heading_token(3, 3)];
 
         let lines = vec![
             "# Heading 1 #\n".to_string(),
@@ -444,7 +442,10 @@ mod tests {
         ];
 
         let mut config = HashMap::new();
-        config.insert("style".to_string(), Value::String("setext_with_atx".to_string()));
+        config.insert(
+            "style".to_string(),
+            Value::String("setext_with_atx".to_string()),
+        );
 
         let params = RuleParams {
             name: "test.md",
@@ -462,10 +463,7 @@ mod tests {
 
     #[test]
     fn test_md003_setext_with_atx_closed() {
-        let tokens = vec![
-            create_heading_token(1, 2),
-            create_heading_token(4, 4),
-        ];
+        let tokens = vec![create_heading_token(1, 2), create_heading_token(4, 4)];
 
         let lines = vec![
             "Heading 1\n".to_string(),
@@ -475,7 +473,10 @@ mod tests {
         ];
 
         let mut config = HashMap::new();
-        config.insert("style".to_string(), Value::String("setext_with_atx_closed".to_string()));
+        config.insert(
+            "style".to_string(),
+            Value::String("setext_with_atx_closed".to_string()),
+        );
 
         let params = RuleParams {
             name: "test.md",
@@ -505,10 +506,7 @@ mod tests {
 
     #[test]
     fn test_get_heading_style_setext() {
-        let lines = vec![
-            "Heading\n".to_string(),
-            "=======\n".to_string(),
-        ];
+        let lines = vec!["Heading\n".to_string(), "=======\n".to_string()];
         assert_eq!(get_heading_style(&lines, 1, 2), HeadingStyle::Setext);
     }
 

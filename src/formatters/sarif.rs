@@ -13,7 +13,11 @@ pub fn format_sarif(results: &LintResults) -> String {
     for file in &files {
         if let Some(errors) = results.results.get(*file) {
             for error in errors {
-                let rule_id = error.rule_names.first().map(|s| s.as_str()).unwrap_or("unknown");
+                let rule_id = error
+                    .rule_names
+                    .first()
+                    .map(|s| s.as_str())
+                    .unwrap_or("unknown");
 
                 // Track unique rules for the tool driver
                 rule_set.entry(rule_id.to_string()).or_insert_with(|| {
@@ -82,9 +86,8 @@ pub fn format_sarif(results: &LintResults) -> String {
         }]
     });
 
-    serde_json::to_string_pretty(&sarif).unwrap_or_else(|e| {
-        format!("{{\"error\": \"Failed to serialize SARIF: {}\"}}", e)
-    })
+    serde_json::to_string_pretty(&sarif)
+        .unwrap_or_else(|e| format!("{{\"error\": \"Failed to serialize SARIF: {}\"}}", e))
 }
 
 #[cfg(test)]
@@ -116,9 +119,18 @@ mod tests {
         let result = &parsed["runs"][0]["results"][0];
         assert_eq!(result["ruleId"], "MD001");
         assert_eq!(result["level"], "error");
-        assert_eq!(result["locations"][0]["physicalLocation"]["region"]["startLine"], 3);
-        assert_eq!(result["locations"][0]["physicalLocation"]["region"]["startColumn"], 1);
-        assert_eq!(result["locations"][0]["physicalLocation"]["region"]["endColumn"], 5);
+        assert_eq!(
+            result["locations"][0]["physicalLocation"]["region"]["startLine"],
+            3
+        );
+        assert_eq!(
+            result["locations"][0]["physicalLocation"]["region"]["startColumn"],
+            1
+        );
+        assert_eq!(
+            result["locations"][0]["physicalLocation"]["region"]["endColumn"],
+            5
+        );
 
         let rules = &parsed["runs"][0]["tool"]["driver"]["rules"];
         assert_eq!(rules[0]["id"], "MD001");

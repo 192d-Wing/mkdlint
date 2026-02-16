@@ -78,7 +78,13 @@ mod tests {
             make_heading(3, "Details", 2),
             make_heading(5, "Conclusion", 2),
         ];
-        let lines = vec!["# Introduction\n".to_string(), "\n".to_string(), "## Details\n".to_string(), "\n".to_string(), "## Conclusion\n".to_string()];
+        let lines = vec![
+            "# Introduction\n".to_string(),
+            "\n".to_string(),
+            "## Details\n".to_string(),
+            "\n".to_string(),
+            "## Conclusion\n".to_string(),
+        ];
         let params = RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -99,7 +105,13 @@ mod tests {
             make_heading(3, "Usage", 2),
             make_heading(5, "Setup", 2),
         ];
-        let lines = vec!["## Setup\n".to_string(), "\n".to_string(), "## Usage\n".to_string(), "\n".to_string(), "## Setup\n".to_string()];
+        let lines = vec![
+            "## Setup\n".to_string(),
+            "\n".to_string(),
+            "## Usage\n".to_string(),
+            "\n".to_string(),
+            "## Setup\n".to_string(),
+        ];
         let params = RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -122,7 +134,13 @@ mod tests {
             make_heading(3, "FAQ", 2),
             make_heading(5, "FAQ", 2),
         ];
-        let lines = vec!["## FAQ\n".to_string(), "\n".to_string(), "## FAQ\n".to_string(), "\n".to_string(), "## FAQ\n".to_string()];
+        let lines = vec![
+            "## FAQ\n".to_string(),
+            "\n".to_string(),
+            "## FAQ\n".to_string(),
+            "\n".to_string(),
+            "## FAQ\n".to_string(),
+        ];
         let params = RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -142,7 +160,11 @@ mod tests {
             make_heading(1, "Overview", 1),
             make_heading(3, "Overview", 2),
         ];
-        let lines = vec!["# Overview\n".to_string(), "\n".to_string(), "## Overview\n".to_string()];
+        let lines = vec![
+            "# Overview\n".to_string(),
+            "\n".to_string(),
+            "## Overview\n".to_string(),
+        ];
         let params = RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -153,16 +175,21 @@ mod tests {
         };
 
         let errors = MD024.lint(&params);
-        assert_eq!(errors.len(), 1, "Same text at different levels is still a duplicate");
+        assert_eq!(
+            errors.len(),
+            1,
+            "Same text at different levels is still a duplicate"
+        );
     }
 
     #[test]
     fn test_md024_no_fix_info() {
-        let tokens = vec![
-            make_heading(1, "Title", 1),
-            make_heading(3, "Title", 2),
+        let tokens = vec![make_heading(1, "Title", 1), make_heading(3, "Title", 2)];
+        let lines = vec![
+            "# Title\n".to_string(),
+            "\n".to_string(),
+            "## Title\n".to_string(),
         ];
-        let lines = vec!["# Title\n".to_string(), "\n".to_string(), "## Title\n".to_string()];
         let params = RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -173,6 +200,9 @@ mod tests {
         };
 
         let errors = MD024.lint(&params);
-        assert!(errors[0].fix_info.is_none(), "MD024 should not have fix_info");
+        assert!(
+            errors[0].fix_info.is_none(),
+            "MD024 should not have fix_info"
+        );
     }
 }

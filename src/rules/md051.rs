@@ -1,12 +1,11 @@
 //! MD051 - Link fragments should be valid
 
-use regex::Regex;
-use once_cell::sync::Lazy;
 use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use once_cell::sync::Lazy;
+use regex::Regex;
 
-static FRAGMENT_LINK_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([^\]]*)\]\(#([^)]+)\)").unwrap()
-});
+static FRAGMENT_LINK_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\[([^\]]*)\]\(#([^)]+)\)").unwrap());
 
 pub struct MD051;
 
@@ -40,7 +39,11 @@ fn extract_heading_text(line: &str) -> Option<String> {
     if level > 6 {
         return None;
     }
-    let text = trimmed[level..].trim().trim_end_matches('#').trim().to_string();
+    let text = trimmed[level..]
+        .trim()
+        .trim_end_matches('#')
+        .trim()
+        .to_string();
     if text.is_empty() {
         return None;
     }
@@ -126,7 +129,10 @@ impl Rule for MD051 {
                         line_number,
                         rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                         rule_description: self.description().to_string(),
-                        error_detail: Some(format!("No matching heading for fragment: #{}", fragment)),
+                        error_detail: Some(format!(
+                            "No matching heading for fragment: #{}",
+                            fragment
+                        )),
                         error_context: Some(cap[0].to_string()),
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: None,
@@ -209,7 +215,13 @@ mod tests {
         let params = make_params(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-        assert!(errors[0].error_detail.as_ref().unwrap().contains("nonexistent"));
+        assert!(
+            errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("nonexistent")
+        );
     }
 
     #[test]
@@ -261,7 +273,10 @@ mod tests {
     #[test]
     fn test_extract_heading_text() {
         assert_eq!(extract_heading_text("# Title"), Some("Title".to_string()));
-        assert_eq!(extract_heading_text("## Sub Title"), Some("Sub Title".to_string()));
+        assert_eq!(
+            extract_heading_text("## Sub Title"),
+            Some("Sub Title".to_string())
+        );
         assert_eq!(extract_heading_text("Not heading"), None);
         assert_eq!(extract_heading_text("#"), None); // Empty heading
     }

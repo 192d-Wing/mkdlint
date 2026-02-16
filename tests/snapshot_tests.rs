@@ -3,7 +3,7 @@
 //! These tests lint fixture files and snapshot the error output so that
 //! any regressions in rule behavior are immediately visible as snapshot diffs.
 
-use mkdlint::{lint_sync, LintOptions};
+use mkdlint::{LintOptions, lint_sync};
 use std::collections::HashMap;
 
 /// Helper: lint a markdown string and return a deterministic text representation of the errors.
@@ -44,11 +44,7 @@ fn lint_snapshot(markdown: &str) -> String {
 
 /// Helper: lint a fixture file from the tests/fixtures directory.
 fn lint_fixture(name: &str) -> String {
-    let path = format!(
-        "{}/tests/fixtures/{}",
-        env!("CARGO_MANIFEST_DIR"),
-        name
-    );
+    let path = format!("{}/tests/fixtures/{}", env!("CARGO_MANIFEST_DIR"), name);
     let content = std::fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("Failed to read fixture {}: {}", path, e));
     lint_snapshot(&content)
@@ -114,7 +110,9 @@ fn snapshot_md013_long_lines() {
 
 #[test]
 fn snapshot_md034_bare_urls() {
-    let output = lint_snapshot("# Title\n\nVisit http://example.com for info.\n\nAlso https://test.org/path is good.\n");
+    let output = lint_snapshot(
+        "# Title\n\nVisit http://example.com for info.\n\nAlso https://test.org/path is good.\n",
+    );
     insta::assert_snapshot!(output);
 }
 

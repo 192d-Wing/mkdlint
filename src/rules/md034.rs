@@ -1,12 +1,10 @@
 //! MD034 - Bare URL used
 
 use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 
-static URL_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"https?://[^\s<>]+").unwrap()
-});
+static URL_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"https?://[^\s<>]+").unwrap());
 
 pub struct MD034;
 
@@ -125,7 +123,10 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
 
-        let fix = errors[0].fix_info.as_ref().expect("fix_info should be present");
+        let fix = errors[0]
+            .fix_info
+            .as_ref()
+            .expect("fix_info should be present");
         assert_eq!(fix.line_number, None);
         // "Visit https://example.com for more" -> URL starts at column 7 (1-based)
         assert_eq!(fix.edit_column, Some(7));
@@ -151,7 +152,10 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
 
-        let fix = errors[0].fix_info.as_ref().expect("fix_info should be present");
+        let fix = errors[0]
+            .fix_info
+            .as_ref()
+            .expect("fix_info should be present");
         assert_eq!(fix.line_number, None);
         assert_eq!(fix.edit_column, Some(1));
         assert_eq!(fix.delete_count, Some(20)); // "http://test.org/path" is 20 chars

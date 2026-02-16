@@ -4,9 +4,7 @@ use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-static CODE_FENCE_PREFIX_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^(.*?)[`~]").unwrap()
-});
+static CODE_FENCE_PREFIX_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(.*?)[`~]").unwrap());
 
 pub struct MD031;
 
@@ -18,7 +16,9 @@ fn is_blank_line(line: &str) -> bool {
 /// Extract the prefix (indentation and blockquote markers) from a code fence line
 fn get_code_fence_prefix(line: &str) -> Option<String> {
     CODE_FENCE_PREFIX_RE.captures(line).map(|caps| {
-        caps.get(1).map(|m| m.as_str().to_string()).unwrap_or_default()
+        caps.get(1)
+            .map(|m| m.as_str().to_string())
+            .unwrap_or_default()
     })
 }
 

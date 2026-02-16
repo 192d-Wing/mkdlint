@@ -1,6 +1,6 @@
 //! Integration tests for mkdlint
 
-use mkdlint::{lint_sync, apply_fixes, Config, LintOptions};
+use mkdlint::{Config, LintOptions, apply_fixes, lint_sync};
 use std::collections::HashMap;
 
 /// Helper to lint a single markdown string and return errors for "test.md"
@@ -30,7 +30,9 @@ fn lint_string_with_config(markdown: &str, config: Config) -> Vec<mkdlint::LintE
 
 /// Check if any error matches a given rule ID
 fn has_rule(errors: &[mkdlint::LintError], rule_id: &str) -> bool {
-    errors.iter().any(|e| e.rule_names.contains(&rule_id.to_string()))
+    errors
+        .iter()
+        .any(|e| e.rule_names.contains(&rule_id.to_string()))
 }
 
 // ---- Existing tests ----
@@ -100,21 +102,30 @@ fn test_heading_increment_violation() {
     // atxHeadingSequence children. The current comrak parser produces generic "heading"
     // tokens, so MD001 doesn't fire via lint_sync yet. Test MD009 as a line-based alternative.
     let errors = lint_string("# Heading 1\n\nLine with trailing spaces   \n");
-    assert!(has_rule(&errors, "MD009"), "Expected MD009 violation for trailing whitespace");
+    assert!(
+        has_rule(&errors, "MD009"),
+        "Expected MD009 violation for trailing whitespace"
+    );
 }
 
 #[test]
 fn test_trailing_whitespace_detection() {
     // MD009: no trailing spaces
     let errors = lint_string("# Hello\n\nSome text   \nMore text\n");
-    assert!(has_rule(&errors, "MD009"), "Expected MD009 violation for trailing whitespace");
+    assert!(
+        has_rule(&errors, "MD009"),
+        "Expected MD009 violation for trailing whitespace"
+    );
 }
 
 #[test]
 fn test_no_hard_tabs() {
     // MD010: no hard tabs
     let errors = lint_string("# Hello\n\n\tindented with tab\n");
-    assert!(has_rule(&errors, "MD010"), "Expected MD010 violation for hard tab");
+    assert!(
+        has_rule(&errors, "MD010"),
+        "Expected MD010 violation for hard tab"
+    );
 }
 
 #[test]
@@ -123,7 +134,10 @@ fn test_line_length_violation() {
     let long_line = "a".repeat(120);
     let markdown = format!("# Title\n\n{}\n", long_line);
     let errors = lint_string(&markdown);
-    assert!(has_rule(&errors, "MD013"), "Expected MD013 violation for long line");
+    assert!(
+        has_rule(&errors, "MD013"),
+        "Expected MD013 violation for long line"
+    );
 }
 
 #[test]
@@ -144,7 +158,10 @@ fn test_rule_disable_via_config() {
     let config: Config = serde_json::from_str(json).unwrap();
 
     let errors = lint_string_with_config("# Hello\n\nSome text   \n", config);
-    assert!(!has_rule(&errors, "MD009"), "MD009 should be disabled by config");
+    assert!(
+        !has_rule(&errors, "MD009"),
+        "MD009 should be disabled by config"
+    );
 }
 
 #[test]
@@ -242,14 +259,24 @@ fn test_clean_markdown_no_errors() {
 
     // Should have zero or very few errors
     // Filter out MD047 (file ending) which may fire depending on trailing newline
-    let significant_errors: Vec<_> = errors.iter()
+    let significant_errors: Vec<_> = errors
+        .iter()
         .filter(|e| !has_rule(&[(*e).clone()], "MD047"))
         .collect();
 
     // Clean markdown shouldn't trigger heading/whitespace/tab rules
-    assert!(!has_rule(&errors, "MD001"), "Clean markdown shouldn't trigger MD001");
-    assert!(!has_rule(&errors, "MD009"), "Clean markdown shouldn't trigger MD009");
-    assert!(!has_rule(&errors, "MD010"), "Clean markdown shouldn't trigger MD010");
+    assert!(
+        !has_rule(&errors, "MD001"),
+        "Clean markdown shouldn't trigger MD001"
+    );
+    assert!(
+        !has_rule(&errors, "MD009"),
+        "Clean markdown shouldn't trigger MD009"
+    );
+    assert!(
+        !has_rule(&errors, "MD010"),
+        "Clean markdown shouldn't trigger MD010"
+    );
     let _ = significant_errors; // suppress unused warning
 }
 
@@ -283,19 +310,26 @@ fn test_lint_nonexistent_file() {
     };
 
     let result = lint_sync(&options);
-    assert!(result.is_err(), "Linting a nonexistent file should return an error");
+    assert!(
+        result.is_err(),
+        "Linting a nonexistent file should return an error"
+    );
 }
 
 #[test]
 fn test_error_has_line_number() {
     // MD009 should report a specific line number
     let errors = lint_string("# Hello\n\nLine with spaces   \n");
-    let md009_errors: Vec<_> = errors.iter()
+    let md009_errors: Vec<_> = errors
+        .iter()
         .filter(|e| e.rule_names.contains(&"MD009".to_string()))
         .collect();
 
     if !md009_errors.is_empty() {
-        assert!(md009_errors[0].line_number > 0, "Error should have a positive line number");
+        assert!(
+            md009_errors[0].line_number > 0,
+            "Error should have a positive line number"
+        );
     }
 }
 
@@ -332,9 +366,15 @@ fn test_config_file_option() {
     };
 
     let results = lint_sync(&options).unwrap();
-    let errors = results.get(file_path.to_string_lossy().as_ref()).unwrap_or(&[]);
+    let errors = results
+        .get(file_path.to_string_lossy().as_ref())
+        .unwrap_or(&[]);
     // All rules disabled, so no errors expected
-    assert!(errors.is_empty(), "All rules disabled via config_file, expected 0 errors but got {}", errors.len());
+    assert!(
+        errors.is_empty(),
+        "All rules disabled via config_file, expected 0 errors but got {}",
+        errors.len()
+    );
 }
 
 // ---- New: MD001 fires through lint_sync (parser → tokens → rule) ----

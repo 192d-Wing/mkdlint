@@ -99,11 +99,7 @@ pub trait RuleRegistry {
     fn find_rule(&self, name: &str) -> Option<&dyn Rule> {
         let name_upper = name.to_uppercase();
         self.rules().iter().find_map(|rule| {
-            if rule
-                .names()
-                .iter()
-                .any(|n| n.to_uppercase() == name_upper)
-            {
+            if rule.names().iter().any(|n| n.to_uppercase() == name_upper) {
                 Some(&**rule)
             } else {
                 None
@@ -116,11 +112,7 @@ pub trait RuleRegistry {
         let tag_upper = tag.to_uppercase();
         self.rules()
             .iter()
-            .filter(|rule| {
-                rule.tags()
-                    .iter()
-                    .any(|t| t.to_uppercase() == tag_upper)
-            })
+            .filter(|rule| rule.tags().iter().any(|t| t.to_uppercase() == tag_upper))
             .map(|r| &**r)
             .collect()
     }

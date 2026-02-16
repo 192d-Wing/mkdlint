@@ -1,29 +1,22 @@
 //! MD053 - Link and image reference definitions should be needed
 
 use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 use std::collections::HashSet;
 
 /// Regex for reference link definitions: `[label]: url`
-static DEF_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^\s*\[([^\]]+)\]:\s+").unwrap()
-});
+static DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\s*\[([^\]]+)\]:\s+").unwrap());
 
 /// Regex for full reference links: `[text][label]`
-static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").unwrap()
-});
+static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").unwrap());
 
 /// Regex for collapsed reference links: `[label][]`
-static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([^\]]+)\]\[\]").unwrap()
-});
+static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").unwrap());
 
 /// Regex for shortcut reference links: `[label]` (not followed by `[` or `(` or `:`)
-static SHORTCUT_REF_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([^\]]+)\](?:[^(\[:]|$)").unwrap()
-});
+static SHORTCUT_REF_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\[([^\]]+)\](?:[^(\[:]|$)").unwrap());
 
 pub struct MD053;
 
@@ -88,7 +81,13 @@ impl Rule for MD053 {
                 let label_lower = label.to_lowercase();
 
                 // Skip ignored definitions
-                if is_ignored(&label_lower, &ignored_definitions.iter().map(|s| s.to_lowercase()).collect::<Vec<_>>()) {
+                if is_ignored(
+                    &label_lower,
+                    &ignored_definitions
+                        .iter()
+                        .map(|s| s.to_lowercase())
+                        .collect::<Vec<_>>(),
+                ) {
                     continue;
                 }
 
@@ -150,7 +149,10 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(lines: &'a [String], config: &'a HashMap<String, serde_json::Value>) -> RuleParams<'a> {
+    fn make_params<'a>(
+        lines: &'a [String],
+        config: &'a HashMap<String, serde_json::Value>,
+    ) -> RuleParams<'a> {
         RuleParams {
             name: "test.md",
             version: "0.1.0",

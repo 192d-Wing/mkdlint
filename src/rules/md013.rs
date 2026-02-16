@@ -29,7 +29,9 @@ impl Rule for MD013 {
 
     fn lint(&self, params: &RuleParams) -> Vec<LintError> {
         let mut errors = Vec::new();
-        let line_length = params.config.get("line_length")
+        let line_length = params
+            .config
+            .get("line_length")
             .and_then(|v| v.as_u64())
             .unwrap_or(80) as usize;
         let mut in_code_block = false;

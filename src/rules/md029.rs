@@ -59,30 +59,36 @@ fn get_ordered_list_value(line: &str) -> Option<(usize, usize, usize)> {
 
     // Check if followed by a period and whitespace or end of line
     if !num_str.is_empty()
-        && let Some('.') = chars.next() {
-            // Valid ordered list marker
-            if let Ok(value) = num_str.parse::<usize>() {
-                // Calculate column (1-based)
-                let indent = line.len() - trimmed.len();
-                let column = indent + 1;
-                return Some((value, column, num_str.len()));
-            }
+        && let Some('.') = chars.next()
+    {
+        // Valid ordered list marker
+        if let Ok(value) = num_str.parse::<usize>() {
+            // Calculate column (1-based)
+            let indent = line.len() - trimmed.len();
+            let column = indent + 1;
+            return Some((value, column, num_str.len()));
         }
+    }
 
     None
 }
 
 /// Check if a token is an ordered list by examining its first list item
-fn is_ordered_list(tokens: &[crate::parser::Token], lines: &[String], list_token: &crate::parser::Token) -> bool {
+fn is_ordered_list(
+    tokens: &[crate::parser::Token],
+    lines: &[String],
+    list_token: &crate::parser::Token,
+) -> bool {
     // Check if any child list items are ordered
     for &child_idx in &list_token.children {
         if let Some(child) = tokens.get(child_idx)
             && child.token_type == "listItem"
-                && child.start_line > 0
-                && child.start_line <= lines.len() {
-                let line = &lines[child.start_line - 1];
-                return get_ordered_list_value(line).is_some();
-            }
+            && child.start_line > 0
+            && child.start_line <= lines.len()
+        {
+            let line = &lines[child.start_line - 1];
+            return get_ordered_list_value(line).is_some();
+        }
     }
     false
 }
@@ -132,9 +138,10 @@ impl Rule for MD029 {
             let mut list_items = Vec::new();
             for &child_idx in &list.children {
                 if let Some(child) = params.tokens.get(child_idx)
-                    && child.token_type == "listItem" {
-                        list_items.push(child);
-                    }
+                    && child.token_type == "listItem"
+                {
+                    list_items.push(child);
+                }
             }
 
             if list_items.is_empty() {
@@ -150,20 +157,21 @@ impl Rule for MD029 {
                 && list_items[0].start_line > 0
                 && list_items[0].start_line <= params.lines.len()
                 && list_items[1].start_line > 0
-                && list_items[1].start_line <= params.lines.len() {
-
+                && list_items[1].start_line <= params.lines.len()
+            {
                 let first_line = &params.lines[list_items[0].start_line - 1];
                 let second_line = &params.lines[list_items[1].start_line - 1];
 
-                if let (Some((first_val, _, _)), Some((second_val, _, _))) =
-                    (get_ordered_list_value(first_line), get_ordered_list_value(second_line))
-
-                    && (second_val != 1 || first_val == 0) {
-                        incrementing = true;
-                        if first_val == 0 {
-                            expected = 0;
-                        }
+                if let (Some((first_val, _, _)), Some((second_val, _, _))) = (
+                    get_ordered_list_value(first_line),
+                    get_ordered_list_value(second_line),
+                ) && (second_val != 1 || first_val == 0)
+                {
+                    incrementing = true;
+                    if first_val == 0 {
+                        expected = 0;
                     }
+                }
             }
 
             // Determine effective style
@@ -348,7 +356,13 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 3);
-        assert!(errors[0].error_detail.as_ref().unwrap().contains("Expected: 1"));
+        assert!(
+            errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("Expected: 1")
+        );
     }
 
     #[test]

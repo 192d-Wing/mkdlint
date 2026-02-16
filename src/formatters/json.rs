@@ -4,9 +4,8 @@ use crate::types::LintResults;
 
 /// Format lint results as JSON
 pub fn format_json(results: &LintResults) -> String {
-    serde_json::to_string_pretty(results).unwrap_or_else(|e| {
-        format!("{{\"error\": \"Failed to serialize results: {}\"}}", e)
-    })
+    serde_json::to_string_pretty(results)
+        .unwrap_or_else(|e| format!("{{\"error\": \"Failed to serialize results: {}\"}}", e))
 }
 
 #[cfg(test)]

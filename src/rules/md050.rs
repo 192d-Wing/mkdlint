@@ -110,7 +110,8 @@ impl Rule for MD050 {
         let mut errors = Vec::new();
 
         // Get configured style: "consistent" (default), "asterisk", or "underscore"
-        let configured_style = params.config
+        let configured_style = params
+            .config
             .get("style")
             .and_then(|v| v.as_str())
             .unwrap_or("consistent")
@@ -239,7 +240,10 @@ mod tests {
         let params = make_params(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-        assert_eq!(errors[0].error_detail.as_deref(), Some("Expected: asterisk; Actual: underscore"));
+        assert_eq!(
+            errors[0].error_detail.as_deref(),
+            Some("Expected: asterisk; Actual: underscore")
+        );
     }
 
     #[test]

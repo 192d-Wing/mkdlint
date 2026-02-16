@@ -1,24 +1,18 @@
 //! MD052 - Reference links and images should use a label that is defined
 
 use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 use std::collections::HashSet;
 
 /// Regex for reference link definitions: `[label]: url`
-static DEF_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^\s*\[([^\]]+)\]:\s+").unwrap()
-});
+static DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\s*\[([^\]]+)\]:\s+").unwrap());
 
 /// Regex for full reference links: `[text][label]`
-static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").unwrap()
-});
+static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").unwrap());
 
 /// Regex for collapsed reference links: `[label][]`
-static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([^\]]+)\]\[\]").unwrap()
-});
+static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").unwrap());
 
 pub struct MD052;
 
@@ -91,7 +85,10 @@ impl Rule for MD052 {
                         line_number,
                         rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                         rule_description: self.description().to_string(),
-                        error_detail: Some(format!("Reference label \"{}\" is not defined", &caps[2])),
+                        error_detail: Some(format!(
+                            "Reference label \"{}\" is not defined",
+                            &caps[2]
+                        )),
                         error_context: Some(caps[0].to_string()),
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: None,
@@ -109,7 +106,10 @@ impl Rule for MD052 {
                         line_number,
                         rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                         rule_description: self.description().to_string(),
-                        error_detail: Some(format!("Reference label \"{}\" is not defined", &caps[1])),
+                        error_detail: Some(format!(
+                            "Reference label \"{}\" is not defined",
+                            &caps[1]
+                        )),
                         error_context: Some(caps[0].to_string()),
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: None,
@@ -129,7 +129,10 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(lines: &'a [String], config: &'a HashMap<String, serde_json::Value>) -> RuleParams<'a> {
+    fn make_params<'a>(
+        lines: &'a [String],
+        config: &'a HashMap<String, serde_json::Value>,
+    ) -> RuleParams<'a> {
         RuleParams {
             name: "test.md",
             version: "0.1.0",

@@ -8,9 +8,7 @@ use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-static UL_MARKER_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^(\s*)[*+\-]\s").unwrap()
-});
+static UL_MARKER_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)[*+\-]\s").unwrap());
 
 pub struct MD007;
 
@@ -37,7 +35,9 @@ impl Rule for MD007 {
 
     fn lint(&self, params: &RuleParams) -> Vec<LintError> {
         let mut errors = Vec::new();
-        let indent = params.config.get("indent")
+        let indent = params
+            .config
+            .get("indent")
             .and_then(|v| v.as_u64())
             .unwrap_or(2) as usize;
 
@@ -137,7 +137,10 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 2);
-        assert_eq!(errors[0].error_detail, Some("Expected: 2; Actual: 3".to_string()));
+        assert_eq!(
+            errors[0].error_detail,
+            Some("Expected: 2; Actual: 3".to_string())
+        );
     }
 
     #[test]

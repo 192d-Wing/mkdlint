@@ -7,8 +7,8 @@ pub use token::*;
 use std::collections::HashMap;
 
 use comrak::{
-    nodes::{AstNode, NodeValue},
     Arena, Options,
+    nodes::{AstNode, NodeValue},
 };
 
 /// Parse markdown content into tokens
@@ -54,17 +54,15 @@ fn collect_text<'a>(node: &'a AstNode<'a>) -> String {
 }
 
 /// Recursively collect tokens from AST with parent tracking
-fn collect_tokens<'a>(
-    node: &'a AstNode<'a>,
-    tokens: &mut Vec<Token>,
-    parent_idx: Option<usize>,
-) {
+fn collect_tokens<'a>(node: &'a AstNode<'a>, tokens: &mut Vec<Token>, parent_idx: Option<usize>) {
     let data = node.data.borrow();
 
     if let Some(mut token) = node_to_token(&data.value, &data.sourcepos) {
         // Collect text from child nodes for non-leaf nodes
         match &data.value {
-            NodeValue::Text(_) | NodeValue::Code(_) | NodeValue::HtmlInline(_)
+            NodeValue::Text(_)
+            | NodeValue::Code(_)
+            | NodeValue::HtmlInline(_)
             | NodeValue::HtmlBlock(_) => {
                 // Text already set in node_to_token
             }
@@ -107,10 +105,7 @@ fn collect_tokens<'a>(
 }
 
 /// Convert comrak NodeValue to Token with metadata
-fn node_to_token(
-    value: &NodeValue,
-    sourcepos: &comrak::nodes::Sourcepos,
-) -> Option<Token> {
+fn node_to_token(value: &NodeValue, sourcepos: &comrak::nodes::Sourcepos) -> Option<Token> {
     let token_type;
     let mut text = String::new();
     let mut metadata = HashMap::new();
@@ -124,7 +119,10 @@ fn node_to_token(
             metadata.insert("ordered".to_string(), ordered.to_string());
             metadata.insert("start".to_string(), nl.start.to_string());
             metadata.insert("tight".to_string(), nl.tight.to_string());
-            metadata.insert("bullet_char".to_string(), (nl.bullet_char as char).to_string());
+            metadata.insert(
+                "bullet_char".to_string(),
+                (nl.bullet_char as char).to_string(),
+            );
             let delim = match nl.delimiter {
                 comrak::nodes::ListDelimType::Period => ".",
                 comrak::nodes::ListDelimType::Paren => ")",
@@ -141,7 +139,10 @@ fn node_to_token(
             text = cb.literal.clone();
             metadata.insert("info".to_string(), cb.info.clone());
             metadata.insert("fenced".to_string(), cb.fenced.to_string());
-            metadata.insert("fence_char".to_string(), (cb.fence_char as char).to_string());
+            metadata.insert(
+                "fence_char".to_string(),
+                (cb.fence_char as char).to_string(),
+            );
             metadata.insert("fence_length".to_string(), cb.fence_length.to_string());
         }
         NodeValue::HtmlBlock(hb) => {
@@ -319,10 +320,7 @@ mod tests {
         let markdown = "[click here](https://example.com \"Example\")";
         let tokens = parse(markdown);
 
-        let links: Vec<_> = tokens
-            .iter()
-            .filter(|t| t.token_type == "link")
-            .collect();
+        let links: Vec<_> = tokens.iter().filter(|t| t.token_type == "link").collect();
 
         assert_eq!(links.len(), 1);
         assert_eq!(links[0].metadata.get("url").unwrap(), "https://example.com");
@@ -356,10 +354,7 @@ mod tests {
         let markdown = "1. First\n2. Second\n3. Third";
         let tokens = parse(markdown);
 
-        let lists: Vec<_> = tokens
-            .iter()
-            .filter(|t| t.token_type == "list")
-            .collect();
+        let lists: Vec<_> = tokens.iter().filter(|t| t.token_type == "list").collect();
 
         assert_eq!(lists.len(), 1);
         assert_eq!(lists[0].metadata.get("ordered").unwrap(), "true");

@@ -34,7 +34,11 @@ impl Rule for MD040 {
             let trimmed = line.trim();
 
             if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
-                let fence_chars = if trimmed.starts_with("```") { "```" } else { "~~~" };
+                let fence_chars = if trimmed.starts_with("```") {
+                    "```"
+                } else {
+                    "~~~"
+                };
                 let after_fence = trimmed.trim_start_matches(fence_chars).trim();
 
                 if in_code_block {

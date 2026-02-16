@@ -73,45 +73,43 @@ impl Rule for MD036 {
             .filter(|para| {
                 // Check parent is "content"
                 if let Some(parent_idx) = para.parent
-                    && let Some(parent) = params.tokens.get(parent_idx) {
-                        if parent.token_type != "content" {
-                            return false;
-                        }
+                    && let Some(parent) = params.tokens.get(parent_idx)
+                {
+                    if parent.token_type != "content" {
+                        return false;
+                    }
 
-                        // Check parent has no parent OR parent.parent is htmlFlow with no parent
-                        if let Some(grandparent_idx) = parent.parent {
-                            if let Some(grandparent) = params.tokens.get(grandparent_idx) {
-                                if grandparent.token_type != "htmlFlow" {
-                                    return false;
-                                }
-                                // htmlFlow should have no parent
-                                if grandparent.parent.is_some() {
-                                    return false;
-                                }
-                            } else {
+                    // Check parent has no parent OR parent.parent is htmlFlow with no parent
+                    if let Some(grandparent_idx) = parent.parent {
+                        if let Some(grandparent) = params.tokens.get(grandparent_idx) {
+                            if grandparent.token_type != "htmlFlow" {
                                 return false;
                             }
+                            // htmlFlow should have no parent
+                            if grandparent.parent.is_some() {
+                                return false;
+                            }
+                        } else {
+                            return false;
                         }
-
-                        // Check for exactly one meaningful child
-                        let meaningful_children: Vec<_> = para
-                            .children
-                            .iter()
-                            .filter_map(|&child_idx| params.tokens.get(child_idx))
-                            .filter(|child| is_paragraph_child_meaningful(child))
-                            .collect();
-
-                        return meaningful_children.len() == 1;
                     }
+
+                    // Check for exactly one meaningful child
+                    let meaningful_children: Vec<_> = para
+                        .children
+                        .iter()
+                        .filter_map(|&child_idx| params.tokens.get(child_idx))
+                        .filter(|child| is_paragraph_child_meaningful(child))
+                        .collect();
+
+                    return meaningful_children.len() == 1;
+                }
                 false
             })
             .collect();
 
         // Check both emphasis and strong types
-        let emphasis_types = [
-            ["emphasis", "emphasisText"],
-            ["strong", "strongText"],
-        ];
+        let emphasis_types = [["emphasis", "emphasisText"], ["strong", "strongText"]];
 
         for emphasis_type in &emphasis_types {
             // Get descendants of filtered paragraphs matching the emphasis types
@@ -126,22 +124,22 @@ impl Rule for MD036 {
                     // 3. Text doesn't end in punctuation
                     if text_token.children.len() == 1
                         && let Some(&child_idx) = text_token.children.first()
-                            && let Some(child) = params.tokens.get(child_idx)
-                                && child.token_type == "data"
-                                    && !punctuation_re.is_match(&text_token.text)
-                                {
-                                    errors.push(LintError {
-                                        line_number: text_token.start_line,
-                                        rule_names: self.names().iter().map(|s| s.to_string()).collect(),
-                                        rule_description: self.description().to_string(),
-                                        error_detail: None,
-                                        error_context: Some(text_token.text.clone()),
-                                        rule_information: self.information().map(|s| s.to_string()),
-                                        error_range: None,
-                                        fix_info: None,
-                                        severity: Severity::Error,
-                                    });
-                                }
+                        && let Some(child) = params.tokens.get(child_idx)
+                        && child.token_type == "data"
+                        && !punctuation_re.is_match(&text_token.text)
+                    {
+                        errors.push(LintError {
+                            line_number: text_token.start_line,
+                            rule_names: self.names().iter().map(|s| s.to_string()).collect(),
+                            rule_description: self.description().to_string(),
+                            error_detail: None,
+                            error_context: Some(text_token.text.clone()),
+                            rule_information: self.information().map(|s| s.to_string()),
+                            error_range: None,
+                            fix_info: None,
+                            severity: Severity::Error,
+                        });
+                    }
                 }
             }
         }

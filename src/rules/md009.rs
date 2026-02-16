@@ -71,10 +71,7 @@ mod tests {
 
     #[test]
     fn test_md009_no_trailing_spaces() {
-        let lines = vec![
-            "# Heading\n".to_string(),
-            "This is content\n".to_string(),
-        ];
+        let lines = vec!["# Heading\n".to_string(), "This is content\n".to_string()];
 
         let params = RuleParams {
             name: "test.md",

@@ -121,7 +121,11 @@ mod tests {
         };
 
         let errors = MD022.lint(&params);
-        assert_eq!(errors.len(), 0, "Properly spaced headings should have no errors");
+        assert_eq!(
+            errors.len(),
+            0,
+            "Properly spaced headings should have no errors"
+        );
     }
 
     #[test]
@@ -152,10 +156,7 @@ mod tests {
 
     #[test]
     fn test_md022_missing_blank_after_heading() {
-        let lines = vec![
-            "# Title\n".to_string(),
-            "Some text\n".to_string(),
-        ];
+        let lines = vec!["# Title\n".to_string(), "Some text\n".to_string()];
         let tokens = vec![make_heading(1, 1)];
         let params = RuleParams {
             name: "test.md",
@@ -198,7 +199,10 @@ mod tests {
             .find(|e| e.error_detail.as_deref() == Some("Expected blank line before heading"))
             .expect("Should have a before-heading error");
 
-        let fix = before_error.fix_info.as_ref().expect("Should have fix_info");
+        let fix = before_error
+            .fix_info
+            .as_ref()
+            .expect("Should have fix_info");
         assert_eq!(fix.edit_column, Some(1));
         assert_eq!(fix.insert_text, Some("\n".to_string()));
     }
@@ -222,15 +226,16 @@ mod tests {
         };
 
         let errors = MD022.lint(&params);
-        assert_eq!(errors.len(), 0, "Heading at start of file with blank after should be fine");
+        assert_eq!(
+            errors.len(),
+            0,
+            "Heading at start of file with blank after should be fine"
+        );
     }
 
     #[test]
     fn test_md022_fix_info_inserts_blank_after() {
-        let lines = vec![
-            "# Title\n".to_string(),
-            "Some text\n".to_string(),
-        ];
+        let lines = vec!["# Title\n".to_string(), "Some text\n".to_string()];
         let tokens = vec![make_heading(1, 1)];
         let params = RuleParams {
             name: "test.md",

@@ -35,7 +35,9 @@ impl Rule for MD005 {
         let mut errors = Vec::new();
 
         // Get all list tokens (both ordered and unordered)
-        let lists = params.tokens.filter_by_types(&["listOrdered", "listUnordered"]);
+        let lists = params
+            .tokens
+            .filter_by_types(&["listOrdered", "listUnordered"]);
 
         for list in lists {
             let expected_indent = list.start_column - 1;
@@ -91,13 +93,19 @@ impl Rule for MD005 {
                             // Generate appropriate error message
                             let (detail, expected, actual) = if end_matching {
                                 (
-                                    format!("Expected: ({}); Actual: ({})", expected_end, actual_end),
+                                    format!(
+                                        "Expected: ({}); Actual: ({})",
+                                        expected_end, actual_end
+                                    ),
                                     expected_end - marker_length,
                                     actual_end - marker_length,
                                 )
                             } else {
                                 (
-                                    format!("Expected: {}; Actual: {}", expected_indent, actual_indent),
+                                    format!(
+                                        "Expected: {}; Actual: {}",
+                                        expected_indent, actual_indent
+                                    ),
                                     expected_indent,
                                     actual_indent,
                                 )
@@ -236,11 +244,13 @@ mod tests {
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 2);
         assert!(errors[0].error_detail.is_some());
-        assert!(errors[0]
-            .error_detail
-            .as_ref()
-            .unwrap()
-            .contains("Expected: 0; Actual: 1"));
+        assert!(
+            errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("Expected: 0; Actual: 1")
+        );
     }
 
     #[test]
@@ -362,10 +372,7 @@ mod tests {
             create_list_item_prefix(2, 2, 5, "2. ", 0), // One space less
         ];
 
-        let lines = vec![
-            "  1. Item 1\n".to_string(),
-            " 2. Item 2\n".to_string(),
-        ];
+        let lines = vec!["  1. Item 1\n".to_string(), " 2. Item 2\n".to_string()];
 
         let params = RuleParams {
             name: "test.md",

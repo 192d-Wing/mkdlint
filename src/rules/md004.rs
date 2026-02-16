@@ -76,20 +76,24 @@ fn different_item_style(style: ListStyle) -> ListStyle {
 fn get_list_marker(line: &str) -> Option<char> {
     let trimmed = line.trim_start();
     if let Some(first_char) = trimmed.chars().next()
-        && matches!(first_char, '*' | '-' | '+') {
-            // Make sure it's followed by whitespace (to distinguish from other uses of these chars)
-            if trimmed.len() > 1 {
-                let second_char = trimmed.chars().nth(1)?;
-                if second_char.is_whitespace() {
-                    return Some(first_char);
-                }
+        && matches!(first_char, '*' | '-' | '+')
+    {
+        // Make sure it's followed by whitespace (to distinguish from other uses of these chars)
+        if trimmed.len() > 1 {
+            let second_char = trimmed.chars().nth(1)?;
+            if second_char.is_whitespace() {
+                return Some(first_char);
             }
         }
+    }
     None
 }
 
 /// Count nesting level by examining parent list tokens
-fn get_nesting_level(tokens: &[crate::parser::Token], current_token: &crate::parser::Token) -> usize {
+fn get_nesting_level(
+    tokens: &[crate::parser::Token],
+    current_token: &crate::parser::Token,
+) -> usize {
     let mut level = 0;
     let mut current = current_token;
 
@@ -195,7 +199,10 @@ impl Rule for MD004 {
                 // Check if the item matches expected style
                 if item_style != expected_style {
                     // Find the column where the marker appears
-                    let marker_pos = line.chars().position(|c| matches!(c, '*' | '-' | '+')).unwrap_or(0);
+                    let marker_pos = line
+                        .chars()
+                        .position(|c| matches!(c, '*' | '-' | '+'))
+                        .unwrap_or(0);
                     let column = marker_pos + 1;
 
                     errors.push(LintError {
@@ -340,15 +347,9 @@ mod tests {
             serde_json::Value::String("dash".to_string()),
         );
 
-        let tokens = vec![
-            create_list_item_token(1),
-            create_list_item_token(2),
-        ];
+        let tokens = vec![create_list_item_token(1), create_list_item_token(2)];
 
-        let lines = vec![
-            "* Item 1\n".to_string(),
-            "- Item 2\n".to_string(),
-        ];
+        let lines = vec!["* Item 1\n".to_string(), "- Item 2\n".to_string()];
 
         let params = RuleParams {
             name: "test.md",
@@ -375,15 +376,9 @@ mod tests {
             serde_json::Value::String("asterisk".to_string()),
         );
 
-        let tokens = vec![
-            create_list_item_token(1),
-            create_list_item_token(2),
-        ];
+        let tokens = vec![create_list_item_token(1), create_list_item_token(2)];
 
-        let lines = vec![
-            "- Item 1\n".to_string(),
-            "- Item 2\n".to_string(),
-        ];
+        let lines = vec!["- Item 1\n".to_string(), "- Item 2\n".to_string()];
 
         let params = RuleParams {
             name: "test.md",
@@ -408,15 +403,9 @@ mod tests {
             serde_json::Value::String("plus".to_string()),
         );
 
-        let tokens = vec![
-            create_list_item_token(1),
-            create_list_item_token(2),
-        ];
+        let tokens = vec![create_list_item_token(1), create_list_item_token(2)];
 
-        let lines = vec![
-            "+ Item 1\n".to_string(),
-            "+ Item 2\n".to_string(),
-        ];
+        let lines = vec!["+ Item 1\n".to_string(), "+ Item 2\n".to_string()];
 
         let params = RuleParams {
             name: "test.md",

@@ -32,7 +32,12 @@ impl LintResults {
     pub fn error_count(&self) -> usize {
         self.results
             .values()
-            .map(|errors| errors.iter().filter(|e| e.severity == crate::types::Severity::Error).count())
+            .map(|errors| {
+                errors
+                    .iter()
+                    .filter(|e| e.severity == crate::types::Severity::Error)
+                    .count()
+            })
             .sum()
     }
 
@@ -40,7 +45,12 @@ impl LintResults {
     pub fn warning_count(&self) -> usize {
         self.results
             .values()
-            .map(|errors| errors.iter().filter(|e| e.severity == crate::types::Severity::Warning).count())
+            .map(|errors| {
+                errors
+                    .iter()
+                    .filter(|e| e.severity == crate::types::Severity::Warning)
+                    .count()
+            })
             .sum()
     }
 

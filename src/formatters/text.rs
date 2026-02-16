@@ -20,8 +20,7 @@ pub fn format_text_with_context(
 
     for file in &files {
         if let Some(errors) = results.results.get(*file) {
-            let source_lines: Option<Vec<&str>> =
-                sources.get(*file).map(|s| s.lines().collect());
+            let source_lines: Option<Vec<&str>> = sources.get(*file).map(|s| s.lines().collect());
 
             for error in errors {
                 let rule_moniker = error.rule_names.join("/");
@@ -44,9 +43,10 @@ pub fn format_text_with_context(
                 }
 
                 if let Some(context) = &error.error_context {
-                    line.push_str(
-                        &format!(" {}", format!("[Context: \"{}\"]", context).dimmed()),
-                    );
+                    line.push_str(&format!(
+                        " {}",
+                        format!("[Context: \"{}\"]", context).dimmed()
+                    ));
                 }
 
                 output.push(line);

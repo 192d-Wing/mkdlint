@@ -69,7 +69,11 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(lines: &'a [String], tokens: &'a [crate::parser::Token], config: &'a HashMap<String, serde_json::Value>) -> crate::types::RuleParams<'a> {
+    fn make_params<'a>(
+        lines: &'a [String],
+        tokens: &'a [crate::parser::Token],
+        config: &'a HashMap<String, serde_json::Value>,
+    ) -> crate::types::RuleParams<'a> {
         crate::types::RuleParams {
             name: "test.md",
             version: "0.1.0",

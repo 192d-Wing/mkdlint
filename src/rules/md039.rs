@@ -1,12 +1,10 @@
 //! MD039 - Spaces inside link text
 
 use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 
-static LINK_SPACE_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[( +[^\]]+?[^ \]]+ +)\]").unwrap()
-});
+static LINK_SPACE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[( +[^\]]+?[^ \]]+ +)\]").unwrap());
 
 pub struct MD039;
 
@@ -71,7 +69,11 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(lines: &'a [String], tokens: &'a [crate::parser::Token], config: &'a HashMap<String, serde_json::Value>) -> crate::types::RuleParams<'a> {
+    fn make_params<'a>(
+        lines: &'a [String],
+        tokens: &'a [crate::parser::Token],
+        config: &'a HashMap<String, serde_json::Value>,
+    ) -> crate::types::RuleParams<'a> {
         crate::types::RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -115,7 +117,10 @@ mod tests {
         let rule = MD039;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-        let fix = errors[0].fix_info.as_ref().expect("fix_info should be present");
+        let fix = errors[0]
+            .fix_info
+            .as_ref()
+            .expect("fix_info should be present");
         assert_eq!(fix.line_number, None);
         // match starts at byte offset 0 => 1-based column 1
         assert_eq!(fix.edit_column, Some(1));
@@ -135,7 +140,10 @@ mod tests {
         let rule = MD039;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-        let fix = errors[0].fix_info.as_ref().expect("fix_info should be present");
+        let fix = errors[0]
+            .fix_info
+            .as_ref()
+            .expect("fix_info should be present");
         assert_eq!(fix.line_number, None);
         assert_eq!(fix.edit_column, Some(5));
         assert_eq!(fix.delete_count, Some(11));

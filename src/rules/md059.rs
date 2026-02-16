@@ -1,13 +1,11 @@
 //! MD059 - Emphasis marker style in math
 
 use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 
 // Pattern to detect emphasis-style underscores: _text_ within math
-static EMPHASIS_UNDERSCORE_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"_[^_]+_").unwrap()
-});
+static EMPHASIS_UNDERSCORE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"_[^_]+_").unwrap());
 
 pub struct MD059;
 
@@ -52,7 +50,9 @@ impl Rule for MD059 {
                             line_number: display_math_start_line,
                             rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                             rule_description: self.description().to_string(),
-                            error_detail: Some("Emphasis-style underscore found in display math".to_string()),
+                            error_detail: Some(
+                                "Emphasis-style underscore found in display math".to_string(),
+                            ),
                             error_context: Some(display_math_content.trim().to_string()),
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: None,
@@ -89,7 +89,12 @@ impl Rule for MD059 {
 
 impl MD059 {
     /// Check for emphasis underscores in single-line $$...$$ math
-    fn check_inline_display_math(&self, line: &str, line_number: usize, errors: &mut Vec<LintError>) {
+    fn check_inline_display_math(
+        &self,
+        line: &str,
+        line_number: usize,
+        errors: &mut Vec<LintError>,
+    ) {
         // Find $$...$$ spans that are on a single line (not standalone $$)
         let mut search_start = 0;
         while let Some(start) = line[search_start..].find("$$") {
@@ -106,7 +111,9 @@ impl MD059 {
                         line_number,
                         rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                         rule_description: self.description().to_string(),
-                        error_detail: Some("Emphasis-style underscore found in display math".to_string()),
+                        error_detail: Some(
+                            "Emphasis-style underscore found in display math".to_string(),
+                        ),
                         error_context: Some(format!("$${}$$", math_content)),
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: Some((abs_start + 1, abs_end + 2 - abs_start)),
@@ -154,7 +161,9 @@ impl MD059 {
                             line_number,
                             rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                             rule_description: self.description().to_string(),
-                            error_detail: Some("Emphasis-style underscore found in math".to_string()),
+                            error_detail: Some(
+                                "Emphasis-style underscore found in math".to_string(),
+                            ),
                             error_context: Some(format!("${}$", math_content)),
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: Some((start + 1, i + 1 - start)),
@@ -176,7 +185,10 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(lines: &'a [String], config: &'a HashMap<String, serde_json::Value>) -> RuleParams<'a> {
+    fn make_params<'a>(
+        lines: &'a [String],
+        config: &'a HashMap<String, serde_json::Value>,
+    ) -> RuleParams<'a> {
         RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -189,9 +201,7 @@ mod tests {
 
     #[test]
     fn test_md059_no_emphasis_in_math() {
-        let lines = vec![
-            "$x^2$\n".to_string(),
-        ];
+        let lines = vec!["$x^2$\n".to_string()];
         let config = HashMap::new();
         let params = make_params(&lines, &config);
         let rule = MD059;
@@ -201,9 +211,7 @@ mod tests {
 
     #[test]
     fn test_md059_emphasis_in_math() {
-        let lines = vec![
-            "$_text_$\n".to_string(),
-        ];
+        let lines = vec!["$_text_$\n".to_string()];
         let config = HashMap::new();
         let params = make_params(&lines, &config);
         let rule = MD059;
@@ -211,6 +219,12 @@ mod tests {
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 1);
         assert_eq!(errors[0].severity, Severity::Warning);
-        assert!(errors[0].error_detail.as_ref().unwrap().contains("underscore"));
+        assert!(
+            errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("underscore")
+        );
     }
 }

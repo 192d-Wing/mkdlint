@@ -97,9 +97,10 @@ impl Config {
             for name in &Self::DISCOVERY_NAMES {
                 let candidate = dir.join(name);
                 if candidate.is_file()
-                    && let Ok(config) = Self::from_file(&candidate) {
-                        return Some(config);
-                    }
+                    && let Ok(config) = Self::from_file(&candidate)
+                {
+                    return Some(config);
+                }
             }
             if !dir.pop() {
                 break;
@@ -139,11 +140,10 @@ impl Config {
         match self.get_rule_config(rule_name) {
             Some(RuleConfig::Enabled(enabled)) => *enabled,
             Some(RuleConfig::Severity(_)) => true,
-            Some(RuleConfig::Options(opts)) => {
-                opts.get("enabled")
-                    .and_then(|v| v.as_bool())
-                    .unwrap_or(true)
-            }
+            Some(RuleConfig::Options(opts)) => opts
+                .get("enabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true),
             None => self.default.unwrap_or(true),
         }
     }

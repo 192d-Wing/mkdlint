@@ -141,15 +141,18 @@ mod tests {
 
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 3); // Second blank line
-        assert!(errors[0].error_detail.as_ref().unwrap().contains("Expected: 1; Actual: 3"));
+        assert!(
+            errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("Expected: 1; Actual: 3")
+        );
     }
 
     #[test]
     fn test_md012_no_blank_lines() {
-        let lines = vec![
-            "# Heading\n".to_string(),
-            "Content\n".to_string(),
-        ];
+        let lines = vec!["# Heading\n".to_string(), "Content\n".to_string()];
 
         let params = RuleParams {
             name: "test.md",

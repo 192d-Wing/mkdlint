@@ -110,9 +110,7 @@ mod tests {
     #[test]
     fn test_md055_inconsistent_pipe_style() {
         let rule = MD055;
-        let lines: Vec<String> = vec![
-            "| Header 1 | Header 2\n".to_string(),
-        ];
+        let lines: Vec<String> = vec!["| Header 1 | Header 2\n".to_string()];
         let tokens = vec![];
         let config = HashMap::new();
         let params = make_params(&lines, &tokens, &config);
@@ -123,9 +121,7 @@ mod tests {
     #[test]
     fn test_md055_trailing_only_pipe() {
         let rule = MD055;
-        let lines: Vec<String> = vec![
-            "Header 1 | Header 2 |\n".to_string(),
-        ];
+        let lines: Vec<String> = vec!["Header 1 | Header 2 |\n".to_string()];
         let tokens = vec![];
         let config = HashMap::new();
         let params = make_params(&lines, &tokens, &config);

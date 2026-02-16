@@ -89,11 +89,7 @@ impl Rule for MD030 {
 
             // Choose expected spaces based on list type and single/multi-line
             let expected_spaces = if ordered {
-                if all_single_line {
-                    ol_single
-                } else {
-                    ol_multi
-                }
+                if all_single_line { ol_single } else { ol_multi }
             } else if all_single_line {
                 ul_single
             } else {
@@ -237,10 +233,10 @@ mod tests {
     fn test_md030_single_space_correct() {
         // - Item (1 space after marker)
         let tokens = vec![
-            create_list_token("listUnordered", 1, 1, vec![1]),       // 0: list
-            create_list_item_token(1, 1, vec![2], Some(0)),          // 1: listItem
+            create_list_token("listUnordered", 1, 1, vec![1]), // 0: list
+            create_list_item_token(1, 1, vec![2], Some(0)),    // 1: listItem
             create_list_item_prefix_token(1, 1, 3, vec![3], Some(1)), // 2: listItemPrefix "- "
-            create_whitespace_token(1, 2, 3, Some(2)),               // 3: whitespace (1 space)
+            create_whitespace_token(1, 2, 3, Some(2)),         // 3: whitespace (1 space)
         ];
 
         let lines = vec!["- Item\n".to_string()];
@@ -263,10 +259,10 @@ mod tests {
     fn test_md030_two_spaces_violation() {
         // -  Item (2 spaces after marker, expected 1)
         let tokens = vec![
-            create_list_token("listUnordered", 1, 1, vec![1]),       // 0: list
-            create_list_item_token(1, 1, vec![2], Some(0)),          // 1: listItem
+            create_list_token("listUnordered", 1, 1, vec![1]), // 0: list
+            create_list_item_token(1, 1, vec![2], Some(0)),    // 1: listItem
             create_list_item_prefix_token(1, 1, 4, vec![3], Some(1)), // 2: listItemPrefix "-  "
-            create_whitespace_token(1, 2, 4, Some(2)),               // 3: whitespace (2 spaces)
+            create_whitespace_token(1, 2, 4, Some(2)),         // 3: whitespace (2 spaces)
         ];
 
         let lines = vec!["-  Item\n".to_string()];
@@ -284,21 +280,23 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 1);
-        assert!(errors[0]
-            .error_detail
-            .as_ref()
-            .unwrap()
-            .contains("Expected: 1; Actual: 2"));
+        assert!(
+            errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("Expected: 1; Actual: 2")
+        );
     }
 
     #[test]
     fn test_md030_ordered_list_single_space() {
         // 1. Item (1 space after marker)
         let tokens = vec![
-            create_list_token("listOrdered", 1, 1, vec![1]),         // 0: list
-            create_list_item_token(1, 1, vec![2], Some(0)),          // 1: listItem
+            create_list_token("listOrdered", 1, 1, vec![1]), // 0: list
+            create_list_item_token(1, 1, vec![2], Some(0)),  // 1: listItem
             create_list_item_prefix_token(1, 1, 4, vec![3], Some(1)), // 2: listItemPrefix "1. "
-            create_whitespace_token(1, 3, 4, Some(2)),               // 3: whitespace (1 space)
+            create_whitespace_token(1, 3, 4, Some(2)),       // 3: whitespace (1 space)
         ];
 
         let lines = vec!["1. Item\n".to_string()];
@@ -321,10 +319,10 @@ mod tests {
     fn test_md030_ordered_list_two_spaces_violation() {
         // 1.  Item (2 spaces after marker, expected 1)
         let tokens = vec![
-            create_list_token("listOrdered", 1, 1, vec![1]),         // 0: list
-            create_list_item_token(1, 1, vec![2], Some(0)),          // 1: listItem
+            create_list_token("listOrdered", 1, 1, vec![1]), // 0: list
+            create_list_item_token(1, 1, vec![2], Some(0)),  // 1: listItem
             create_list_item_prefix_token(1, 1, 5, vec![3], Some(1)), // 2: listItemPrefix "1.  "
-            create_whitespace_token(1, 3, 5, Some(2)),               // 3: whitespace (2 spaces)
+            create_whitespace_token(1, 3, 5, Some(2)),       // 3: whitespace (2 spaces)
         ];
 
         let lines = vec!["1.  Item\n".to_string()];
@@ -342,24 +340,26 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 1);
-        assert!(errors[0]
-            .error_detail
-            .as_ref()
-            .unwrap()
-            .contains("Expected: 1; Actual: 2"));
+        assert!(
+            errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("Expected: 1; Actual: 2")
+        );
     }
 
     #[test]
     fn test_md030_multi_line_config() {
         // Multi-line list with ul_multi = 3
         let tokens = vec![
-            create_list_token("listUnordered", 1, 3, vec![1, 4]),     // 0: list
-            create_list_item_token(1, 2, vec![2], Some(0)),           // 1: listItem
+            create_list_token("listUnordered", 1, 3, vec![1, 4]), // 0: list
+            create_list_item_token(1, 2, vec![2], Some(0)),       // 1: listItem
             create_list_item_prefix_token(1, 1, 5, vec![3], Some(1)), // 2: listItemPrefix "-   "
-            create_whitespace_token(1, 2, 5, Some(2)),                // 3: whitespace (3 spaces)
-            create_list_item_token(3, 3, vec![5], Some(0)),           // 4: listItem
+            create_whitespace_token(1, 2, 5, Some(2)),            // 3: whitespace (3 spaces)
+            create_list_item_token(3, 3, vec![5], Some(0)),       // 4: listItem
             create_list_item_prefix_token(3, 1, 5, vec![6], Some(4)), // 5: listItemPrefix "-   "
-            create_whitespace_token(3, 2, 5, Some(5)),                // 6: whitespace (3 spaces)
+            create_whitespace_token(3, 2, 5, Some(5)),            // 6: whitespace (3 spaces)
         ];
 
         let lines = vec![

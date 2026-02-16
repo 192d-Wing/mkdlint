@@ -14,7 +14,11 @@ fn parse_heading(line: &str) -> Option<(usize, String)> {
     if level > 6 {
         return None;
     }
-    let text = trimmed[level..].trim().trim_end_matches('#').trim().to_string();
+    let text = trimmed[level..]
+        .trim()
+        .trim_end_matches('#')
+        .trim()
+        .to_string();
     Some((level, text))
 }
 
@@ -67,7 +71,8 @@ impl Rule for MD043 {
         // Get required headings from config
         let required = match params.config.get("headings") {
             Some(val) => match val.as_array() {
-                Some(arr) => arr.iter()
+                Some(arr) => arr
+                    .iter()
                     .filter_map(|v| v.as_str().map(|s| s.to_string()))
                     .collect::<Vec<_>>(),
                 None => return vec![],
@@ -124,7 +129,12 @@ impl Rule for MD043 {
                     line_number: line_num,
                     rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                     rule_description: self.description().to_string(),
-                    error_detail: Some(format!("Expected: {}; Actual: {} {}", expected, "#".repeat(level), text)),
+                    error_detail: Some(format!(
+                        "Expected: {}; Actual: {} {}",
+                        expected,
+                        "#".repeat(level),
+                        text
+                    )),
                     error_context: None,
                     rule_information: self.information().map(|s| s.to_string()),
                     error_range: None,
@@ -193,7 +203,10 @@ mod tests {
             "## Section\n".to_string(),
         ];
         let mut config = HashMap::new();
-        config.insert("headings".to_string(), serde_json::json!(["# Title", "## Section"]));
+        config.insert(
+            "headings".to_string(),
+            serde_json::json!(["# Title", "## Section"]),
+        );
         let params = make_params(&lines, &config);
         assert_eq!(rule.lint(&params).len(), 0);
     }
@@ -201,15 +214,22 @@ mod tests {
     #[test]
     fn test_md043_missing_heading() {
         let rule = MD043;
-        let lines = vec![
-            "# Title\n".to_string(),
-        ];
+        let lines = vec!["# Title\n".to_string()];
         let mut config = HashMap::new();
-        config.insert("headings".to_string(), serde_json::json!(["# Title", "## Section"]));
+        config.insert(
+            "headings".to_string(),
+            serde_json::json!(["# Title", "## Section"]),
+        );
         let params = make_params(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-        assert!(errors[0].error_detail.as_ref().unwrap().contains("Expected"));
+        assert!(
+            errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("Expected")
+        );
     }
 
     #[test]
@@ -260,9 +280,7 @@ mod tests {
     #[test]
     fn test_md043_wrong_level() {
         let rule = MD043;
-        let lines = vec![
-            "## Not Title\n".to_string(),
-        ];
+        let lines = vec!["## Not Title\n".to_string()];
         let mut config = HashMap::new();
         config.insert("headings".to_string(), serde_json::json!(["# Title"]));
         let params = make_params(&lines, &config);

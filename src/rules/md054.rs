@@ -1,43 +1,29 @@
 //! MD054 - Link and image style
 
 use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
-use regex::Regex;
 use once_cell::sync::Lazy;
+use regex::Regex;
 
 // Inline link: [text](url)
-static INLINE_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([^\]]*)\]\(([^)]*)\)").unwrap()
-});
+static INLINE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\(([^)]*)\)").unwrap());
 
 // Full reference link: [text][label]
-static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").unwrap()
-});
+static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").unwrap());
 
 // Collapsed reference link: [text][]
-static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([^\]]+)\]\[\]").unwrap()
-});
+static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").unwrap());
 
 // Shortcut reference link: [text] not followed by ( or [
-static SHORTCUT_REF_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"\[([^\]]+)\](?:[^(\[])").unwrap()
-});
+static SHORTCUT_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\](?:[^(\[])").unwrap());
 
 // Autolink: <http://...> or <https://...>
-static AUTOLINK_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"<(https?://[^>]+)>").unwrap()
-});
+static AUTOLINK_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"<(https?://[^>]+)>").unwrap());
 
 // Inline code span regex for stripping
-static INLINE_CODE_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"`[^`]+`").unwrap()
-});
+static INLINE_CODE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"`[^`]+`").unwrap());
 
 // Code fence opening/closing
-static CODE_FENCE_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^(`{3,}|~{3,})").unwrap()
-});
+static CODE_FENCE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(`{3,}|~{3,})").unwrap());
 
 pub struct MD054;
 
@@ -66,19 +52,29 @@ impl Rule for MD054 {
         let mut errors = Vec::new();
 
         // Read config for allowed styles (all default to true)
-        let allow_autolink = params.config.get("autolink")
+        let allow_autolink = params
+            .config
+            .get("autolink")
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
-        let allow_inline = params.config.get("inline")
+        let allow_inline = params
+            .config
+            .get("inline")
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
-        let allow_full = params.config.get("full")
+        let allow_full = params
+            .config
+            .get("full")
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
-        let allow_collapsed = params.config.get("collapsed")
+        let allow_collapsed = params
+            .config
+            .get("collapsed")
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
-        let allow_shortcut = params.config.get("shortcut")
+        let allow_shortcut = params
+            .config
+            .get("shortcut")
             .and_then(|v| v.as_bool())
             .unwrap_or(true);
 
@@ -182,7 +178,9 @@ impl Rule for MD054 {
                             line_number,
                             rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                             rule_description: self.description().to_string(),
-                            error_detail: Some("Collapsed reference style is not allowed".to_string()),
+                            error_detail: Some(
+                                "Collapsed reference style is not allowed".to_string(),
+                            ),
                             error_context: Some(mat.as_str().to_string()),
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: Some((mat.start() + 1, mat.len())),
@@ -234,7 +232,9 @@ impl Rule for MD054 {
                             line_number,
                             rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                             rule_description: self.description().to_string(),
-                            error_detail: Some("Shortcut reference style is not allowed".to_string()),
+                            error_detail: Some(
+                                "Shortcut reference style is not allowed".to_string(),
+                            ),
                             error_context: Some(mat.as_str().to_string()),
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: Some((mat.start() + 1, mat.len())),
@@ -260,7 +260,10 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(lines: &'a [String], config: &'a HashMap<String, serde_json::Value>) -> RuleParams<'a> {
+    fn make_params<'a>(
+        lines: &'a [String],
+        config: &'a HashMap<String, serde_json::Value>,
+    ) -> RuleParams<'a> {
         RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -289,9 +292,7 @@ mod tests {
 
     #[test]
     fn test_md054_inline_only() {
-        let lines = vec![
-            "[full ref][label]\n".to_string(),
-        ];
+        let lines = vec!["[full ref][label]\n".to_string()];
         let mut config = HashMap::new();
         config.insert("full".to_string(), serde_json::Value::Bool(false));
         let params = make_params(&lines, &config);
@@ -299,14 +300,18 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 1);
-        assert!(errors[0].error_detail.as_ref().unwrap().contains("Full reference"));
+        assert!(
+            errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("Full reference")
+        );
     }
 
     #[test]
     fn test_md054_autolink_disabled() {
-        let lines = vec![
-            "<https://example.com>\n".to_string(),
-        ];
+        let lines = vec!["<https://example.com>\n".to_string()];
         let mut config = HashMap::new();
         config.insert("autolink".to_string(), serde_json::Value::Bool(false));
         let params = make_params(&lines, &config);
@@ -314,6 +319,12 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 1);
-        assert!(errors[0].error_detail.as_ref().unwrap().contains("Autolink"));
+        assert!(
+            errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("Autolink")
+        );
     }
 }

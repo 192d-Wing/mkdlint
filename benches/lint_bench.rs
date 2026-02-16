@@ -1,10 +1,11 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use std::hint::black_box;
-use mkdlint::{lint_sync, apply_fixes, Config, LintOptions};
+use criterion::{Criterion, criterion_group, criterion_main};
+use mkdlint::{Config, LintOptions, apply_fixes, lint_sync};
 use std::collections::HashMap;
+use std::hint::black_box;
 
 fn generate_small_md() -> String {
-    "# Title\n\nSome text here.\n\n## Section\n\nMore text.\n\n### Subsection\n\nFinal text.\n".to_string()
+    "# Title\n\nSome text here.\n\n## Section\n\nMore text.\n\n### Subsection\n\nFinal text.\n"
+        .to_string()
 }
 
 fn generate_large_md() -> String {
@@ -100,18 +101,14 @@ fn bench_apply_fixes(c: &mut Criterion) {
     let errors = results.get("bench.md").unwrap();
 
     c.bench_function("apply_fixes", |b| {
-        b.iter(|| {
-            black_box(apply_fixes(&content, errors))
-        })
+        b.iter(|| black_box(apply_fixes(&content, errors)))
     });
 }
 
 fn bench_parser_only(c: &mut Criterion) {
     let content = generate_large_md();
     c.bench_function("parser_only", |b| {
-        b.iter(|| {
-            black_box(mkdlint::parser::parse(&content))
-        })
+        b.iter(|| black_box(mkdlint::parser::parse(&content)))
     });
 }
 
@@ -132,9 +129,7 @@ fn bench_config_load_json(c: &mut Criterion) {
     std::fs::write(&config_path, config_json).unwrap();
 
     c.bench_function("config_load_json", |b| {
-        b.iter(|| {
-            black_box(Config::from_file(&config_path).unwrap())
-        })
+        b.iter(|| black_box(Config::from_file(&config_path).unwrap()))
     });
 }
 

@@ -65,7 +65,11 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(lines: &'a [String], tokens: &'a [crate::parser::Token], config: &'a HashMap<String, serde_json::Value>) -> crate::types::RuleParams<'a> {
+    fn make_params<'a>(
+        lines: &'a [String],
+        tokens: &'a [crate::parser::Token],
+        config: &'a HashMap<String, serde_json::Value>,
+    ) -> crate::types::RuleParams<'a> {
         crate::types::RuleParams {
             name: "test.md",
             version: "0.1.0",
@@ -119,7 +123,10 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
 
-        let fix = errors[0].fix_info.as_ref().expect("fix_info should be present");
+        let fix = errors[0]
+            .fix_info
+            .as_ref()
+            .expect("fix_info should be present");
         assert_eq!(fix.line_number, None);
         assert_eq!(fix.edit_column, Some(1));
         assert_eq!(fix.delete_count, Some(2)); // 2 leading spaces
@@ -136,7 +143,10 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
 
-        let fix = errors[0].fix_info.as_ref().expect("fix_info should be present");
+        let fix = errors[0]
+            .fix_info
+            .as_ref()
+            .expect("fix_info should be present");
         assert_eq!(fix.line_number, None);
         assert_eq!(fix.edit_column, Some(1));
         assert_eq!(fix.delete_count, Some(1)); // 1 leading tab
@@ -153,7 +163,10 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
 
-        let fix = errors[0].fix_info.as_ref().expect("fix_info should be present");
+        let fix = errors[0]
+            .fix_info
+            .as_ref()
+            .expect("fix_info should be present");
         assert_eq!(fix.line_number, None);
         assert_eq!(fix.edit_column, Some(1));
         assert_eq!(fix.delete_count, Some(4)); // 4 leading whitespace chars

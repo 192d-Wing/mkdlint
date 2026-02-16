@@ -118,9 +118,7 @@ mod tests {
     #[test]
     fn test_md056_single_row_table() {
         let rule = MD056;
-        let lines: Vec<String> = vec![
-            "| Header 1 | Header 2 |\n".to_string(),
-        ];
+        let lines: Vec<String> = vec!["| Header 1 | Header 2 |\n".to_string()];
         let tokens = vec![];
         let config = HashMap::new();
         let params = make_params(&lines, &tokens, &config);

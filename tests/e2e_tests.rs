@@ -32,27 +32,39 @@ fn run_mkdlint(args: &[&str]) -> (i32, String, String) {
 fn test_cli_version() {
     let (code, stdout, _stderr) = run_mkdlint(&["--version"]);
     assert_eq!(code, 0, "--version should exit 0");
-    assert!(stdout.contains("0."), "Version output should contain version number");
+    assert!(
+        stdout.contains("0."),
+        "Version output should contain version number"
+    );
 }
 
 #[test]
 fn test_cli_help() {
     let (code, stdout, _stderr) = run_mkdlint(&["--help"]);
     assert_eq!(code, 0, "--help should exit 0");
-    assert!(stdout.contains("lint") || stdout.contains("Markdown") || stdout.contains("mkdlint"),
-        "Help output should mention linting or markdown");
+    assert!(
+        stdout.contains("lint") || stdout.contains("Markdown") || stdout.contains("mkdlint"),
+        "Help output should mention linting or markdown"
+    );
 }
 
 #[test]
 fn test_cli_clean_file() {
     let dir = tempfile::tempdir().unwrap();
     let file_path = dir.path().join("clean.md");
-    std::fs::write(&file_path, "# Title\n\nA paragraph with normal text.\n\n## Section\n\nAnother paragraph.\n").unwrap();
+    std::fs::write(
+        &file_path,
+        "# Title\n\nA paragraph with normal text.\n\n## Section\n\nAnother paragraph.\n",
+    )
+    .unwrap();
 
     let (code, stdout, _stderr) = run_mkdlint(&[file_path.to_str().unwrap()]);
     // Clean file should exit 0 with "No errors found" or similar
     // Note: some rules might still fire, so we just check it doesn't crash
-    assert!(code == 0 || code == 1, "Exit code should be 0 (clean) or 1 (violations)");
+    assert!(
+        code == 0 || code == 1,
+        "Exit code should be 0 (clean) or 1 (violations)"
+    );
     let _ = stdout;
 }
 
@@ -61,7 +73,11 @@ fn test_cli_violation_file() {
     let dir = tempfile::tempdir().unwrap();
     let file_path = dir.path().join("bad.md");
     // This triggers MD001 (skipped heading level) and MD009 (trailing spaces)
-    std::fs::write(&file_path, "# Heading 1\n\n### Heading 3\n\nTrailing spaces   \n").unwrap();
+    std::fs::write(
+        &file_path,
+        "# Heading 1\n\n### Heading 3\n\nTrailing spaces   \n",
+    )
+    .unwrap();
 
     let (code, stdout, _stderr) = run_mkdlint(&[file_path.to_str().unwrap()]);
     assert_eq!(code, 1, "File with violations should exit 1");
@@ -79,11 +95,18 @@ fn test_cli_with_config() {
     std::fs::write(&file_path, "# H1\n### H3\ntrailing   \n").unwrap();
 
     let (code, stdout, _stderr) = run_mkdlint(&[
-        "--config", config_path.to_str().unwrap(),
+        "--config",
+        config_path.to_str().unwrap(),
         file_path.to_str().unwrap(),
     ]);
-    assert_eq!(code, 0, "All rules disabled via config should produce exit 0");
-    assert!(stdout.contains("No errors"), "Should report no errors when all rules disabled");
+    assert_eq!(
+        code, 0,
+        "All rules disabled via config should produce exit 0"
+    );
+    assert!(
+        stdout.contains("No errors"),
+        "Should report no errors when all rules disabled"
+    );
 }
 
 #[test]
@@ -95,10 +118,7 @@ fn test_cli_multiple_files() {
     std::fs::write(&file1, "# File A\n\nContent.\n").unwrap();
     std::fs::write(&file2, "# File B\n\nContent.\n").unwrap();
 
-    let (code, _stdout, _stderr) = run_mkdlint(&[
-        file1.to_str().unwrap(),
-        file2.to_str().unwrap(),
-    ]);
+    let (code, _stdout, _stderr) = run_mkdlint(&[file1.to_str().unwrap(), file2.to_str().unwrap()]);
     // Should process both files without crashing
     assert!(code == 0 || code == 1, "Should exit cleanly with 0 or 1");
 }
@@ -107,7 +127,10 @@ fn test_cli_multiple_files() {
 fn test_cli_nonexistent_file() {
     let (code, _stdout, stderr) = run_mkdlint(&["/tmp/this_file_does_not_exist_99999.md"]);
     assert_ne!(code, 0, "Nonexistent file should produce non-zero exit");
-    assert!(!stderr.is_empty() || !_stdout.is_empty(), "Should output an error message");
+    assert!(
+        !stderr.is_empty() || !_stdout.is_empty(),
+        "Should output an error message"
+    );
 }
 
 #[test]
@@ -120,8 +143,14 @@ fn test_cli_output_format() {
     let (code, stdout, _stderr) = run_mkdlint(&[file_path.to_str().unwrap()]);
     if code == 1 {
         // Output should contain the filename and a rule identifier
-        assert!(stdout.contains("format_test.md"), "Output should contain the filename");
-        assert!(stdout.contains("MD"), "Output should contain a rule ID like MD009");
+        assert!(
+            stdout.contains("format_test.md"),
+            "Output should contain the filename"
+        );
+        assert!(
+            stdout.contains("MD"),
+            "Output should contain a rule ID like MD009"
+        );
     }
 }
 
@@ -135,7 +164,11 @@ fn fixture_path(name: &str) -> String {
 #[test]
 fn test_fixture_clean_file_exits_zero() {
     let (code, stdout, _) = run_mkdlint(&[&fixture_path("clean.md")]);
-    assert_eq!(code, 0, "Clean fixture should produce exit 0. Output: {}", stdout);
+    assert_eq!(
+        code, 0,
+        "Clean fixture should produce exit 0. Output: {}",
+        stdout
+    );
     assert!(
         stdout.contains("No errors"),
         "Clean fixture should report no errors. Output: {}",
@@ -147,15 +180,24 @@ fn test_fixture_clean_file_exits_zero() {
 fn test_fixture_heading_errors_detected() {
     let (code, stdout, _) = run_mkdlint(&["--no-color", &fixture_path("heading_errors.md")]);
     assert_eq!(code, 1, "heading_errors.md should produce exit 1");
-    assert!(stdout.contains("MD022"), "Should detect MD022 (blank lines around headings)");
-    assert!(stdout.contains("MD025"), "Should detect MD025 (multiple H1)");
+    assert!(
+        stdout.contains("MD022"),
+        "Should detect MD022 (blank lines around headings)"
+    );
+    assert!(
+        stdout.contains("MD025"),
+        "Should detect MD025 (multiple H1)"
+    );
 }
 
 #[test]
 fn test_fixture_whitespace_errors_detected() {
     let (code, stdout, _) = run_mkdlint(&["--no-color", &fixture_path("whitespace_errors.md")]);
     assert_eq!(code, 1, "whitespace_errors.md should produce exit 1");
-    assert!(stdout.contains("MD009"), "Should detect MD009 (trailing spaces)");
+    assert!(
+        stdout.contains("MD009"),
+        "Should detect MD009 (trailing spaces)"
+    );
     assert!(stdout.contains("MD010"), "Should detect MD010 (hard tabs)");
 }
 
@@ -164,7 +206,10 @@ fn test_fixture_link_errors_detected() {
     let (code, stdout, _) = run_mkdlint(&["--no-color", &fixture_path("link_errors.md")]);
     assert_eq!(code, 1, "link_errors.md should produce exit 1");
     assert!(stdout.contains("MD034"), "Should detect MD034 (bare URLs)");
-    assert!(stdout.contains("MD042"), "Should detect MD042 (empty links)");
+    assert!(
+        stdout.contains("MD042"),
+        "Should detect MD042 (empty links)"
+    );
 }
 
 #[test]
@@ -173,7 +218,10 @@ fn test_fixture_emphasis_errors_detected() {
     assert_eq!(code, 1, "emphasis_errors.md should produce exit 1");
     // MD049/MD050 enforce consistent emphasis/strong style
     assert!(
-        stdout.contains("MD049") || stdout.contains("MD050") || stdout.contains("MD037") || stdout.contains("MD038"),
+        stdout.contains("MD049")
+            || stdout.contains("MD050")
+            || stdout.contains("MD037")
+            || stdout.contains("MD038"),
         "Should detect emphasis-related errors. Output: {}",
         stdout,
     );
@@ -182,25 +230,35 @@ fn test_fixture_emphasis_errors_detected() {
 #[test]
 fn test_fixture_json_output_format() {
     let (code, stdout, _) = run_mkdlint(&[
-        "--output-format", "json",
+        "--output-format",
+        "json",
         &fixture_path("whitespace_errors.md"),
     ]);
     assert_eq!(code, 1, "Should exit 1 with violations");
     // Verify it's valid JSON
-    let parsed: serde_json::Value = serde_json::from_str(&stdout)
-        .unwrap_or_else(|e| panic!("JSON output should be valid JSON: {}\nOutput: {}", e, stdout));
+    let parsed: serde_json::Value = serde_json::from_str(&stdout).unwrap_or_else(|e| {
+        panic!(
+            "JSON output should be valid JSON: {}\nOutput: {}",
+            e, stdout
+        )
+    });
     assert!(parsed.is_object(), "JSON root should be an object");
 }
 
 #[test]
 fn test_fixture_sarif_output_format() {
     let (code, stdout, _) = run_mkdlint(&[
-        "--output-format", "sarif",
+        "--output-format",
+        "sarif",
         &fixture_path("whitespace_errors.md"),
     ]);
     assert_eq!(code, 1, "Should exit 1 with violations");
-    let parsed: serde_json::Value = serde_json::from_str(&stdout)
-        .unwrap_or_else(|e| panic!("SARIF output should be valid JSON: {}\nOutput: {}", e, stdout));
+    let parsed: serde_json::Value = serde_json::from_str(&stdout).unwrap_or_else(|e| {
+        panic!(
+            "SARIF output should be valid JSON: {}\nOutput: {}",
+            e, stdout
+        )
+    });
     assert_eq!(
         parsed["$schema"].as_str().unwrap_or(""),
         "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json",
@@ -261,10 +319,7 @@ fn test_fixture_ignore_pattern() {
     std::fs::write(dir.path().join("bad.md"), "# Title\n\nTrailing   \n").unwrap();
 
     // Ignore bad.md
-    let (_code, stdout, _) = run_mkdlint(&[
-        "--ignore", "**/bad.md",
-        dir.path().to_str().unwrap(),
-    ]);
+    let (_code, stdout, _) = run_mkdlint(&["--ignore", "**/bad.md", dir.path().to_str().unwrap()]);
     // Only good.md should be linted
     assert!(!stdout.contains("bad.md"), "bad.md should be ignored");
 }
