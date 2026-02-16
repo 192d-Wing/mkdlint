@@ -1,10 +1,9 @@
 ---
 source: tests/snapshot_tests.rs
-assertion_line: 78
 expression: output
 ---
 test.md:3: MD011/no-reversed-links Reversed link syntax [Context: "(text)[http://example.com]"] (col 16, len 26) [fixable]
 test.md:3: MD034/no-bare-urls Bare URL used [Context: "http://example.com]"] (col 23, len 19) [fixable]
 test.md:5: MD034/no-bare-urls Bare URL used [Context: "http://example.com"] (col 11, len 18) [fixable]
-test.md:7: MD042/no-empty-links No empty links [Context: "[click here]()"] (col 13, len 14)
+test.md:7: MD042/no-empty-links No empty links [Context: "[click here]()"] (col 13, len 14) [fixable]
 test.md:9: MD039/no-space-in-links Spaces inside link text [Context: "[ link text ]"] (col 19, len 13) [fixable]
