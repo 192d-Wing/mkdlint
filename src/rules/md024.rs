@@ -1,8 +1,7 @@
 //! MD024 - Multiple headings with the same content
 
 use crate::parser::TokenExt;
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
-use std::collections::HashSet;
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 
 pub struct MD024;
 
@@ -16,7 +15,7 @@ impl Rule for MD024 {
     }
 
     fn tags(&self) -> &[&'static str] {
-        &["headings", "headers"]
+        &["headings", "headers", "fixable"]
     }
 
     fn parser_type(&self) -> ParserType {
@@ -29,28 +28,55 @@ impl Rule for MD024 {
 
     fn lint(&self, params: &RuleParams) -> Vec<LintError> {
         let mut errors = Vec::new();
-        let mut seen_headings = HashSet::new();
+        let mut heading_counts: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::new();
         let headings = params.tokens.filter_by_type("heading");
 
         for heading in headings {
             let normalized = heading.text.trim();
 
-            if !normalized.is_empty() && seen_headings.contains(normalized) {
-                errors.push(LintError {
-                    line_number: heading.start_line,
-                    rule_names: self.names().iter().map(|s| s.to_string()).collect(),
-                    rule_description: self.description().to_string(),
-                    error_detail: None,
-                    error_context: Some(normalized.to_string()),
-                    rule_information: self.information().map(|s| s.to_string()),
-                    error_range: None,
-                    fix_info: None,
-                    suggestion: Some("Use unique content for each heading".to_string()),
-                    severity: Severity::Error,
-                });
-            }
+            if !normalized.is_empty() {
+                let count = heading_counts.entry(normalized.to_string()).or_insert(0);
+                *count += 1;
 
-            seen_headings.insert(normalized.to_string());
+                // If this is a duplicate (count > 1), report error with fix
+                if *count > 1 {
+                    let line_number = heading.start_line;
+                    let line = &params.lines[line_number - 1];
+
+                    // Find the heading text in the line
+                    let heading_start = line.find(normalized);
+                    if let Some(start_pos) = heading_start {
+                        // Calculate fix: append " (N)" to the heading
+                        let new_text = format!("{} ({})", normalized, count);
+                        let edit_column = start_pos + normalized.len() + 1; // 1-based
+
+                        errors.push(LintError {
+                            line_number,
+                            rule_names: self.names().iter().map(|s| s.to_string()).collect(),
+                            rule_description: self.description().to_string(),
+                            error_detail: Some(format!(
+                                "Duplicate heading: '{}' (occurrence #{})",
+                                normalized, count
+                            )),
+                            error_context: Some(normalized.to_string()),
+                            rule_information: self.information().map(|s| s.to_string()),
+                            error_range: None,
+                            fix_info: Some(FixInfo {
+                                line_number: None,
+                                edit_column: Some(edit_column),
+                                delete_count: None,
+                                insert_text: Some(format!(" ({})", count)),
+                            }),
+                            suggestion: Some(format!(
+                                "Disambiguate by appending a number: '{}'",
+                                new_text
+                            )),
+                            severity: Severity::Error,
+                        });
+                    }
+                }
+            }
         }
 
         errors
@@ -184,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn test_md024_no_fix_info() {
+    fn test_md024_fix_info() {
         let tokens = vec![make_heading(1, "Title", 1), make_heading(3, "Title", 2)];
         let lines = vec![
             "# Title\n".to_string(),
@@ -201,9 +227,70 @@ mod tests {
         };
 
         let errors = MD024.lint(&params);
-        assert!(
-            errors[0].fix_info.is_none(),
-            "MD024 should not have fix_info"
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        assert_eq!(fix.insert_text, Some(" (2)".to_string()));
+        assert_eq!(fix.delete_count, None);
+    }
+
+    #[test]
+    fn test_md024_fix_multiple_duplicates() {
+        let tokens = vec![
+            make_heading(1, "FAQ", 2),
+            make_heading(3, "FAQ", 2),
+            make_heading(5, "FAQ", 2),
+        ];
+        let lines = vec![
+            "## FAQ\n".to_string(),
+            "\n".to_string(),
+            "## FAQ\n".to_string(),
+            "\n".to_string(),
+            "## FAQ\n".to_string(),
+        ];
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &tokens,
+            config: &HashMap::new(),
+        };
+
+        let errors = MD024.lint(&params);
+        assert_eq!(errors.len(), 2);
+        // Second occurrence
+        assert_eq!(
+            errors[0].fix_info.as_ref().unwrap().insert_text,
+            Some(" (2)".to_string())
         );
+        // Third occurrence
+        assert_eq!(
+            errors[1].fix_info.as_ref().unwrap().insert_text,
+            Some(" (3)".to_string())
+        );
+    }
+
+    #[test]
+    fn test_md024_fix_column_calculation() {
+        let tokens = vec![make_heading(1, "Setup", 2), make_heading(3, "Setup", 2)];
+        let lines = vec![
+            "## Setup\n".to_string(),
+            "\n".to_string(),
+            "## Setup\n".to_string(),
+        ];
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &tokens,
+            config: &HashMap::new(),
+        };
+
+        let errors = MD024.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        // "## Setup" -> position after "Setup" is column 9 (1-based)
+        assert_eq!(fix.edit_column, Some(9));
     }
 }
