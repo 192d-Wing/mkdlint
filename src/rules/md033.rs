@@ -141,7 +141,7 @@ impl Rule for MD033 {
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: Some(range),
                         fix_info: None,
-                        suggestion: None,
+                        suggestion: Some("Avoid using raw HTML in Markdown".to_string()),
                         severity: Severity::Error,
                     });
                 }

@@ -55,7 +55,7 @@ impl Rule for MD038 {
                         delete_count: Some(full_match.len() as i32),
                         insert_text: Some(corrected),
                     }),
-                    suggestion: None,
+                    suggestion: Some("Remove spaces inside code span markers".to_string()),
                     severity: Severity::Error,
                 });
             }

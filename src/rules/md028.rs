@@ -50,7 +50,7 @@ impl Rule for MD028 {
                             delete_count: Some(-1), // Delete entire line
                             insert_text: None,
                         }),
-                        suggestion: None,
+                        suggestion: Some("Remove blank lines inside blockquote".to_string()),
                         severity: Severity::Error,
                     });
                 }

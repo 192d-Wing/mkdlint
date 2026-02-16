@@ -58,7 +58,9 @@ impl Rule for MD011 {
                         delete_count: Some(mat.len() as i32),
                         insert_text: Some(corrected),
                     }),
-                    suggestion: None,
+                    suggestion: Some(
+                        "Use correct link syntax: [text](url) or [text][ref]".to_string(),
+                    ),
                     severity: Severity::Error,
                 });
             }

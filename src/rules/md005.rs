@@ -72,7 +72,9 @@ impl Rule for MD005 {
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: Some(range),
                             fix_info: None, // No fixInfo; MD007 handles this scenario better
-                            suggestion: None,
+                            suggestion: Some(
+                                "Match list item indentation to previous items".to_string(),
+                            ),
                             severity: Severity::Error,
                         });
                     }
@@ -130,7 +132,9 @@ impl Rule for MD005 {
                                         None
                                     },
                                 }),
-                                suggestion: None,
+                                suggestion: Some(
+                                    "Match list item indentation to previous items".to_string(),
+                                ),
                                 severity: Severity::Error,
                             });
                         }

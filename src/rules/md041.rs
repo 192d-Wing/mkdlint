@@ -86,7 +86,7 @@ impl Rule for MD041 {
                     delete_count: None,
                     insert_text: Some("# Title\n\n".to_string()),
                 }),
-                suggestion: None,
+                suggestion: Some("Add a top-level heading as the first line".to_string()),
                 severity: Severity::Error,
             });
         }

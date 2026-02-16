@@ -168,7 +168,7 @@ impl Rule for MD050 {
                         delete_count: Some(sm.full_match.len() as i32),
                         insert_text: Some(corrected),
                     }),
-                    suggestion: None,
+                    suggestion: Some("Use consistent strong emphasis style".to_string()),
                     severity: Severity::Error,
                 });
             }

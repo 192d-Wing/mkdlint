@@ -138,7 +138,9 @@ impl Rule for MD001 {
                     rule_information: self.information().map(|s| s.to_string()),
                     error_range: None,
                     fix_info,
-                    suggestion: None,
+                    suggestion: Some(
+                        "Heading levels should increment by one level at a time".to_string(),
+                    ),
                     severity: Severity::Error,
                 });
             }

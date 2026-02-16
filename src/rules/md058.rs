@@ -54,7 +54,9 @@ impl Rule for MD058 {
                                 delete_count: None,
                                 insert_text: Some("\n".to_string()),
                             }),
-                            suggestion: None,
+                            suggestion: Some(
+                                "Tables should be surrounded by blank lines".to_string(),
+                            ),
                             severity: Severity::Error,
                         });
                     }
@@ -77,7 +79,7 @@ impl Rule for MD058 {
                             delete_count: None,
                             insert_text: Some("\n".to_string()),
                         }),
-                        suggestion: None,
+                        suggestion: Some("Tables should be surrounded by blank lines".to_string()),
                         severity: Severity::Error,
                     });
                 }

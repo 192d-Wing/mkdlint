@@ -51,7 +51,7 @@ impl Rule for MD010 {
                             delete_count: Some(1),
                             insert_text: Some("    ".to_string()), // Replace with 4 spaces
                         }),
-                        suggestion: None,
+                        suggestion: Some("Replace hard tabs with spaces".to_string()),
                         severity: Severity::Error,
                     });
                 }

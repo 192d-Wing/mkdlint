@@ -54,7 +54,9 @@ impl Rule for MD023 {
                             delete_count: Some(indent_count as i32),
                             insert_text: None,
                         }),
-                        suggestion: None,
+                        suggestion: Some(
+                            "Headings must start at the beginning of the line".to_string(),
+                        ),
                         severity: Severity::Error,
                     });
                 }

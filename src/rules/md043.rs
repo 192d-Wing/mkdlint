@@ -118,7 +118,7 @@ impl Rule for MD043 {
                     rule_information: self.information().map(|s| s.to_string()),
                     error_range: None,
                     fix_info: None,
-                    suggestion: None,
+                    suggestion: Some("Follow the required heading structure".to_string()),
                     severity: Severity::Error,
                 });
                 continue;
@@ -140,7 +140,7 @@ impl Rule for MD043 {
                     rule_information: self.information().map(|s| s.to_string()),
                     error_range: None,
                     fix_info: None,
-                    suggestion: None,
+                    suggestion: Some("Follow the required heading structure".to_string()),
                     severity: Severity::Error,
                 });
             }
@@ -159,7 +159,7 @@ impl Rule for MD043 {
                 rule_information: self.information().map(|s| s.to_string()),
                 error_range: None,
                 fix_info: None,
-                suggestion: None,
+                suggestion: Some("Follow the required heading structure".to_string()),
                 severity: Severity::Error,
             });
             actual_idx += 1;

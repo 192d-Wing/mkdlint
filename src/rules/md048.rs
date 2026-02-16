@@ -90,7 +90,7 @@ impl Rule for MD048 {
                         delete_count: Some(fence_len as i32),
                         insert_text: Some(new_fence.to_string()),
                     }),
-                    suggestion: None,
+                    suggestion: Some("Use consistent code fence style".to_string()),
                     severity: Severity::Error,
                 });
             }

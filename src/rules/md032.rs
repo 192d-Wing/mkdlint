@@ -193,7 +193,9 @@ impl Rule for MD032 {
                                 delete_count: None,
                                 insert_text: Some(insert_text),
                             }),
-                            suggestion: None,
+                            suggestion: Some(
+                                "Lists should be surrounded by blank lines".to_string(),
+                            ),
                             severity: Severity::Error,
                         });
                     }
@@ -255,7 +257,7 @@ impl Rule for MD032 {
                             delete_count: None,
                             insert_text: Some(insert_text),
                         }),
-                        suggestion: None,
+                        suggestion: Some("Lists should be surrounded by blank lines".to_string()),
                         severity: Severity::Error,
                     });
                 }

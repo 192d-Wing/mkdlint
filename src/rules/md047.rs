@@ -50,7 +50,7 @@ impl Rule for MD047 {
                     delete_count: None,
                     insert_text: Some("\n".to_string()),
                 }),
-                suggestion: None,
+                suggestion: Some("Files should end with a single newline character".to_string()),
                 severity: Severity::Error,
             });
         }

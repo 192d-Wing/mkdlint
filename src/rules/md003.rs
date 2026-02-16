@@ -275,7 +275,10 @@ impl Rule for MD003 {
                                     delete_count: Some(-1),
                                     insert_text: None,
                                 }),
-                                suggestion: None,
+                                suggestion: Some(
+                                    "Use consistent heading style throughout the document"
+                                        .to_string(),
+                                ),
                                 severity: Severity::Error,
                             });
                         }
@@ -382,7 +385,9 @@ impl Rule for MD003 {
                                 delete_count: Some(-1),
                                 insert_text: None,
                             }),
-                            suggestion: None,
+                            suggestion: Some(
+                                "Use consistent heading style throughout the document".to_string(),
+                            ),
                             severity: Severity::Error,
                         });
                     }

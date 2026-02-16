@@ -151,7 +151,10 @@ impl Rule for MD031 {
                                 delete_count: None,
                                 insert_text: Some(insert_text),
                             }),
-                            suggestion: None,
+                            suggestion: Some(
+                                "Fenced code blocks should be surrounded by blank lines"
+                                    .to_string(),
+                            ),
                             severity: Severity::Error,
                         });
                     }
@@ -205,7 +208,10 @@ impl Rule for MD031 {
                                     delete_count: None,
                                     insert_text: Some(insert_text),
                                 }),
-                                suggestion: None,
+                                suggestion: Some(
+                                    "Fenced code blocks should be surrounded by blank lines"
+                                        .to_string(),
+                                ),
                                 severity: Severity::Error,
                             });
                         }

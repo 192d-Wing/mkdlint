@@ -69,7 +69,9 @@ impl Rule for MD013 {
                     rule_information: self.information().map(|s| s.to_string()),
                     error_range: Some((line_length + 1, actual_length - line_length)),
                     fix_info: None,
-                    suggestion: None,
+                    suggestion: Some(
+                        "Consider breaking long lines for better readability".to_string(),
+                    ),
                     severity: Severity::Error,
                 });
             }

@@ -51,7 +51,9 @@ impl Rule for MD022 {
                             delete_count: None,
                             insert_text: Some("\n".to_string()),
                         }),
-                        suggestion: None,
+                        suggestion: Some(
+                            "Headings should be surrounded by blank lines".to_string(),
+                        ),
                         severity: Severity::Error,
                     });
                 }
@@ -75,7 +77,9 @@ impl Rule for MD022 {
                             delete_count: None,
                             insert_text: Some("\n".to_string()),
                         }),
-                        suggestion: None,
+                        suggestion: Some(
+                            "Headings should be surrounded by blank lines".to_string(),
+                        ),
                         severity: Severity::Error,
                     });
                 }

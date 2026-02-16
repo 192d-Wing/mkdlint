@@ -80,7 +80,7 @@ impl Rule for MD007 {
                             delete_count: Some(leading_spaces as i32),
                             insert_text: Some(" ".repeat(expected)),
                         }),
-                        suggestion: None,
+                        suggestion: Some("Use consistent indentation for nested lists".to_string()),
                         severity: Severity::Error,
                     });
                 }

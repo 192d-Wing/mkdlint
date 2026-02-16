@@ -56,7 +56,9 @@ impl Rule for MD034 {
                         delete_count: Some(mat.len() as i32),
                         insert_text: Some(format!("<{}>", url)),
                     }),
-                    suggestion: None,
+                    suggestion: Some(
+                        "Use angle brackets for bare URLs: <http://example.com>".to_string(),
+                    ),
                     severity: Severity::Error,
                 });
             }

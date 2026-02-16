@@ -59,7 +59,7 @@ impl Rule for MD012 {
                             delete_count: Some(-1), // Delete entire line
                             insert_text: None,
                         }),
-                        suggestion: None,
+                        suggestion: Some("Remove consecutive blank lines".to_string()),
                         severity: Severity::Error,
                     });
                 }
@@ -83,7 +83,7 @@ impl Rule for MD012 {
                     delete_count: Some(-1),
                     insert_text: None,
                 }),
-                suggestion: None,
+                suggestion: Some("Remove consecutive blank lines".to_string()),
                 severity: Severity::Error,
             });
         }

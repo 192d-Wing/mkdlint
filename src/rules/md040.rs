@@ -72,7 +72,9 @@ impl Rule for MD040 {
                                 delete_count: None,
                                 insert_text: Some(default_lang.to_string()),
                             }),
-                            suggestion: None,
+                            suggestion: Some(
+                                "Specify a language for fenced code blocks".to_string(),
+                            ),
                             severity: Severity::Error,
                         });
                     }

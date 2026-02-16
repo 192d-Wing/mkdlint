@@ -134,7 +134,9 @@ impl Rule for MD054 {
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: Some((mat.start() + 1, mat.len())),
                         fix_info: None,
-                        suggestion: None,
+                        suggestion: Some(
+                            "Use consistent link and image reference style".to_string(),
+                        ),
                         severity: Severity::Error,
                     });
                 }
@@ -158,7 +160,9 @@ impl Rule for MD054 {
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: Some((mat.start() + 1, mat.len())),
                             fix_info: None,
-                            suggestion: None,
+                            suggestion: Some(
+                                "Use consistent link and image reference style".to_string(),
+                            ),
                             severity: Severity::Error,
                         });
                     }
@@ -187,7 +191,9 @@ impl Rule for MD054 {
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: Some((mat.start() + 1, mat.len())),
                             fix_info: None,
-                            suggestion: None,
+                            suggestion: Some(
+                                "Use consistent link and image reference style".to_string(),
+                            ),
                             severity: Severity::Error,
                         });
                     }
@@ -214,7 +220,9 @@ impl Rule for MD054 {
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: Some((mat.start() + 1, mat.len())),
                             fix_info: None,
-                            suggestion: None,
+                            suggestion: Some(
+                                "Use consistent link and image reference style".to_string(),
+                            ),
                             severity: Severity::Error,
                         });
                     }
@@ -243,7 +251,9 @@ impl Rule for MD054 {
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: Some((mat.start() + 1, mat.len())),
                             fix_info: None,
-                            suggestion: None,
+                            suggestion: Some(
+                                "Use consistent link and image reference style".to_string(),
+                            ),
                             severity: Severity::Error,
                         });
                     }

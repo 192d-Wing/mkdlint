@@ -182,7 +182,7 @@ impl Rule for MD049 {
                         delete_count: Some(em.full_match.len() as i32),
                         insert_text: Some(corrected),
                     }),
-                    suggestion: None,
+                    suggestion: Some("Use consistent emphasis style".to_string()),
                     severity: Severity::Error,
                 });
             }

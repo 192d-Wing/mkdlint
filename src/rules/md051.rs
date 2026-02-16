@@ -137,7 +137,9 @@ impl Rule for MD051 {
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: None,
                         fix_info: None,
-                        suggestion: None,
+                        suggestion: Some(
+                            "Ensure link fragments point to valid headings".to_string(),
+                        ),
                         severity: Severity::Error,
                     });
                 }
