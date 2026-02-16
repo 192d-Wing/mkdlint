@@ -297,64 +297,379 @@ mkdlint's auto-fix is safe:
 
 ## IDE Integration
 
+mkdlint can be integrated into your editor in multiple ways for real-time feedback.
+
+### Option 1: CLI Integration (Simple & Universal)
+
+The easiest way to integrate mkdlint is through your editor's task runner or build system.
+
+**Pros:**
+- Works in any editor
+- No additional setup required
+- Can use watch mode for auto-linting
+
+**Cons:**
+- No inline diagnostics
+- Manual workflow
+
+### Option 2: LSP Integration (Advanced)
+
+For real-time inline diagnostics and code actions, use `mkdlint-lsp` (built with `--features lsp`).
+
+**Note:** The LSP server is currently in development. For now, use CLI integration with watch mode.
+
+---
+
 ### Visual Studio Code
 
-1. Install the mkdlint LSP extension (coming soon) or configure manually:
+#### Method 1: Tasks (Recommended)
+
+Create `.vscode/tasks.json`:
 
 ```json
-// settings.json
 {
-  "mkdlint.enable": true,
-  "mkdlint.config": "${workspaceFolder}/.markdownlint.json",
-  "mkdlint.lsp.path": "/path/to/mkdlint-lsp"
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "mkdlint",
+      "type": "shell",
+      "command": "mkdlint",
+      "args": ["${file}"],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": {
+        "owner": "mkdlint",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+)\\s+(error|warning)\\s+(.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    },
+    {
+      "label": "mkdlint --fix",
+      "type": "shell",
+      "command": "mkdlint",
+      "args": ["--fix", "${file}"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "mkdlint --watch",
+      "type": "shell",
+      "command": "mkdlint",
+      "args": ["--watch", "${workspaceFolder}"],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    }
+  ]
 }
 ```
 
-2. Set up auto-fix on save:
+**Usage:**
+1. Open Command Palette (`Cmd/Ctrl+Shift+P`)
+2. Run `Tasks: Run Task` → Select `mkdlint`
+3. Or bind to keyboard shortcut in `keybindings.json`:
 
 ```json
 {
-  "editor.codeActionsOnSave": {
-    "source.fixAll.mkdlint": true
+  "key": "cmd+shift+l",
+  "command": "workbench.action.tasks.runTask",
+  "args": "mkdlint"
+}
+```
+
+#### Method 2: Auto-run on Save
+
+Add to `.vscode/settings.json`:
+
+```json
+{
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.md$",
+        "cmd": "mkdlint --fix ${file}"
+      }
+    ]
   }
 }
 ```
 
-### Neovim
+Requires: [Run on Save extension](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave)
 
-Using `nvim-lspconfig`:
+#### Method 3: Watch Mode in Terminal
+
+1. Open integrated terminal
+2. Run: `mkdlint --watch --fix`
+3. Split editor and terminal side-by-side
+4. Edit markdown files → see live results
+
+---
+
+### Neovim / Vim
+
+#### Method 1: ALE (Asynchronous Lint Engine)
+
+Add to your `init.vim` or `init.lua`:
+
+**Vim:**
+```vim
+" Add mkdlint as a linter
+let g:ale_linters = {
+\   'markdown': ['mkdlint'],
+\}
+
+" Enable auto-fix on save
+let g:ale_fixers = {
+\   'markdown': ['mkdlint'],
+\}
+let g:ale_fix_on_save = 1
+
+" Configure mkdlint executable
+let g:ale_markdown_mkdlint_executable = 'mkdlint'
+let g:ale_markdown_mkdlint_options = ''
+```
+
+**Lua (Neovim):**
+```lua
+vim.g.ale_linters = {
+  markdown = {'mkdlint'}
+}
+vim.g.ale_fixers = {
+  markdown = {'mkdlint'}
+}
+vim.g.ale_fix_on_save = 1
+```
+
+#### Method 2: null-ls (Neovim only)
 
 ```lua
-require('lspconfig').mkdlint.setup{
-  cmd = { "mkdlint-lsp" },
-  filetypes = { "markdown" },
-  root_dir = require('lspconfig').util.root_pattern(
-    ".markdownlint.json",
-    ".markdownlint.yaml",
-    ".git"
-  ),
-  settings = {
-    mkdlint = {
-      config = ".markdownlint.json"
-    }
-  }
-}
+local null_ls = require("null-ls")
+
+null_ls.setup({
+  sources = {
+    null_ls.builtins.diagnostics.mkdlint,
+    null_ls.builtins.formatting.mkdlint,
+  },
+})
+
+-- Auto-format on save
+vim.api.nvim_create_autocmd("BufWritePre", {
+  pattern = "*.md",
+  callback = function()
+    vim.lsp.buf.format()
+  end,
+})
 ```
+
+#### Method 3: Simple Autocmd
+
+Add to your config:
+
+```vim
+" Auto-fix on save
+autocmd BufWritePost *.md silent !mkdlint --fix %
+```
+
+Or in Lua:
+
+```lua
+vim.api.nvim_create_autocmd("BufWritePost", {
+  pattern = "*.md",
+  command = "silent !mkdlint --fix %"
+})
+```
+
+#### Method 4: Custom Command
+
+```vim
+" Add :Mkdlint command
+command! Mkdlint :!mkdlint --fix %
+
+" Keybinding
+nnoremap <leader>ml :Mkdlint<CR>
+```
+
+**Recommended Workflow:**
+- Use `:!mkdlint --watch --fix` in a tmux/screen split
+- Or run in `:terminal` split with `:split | terminal mkdlint --watch --fix`
+
+---
 
 ### Emacs
 
-Using `lsp-mode`:
+#### Method 1: Flycheck
+
+Add to your `init.el`:
 
 ```elisp
-(use-package lsp-mode
-  :hook (markdown-mode . lsp)
-  :config
-  (lsp-register-client
-   (make-lsp-client
-    :new-connection (lsp-stdio-connection '("mkdlint-lsp"))
-    :activation-fn (lsp-activate-on "markdown")
-    :server-id 'mkdlint)))
+(require 'flycheck)
+
+;; Define mkdlint checker
+(flycheck-define-checker markdown-mkdlint
+  "A Markdown syntax checker using mkdlint."
+  :command ("mkdlint" source)
+  :error-patterns
+  ((error line-start
+          (file-name) ":" line ":" column
+          " error " (message)
+          line-end))
+  :modes (markdown-mode gfm-mode))
+
+;; Add to markdown checkers
+(add-to-list 'flycheck-checkers 'markdown-mkdlint)
+
+;; Enable flycheck in markdown
+(add-hook 'markdown-mode-hook 'flycheck-mode)
 ```
+
+#### Method 2: Auto-fix on Save
+
+```elisp
+(defun mkdlint-fix-buffer ()
+  "Run mkdlint --fix on current buffer."
+  (interactive)
+  (when (eq major-mode 'markdown-mode)
+    (shell-command-to-string
+     (format "mkdlint --fix %s" (buffer-file-name)))
+    (revert-buffer :ignore-auto :noconfirm)))
+
+;; Keybinding
+(define-key markdown-mode-map (kbd "C-c C-f") 'mkdlint-fix-buffer)
+
+;; Auto-fix on save
+(add-hook 'markdown-mode-hook
+          (lambda ()
+            (add-hook 'after-save-hook 'mkdlint-fix-buffer nil t)))
+```
+
+#### Method 3: Compilation Mode
+
+```elisp
+(defun mkdlint-current-file ()
+  "Run mkdlint on current file."
+  (interactive)
+  (compile (concat "mkdlint " (buffer-file-name))))
+
+(define-key markdown-mode-map (kbd "C-c C-l") 'mkdlint-current-file)
+```
+
+---
+
+### Zed
+
+Create `.zed/tasks.json`:
+
+```json
+[
+  {
+    "label": "Lint Markdown",
+    "command": "mkdlint",
+    "args": ["${ZED_FILE}"]
+  },
+  {
+    "label": "Fix Markdown",
+    "command": "mkdlint",
+    "args": ["--fix", "${ZED_FILE}"]
+  },
+  {
+    "label": "Watch Markdown",
+    "command": "mkdlint",
+    "args": ["--watch", "${ZED_WORKTREE_ROOT}"]
+  }
+]
+```
+
+**Usage:**
+- `Cmd/Ctrl+Shift+P` → Tasks → Select task
+
+---
+
+### Sublime Text
+
+Create `mkdlint.sublime-build`:
+
+```json
+{
+  "shell_cmd": "mkdlint \"$file\"",
+  "file_regex": "^(.+):(\\d+):(\\d+)\\s+(error|warning)\\s+(.+)$",
+  "selector": "text.html.markdown",
+  "variants": [
+    {
+      "name": "Fix",
+      "shell_cmd": "mkdlint --fix \"$file\""
+    },
+    {
+      "name": "Watch",
+      "shell_cmd": "mkdlint --watch \"$file_path\""
+    }
+  ]
+}
+```
+
+**Usage:**
+- `Cmd/Ctrl+B` to run
+- `Cmd/Ctrl+Shift+B` to select variant
+
+---
+
+### Generic LSP Setup (Future)
+
+Once `mkdlint-lsp` is stable, any LSP-compatible editor can use it:
+
+**Installation:**
+```bash
+cargo install mkdlint --features lsp
+```
+
+**LSP Configuration:**
+```json
+{
+  "command": "mkdlint-lsp",
+  "filetypes": ["markdown"],
+  "rootPatterns": [".markdownlint.json", ".markdownlint.yaml", ".git"]
+}
+```
+
+**Editors with LSP support:**
+- VS Code (via extension)
+- Neovim (nvim-lspconfig)
+- Emacs (lsp-mode, eglot)
+- Vim (vim-lsp, coc.nvim)
+- Sublime Text (LSP package)
+- Zed (built-in LSP)
+- Helix (built-in LSP)
+
+---
+
+### Recommended Workflows
+
+**For beginners:**
+1. Use watch mode in a split terminal: `mkdlint --watch --fix`
+2. Simple, visual, works everywhere
+
+**For power users:**
+1. Set up editor task/command for manual linting
+2. Configure auto-fix on save
+3. Use watch mode for real-time feedback during heavy editing
+
+**For teams:**
+1. Commit `.markdownlint.json` config
+2. Add pre-commit hook
+3. Configure CI/CD (see next section)
+4. Share editor configs in `.vscode/` or `.zed/`
 
 ## CI/CD Integration
 
@@ -430,6 +745,153 @@ mkdlint init
 # or
 mkdlint --disable MD013 file.md
 ```
+
+### IDE Integration Issues
+
+#### mkdlint not found in PATH
+
+**Symptoms:**
+- Editor shows "command not found: mkdlint"
+- Tasks fail to run
+
+**Solution:**
+```bash
+# Verify mkdlint is installed
+which mkdlint
+
+# If not found, install it
+cargo install mkdlint
+
+# Add cargo bin to PATH if needed
+echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.zshrc  # or ~/.bashrc
+source ~/.zshrc
+```
+
+#### Watch mode doesn't detect changes
+
+**Symptoms:**
+- `mkdlint --watch` running but not re-linting on file changes
+
+**Solution:**
+1. Check file extension (must be .md or .markdown)
+2. Verify watched path exists: `mkdlint --watch /path/to/docs`
+3. Check file system notifications work:
+   ```bash
+   # Test with a simple change
+   echo "# Test" >> test.md
+   ```
+4. On macOS, ensure you have required permissions for file watching
+
+#### Auto-fix not working in editor
+
+**Symptoms:**
+- Errors are shown but not fixed automatically
+
+**Solution:**
+1. Verify `--fix` flag is in the command:
+   ```bash
+   mkdlint --fix file.md  # Good
+   mkdlint file.md        # Won't fix
+   ```
+2. Check that the rule is fixable (look for 🔧 icon in output)
+3. For Vim/Neovim: Ensure buffer is reloaded after fix:
+   ```vim
+   :e!  " Reload buffer
+   ```
+
+#### VS Code task not showing errors
+
+**Symptoms:**
+- Task runs but doesn't populate Problems panel
+
+**Solution:**
+Ensure your problem matcher regex is correct:
+```json
+{
+  "problemMatcher": {
+    "owner": "mkdlint",
+    "fileLocation": "absolute",
+    "pattern": {
+      "regexp": "^(.+):(\\d+):(\\d+)\\s+(error|warning)\\s+(.+)$",
+      "file": 1,
+      "line": 2,
+      "column": 3,
+      "severity": 4,
+      "message": 5
+    }
+  }
+}
+```
+
+#### Neovim/Vim: Auto-fix breaks undo history
+
+**Symptoms:**
+- After auto-fix on save, can't undo previous changes
+
+**Solution:**
+Use a plugin that preserves undo history:
+```lua
+-- For Neovim with null-ls
+local null_ls = require("null-ls")
+null_ls.setup({
+  sources = {
+    null_ls.builtins.formatting.mkdlint.with({
+      extra_args = { "--fix" }
+    }),
+  },
+  -- This preserves undo history
+  on_attach = function(client, bufnr)
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      buffer = bufnr,
+      callback = function()
+        vim.lsp.buf.format({ bufnr = bufnr })
+      end,
+    })
+  end,
+})
+```
+
+#### Emacs: Buffer not reloading after fix
+
+**Symptoms:**
+- File is fixed on disk but not updated in Emacs
+
+**Solution:**
+Add `revert-buffer` to your fix function:
+```elisp
+(defun mkdlint-fix-buffer ()
+  "Run mkdlint --fix on current buffer."
+  (interactive)
+  (when (eq major-mode 'markdown-mode)
+    (shell-command-to-string
+     (format "mkdlint --fix %s" (buffer-file-name)))
+    (revert-buffer :ignore-auto :noconfirm)))  ;; This line is important
+```
+
+#### Performance: Editor sluggish with watch mode
+
+**Symptoms:**
+- Editor lags when watch mode is running
+
+**Solution:**
+1. Use ignore patterns to exclude large directories:
+   ```bash
+   mkdlint --watch --ignore "**/node_modules/**" --ignore "vendor/**" .
+   ```
+2. Watch specific directories only:
+   ```bash
+   mkdlint --watch --watch-paths docs/ --watch-paths README.md
+   ```
+3. Increase debounce time (future feature)
+
+#### LSP: "mkdlint-lsp not found"
+
+**Note:** LSP support is currently in development.
+
+**Current Status:**
+- CLI integration is fully supported and recommended
+- LSP server is planned for future releases
+- Use watch mode with terminal splits for now
 
 #### "Too many errors"
 
