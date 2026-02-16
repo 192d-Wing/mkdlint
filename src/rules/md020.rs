@@ -1,6 +1,6 @@
 //! MD020 - No space inside hashes on closed atx style heading
 
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 
 pub struct MD020;
 
@@ -14,7 +14,7 @@ impl Rule for MD020 {
     }
 
     fn tags(&self) -> &[&'static str] {
-        &["headings", "atx", "atx_closed", "spaces"]
+        &["headings", "atx", "atx_closed", "spaces", "fixable"]
     }
 
     fn parser_type(&self) -> ParserType {
@@ -38,16 +38,46 @@ impl Rule for MD020 {
                     let has_start_space = content.starts_with(' ');
                     let has_end_space = content.ends_with(' ');
 
-                    if !has_start_space || !has_end_space {
+                    // Calculate positions for fix_info
+                    let leading_hashes = trimmed.chars().take_while(|&c| c == '#').count();
+                    let trailing_hashes = trimmed.chars().rev().take_while(|&c| c == '#').count();
+                    let leading_ws = line.len() - line.trim_start().len();
+
+                    if !has_start_space {
                         errors.push(LintError {
                             line_number,
                             rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                             rule_description: self.description().to_string(),
-                            error_detail: None,
+                            error_detail: Some("Missing space after opening #".to_string()),
                             error_context: Some(trimmed.to_string()),
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: None,
-                            fix_info: None,
+                            fix_info: Some(FixInfo {
+                                line_number: None,
+                                edit_column: Some(leading_ws + leading_hashes + 1),
+                                delete_count: None,
+                                insert_text: Some(" ".to_string()),
+                            }),
+                            severity: Severity::Error,
+                        });
+                    }
+
+                    if !has_end_space {
+                        let content_end = trimmed.len() - trailing_hashes;
+                        errors.push(LintError {
+                            line_number,
+                            rule_names: self.names().iter().map(|s| s.to_string()).collect(),
+                            rule_description: self.description().to_string(),
+                            error_detail: Some("Missing space before closing #".to_string()),
+                            error_context: Some(trimmed.to_string()),
+                            rule_information: self.information().map(|s| s.to_string()),
+                            error_range: None,
+                            fix_info: Some(FixInfo {
+                                line_number: None,
+                                edit_column: Some(leading_ws + content_end + 1),
+                                delete_count: None,
+                                insert_text: Some(" ".to_string()),
+                            }),
                             severity: Severity::Error,
                         });
                     }
@@ -110,5 +140,54 @@ mod tests {
         let rule = MD020;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
+    }
+
+    #[test]
+    fn test_md020_fix_missing_start_space() {
+        let lines: Vec<String> = "#Heading #\n".lines().map(|l| l.to_string()).collect();
+        let tokens = vec![];
+        let config = HashMap::new();
+        let params = make_params(&lines, &tokens, &config);
+        let rule = MD020;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        assert_eq!(fix.edit_column, Some(2)); // After first #
+        assert_eq!(fix.delete_count, None);
+        assert_eq!(fix.insert_text, Some(" ".to_string()));
+    }
+
+    #[test]
+    fn test_md020_fix_missing_end_space() {
+        let lines: Vec<String> = "# Heading#\n".lines().map(|l| l.to_string()).collect();
+        let tokens = vec![];
+        let config = HashMap::new();
+        let params = make_params(&lines, &tokens, &config);
+        let rule = MD020;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        assert_eq!(fix.edit_column, Some(10)); // Before closing #
+        assert_eq!(fix.delete_count, None);
+        assert_eq!(fix.insert_text, Some(" ".to_string()));
+    }
+
+    #[test]
+    fn test_md020_fix_both_missing() {
+        let lines: Vec<String> = "#Heading#\n".lines().map(|l| l.to_string()).collect();
+        let tokens = vec![];
+        let config = HashMap::new();
+        let params = make_params(&lines, &tokens, &config);
+        let rule = MD020;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 2); // Both start and end errors
+        // First error: missing start space
+        let fix1 = errors[0].fix_info.as_ref().unwrap();
+        assert_eq!(fix1.edit_column, Some(2));
+        assert_eq!(fix1.insert_text, Some(" ".to_string()));
+        // Second error: missing end space
+        let fix2 = errors[1].fix_info.as_ref().unwrap();
+        assert_eq!(fix2.edit_column, Some(9));
+        assert_eq!(fix2.insert_text, Some(" ".to_string()));
     }
 }
