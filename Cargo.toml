@@ -34,7 +34,7 @@ tokio = { version = "1.41", features = [
     "fs",
     "io-util",
     "sync",
-    "time",
+    "time", "io-std", "macros",
 ], optional = true }
 
 # Parallel processing
@@ -67,6 +67,7 @@ tower-lsp = { version = "0.20", optional = true }
 lsp-types = { version = "0.94", optional = true }
 tower = { version = "0.5", optional = true }
 url = { version = "2.5", optional = true }
+env_logger = { version = "0.11", optional = true }
 
 [dev-dependencies]
 tokio = { version = "1.41", features = ["rt", "macros", "fs"] }
@@ -80,7 +81,7 @@ insta = "1.41"                                                  # Snapshot testi
 default = ["cli"]
 cli = ["dep:clap", "dep:colored", "dep:walkdir", "dep:globset"]
 async = ["dep:tokio"]
-lsp = ["async", "dep:tower-lsp", "dep:lsp-types", "dep:tower", "dep:url"]
+lsp = ["async", "dep:tower-lsp", "dep:lsp-types", "dep:tower", "dep:url", "dep:env_logger"]
 
 [[bench]]
 name = "lint_bench"
