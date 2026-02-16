@@ -1,6 +1,6 @@
 //! MD045 - Images should have alternate text (alt text)
 
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
@@ -18,7 +18,7 @@ impl Rule for MD045 {
     }
 
     fn tags(&self) -> &[&'static str] {
-        &["accessibility", "images"]
+        &["accessibility", "images", "fixable"]
     }
 
     fn parser_type(&self) -> ParserType {
@@ -38,16 +38,28 @@ impl Rule for MD045 {
             for cap in IMAGE_RE.captures_iter(line) {
                 let alt_text = &cap[1];
                 if alt_text.trim().is_empty() {
+                    // Calculate column position for the alt text
+                    let full_match = cap.get(0).unwrap();
+                    let alt_match = cap.get(1).unwrap();
+                    let alt_col = alt_match.start() + 1; // 1-based column
+
                     errors.push(LintError {
                         line_number,
                         rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                         rule_description: self.description().to_string(),
                         error_detail: None,
-                        error_context: Some(cap[0].to_string()),
+                        error_context: Some(full_match.as_str().to_string()),
                         rule_information: self.information().map(|s| s.to_string()),
-                        error_range: None,
-                        fix_info: None,
-                        suggestion: None,
+                        error_range: Some((full_match.start() + 1, full_match.len())),
+                        fix_info: Some(FixInfo {
+                            line_number: None,
+                            edit_column: Some(alt_col),
+                            delete_count: Some(alt_text.len() as i32),
+                            insert_text: Some("image".to_string()),
+                        }),
+                        suggestion: Some(
+                            "Add descriptive alt text, e.g., ![description](image.png)".to_string(),
+                        ),
                         severity: Severity::Error,
                     });
                 }

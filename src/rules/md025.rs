@@ -1,7 +1,7 @@
 //! MD025 - Multiple top-level headings in the same document
 
 use crate::parser::TokenExt;
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 
 pub struct MD025;
 
@@ -15,7 +15,7 @@ impl Rule for MD025 {
     }
 
     fn tags(&self) -> &[&'static str] {
-        &["headings", "headers"]
+        &["headings", "headers", "fixable"]
     }
 
     fn parser_type(&self) -> ParserType {
@@ -41,6 +41,33 @@ impl Rule for MD025 {
 
             if level == 1 {
                 if found_h1 {
+                    // Generate fix to convert H1 to H2
+                    let line = params.lines.get(heading.start_line - 1);
+                    let fix_info = if let Some(line_text) = line {
+                        let trimmed = line_text.trim_start();
+                        if trimmed.starts_with('#') {
+                            // ATX style heading - add one more #
+                            let hash_count = trimmed.chars().take_while(|&c| c == '#').count();
+                            Some(FixInfo {
+                                line_number: Some(heading.start_line),
+                                edit_column: Some(1),
+                                delete_count: Some(hash_count as i32),
+                                insert_text: Some("##".to_string()),
+                            })
+                        } else {
+                            // Setext style - convert to ATX H2
+                            let heading_text = trimmed.trim_end();
+                            Some(FixInfo {
+                                line_number: Some(heading.start_line),
+                                edit_column: Some(1),
+                                delete_count: Some(i32::MAX),
+                                insert_text: Some(format!("## {}", heading_text)),
+                            })
+                        }
+                    } else {
+                        None
+                    };
+
                     errors.push(LintError {
                         line_number: heading.start_line,
                         rule_names: self.names().iter().map(|s| s.to_string()).collect(),
@@ -49,8 +76,10 @@ impl Rule for MD025 {
                         error_context: Some(heading.text.trim().to_string()),
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: None,
-                        fix_info: None,
-                        suggestion: None,
+                        fix_info,
+                        suggestion: Some(
+                            "Convert this heading to H2 (##) or restructure your document to have only one H1".to_string(),
+                        ),
                         severity: Severity::Error,
                     });
                 }
@@ -194,8 +223,8 @@ mod tests {
 
         let errors = MD025.lint(&params);
         assert!(
-            errors[0].fix_info.is_none(),
-            "MD025 should not have fix_info"
+            errors[0].fix_info.is_some(),
+            "MD025 should have fix_info to convert H1 to H2"
         );
     }
 }
