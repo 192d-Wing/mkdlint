@@ -1,11 +1,12 @@
 //! Lint results types
 
 use crate::types::LintError;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt;
 
 /// Results from linting operations
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct LintResults {
     /// Map of file/string name to lint errors
     pub results: HashMap<String, Vec<LintError>>,

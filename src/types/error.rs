@@ -1,5 +1,6 @@
 //! Error types for markdownlint
 
+use serde::Serialize;
 use std::fmt;
 
 /// Main error type for markdownlint operations
@@ -52,7 +53,7 @@ pub enum MarkdownlintError {
 pub type Result<T> = std::result::Result<T, MarkdownlintError>;
 
 /// Information about a lint error or warning
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct LintError {
     /// Line number (1-based) where the error occurs
     pub line_number: usize,
@@ -83,7 +84,7 @@ pub struct LintError {
 }
 
 /// Severity level for lint errors
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 pub enum Severity {
     /// Error level
     Error,
@@ -101,7 +102,7 @@ impl fmt::Display for Severity {
 }
 
 /// Information for automatically fixing a lint error
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct FixInfo {
     /// Line number to apply the fix (defaults to error line if None)
     pub line_number: Option<usize>,
