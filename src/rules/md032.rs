@@ -170,7 +170,7 @@ impl Rule for MD032 {
                 // Check if previous line (index first_line_number - 2) is blank
                 if first_line_number > 1 {
                     let prev_line_idx = first_line_number - 2;
-                    if prev_line_idx < lines.len() && !is_blank_line(&lines[prev_line_idx]) {
+                    if prev_line_idx < lines.len() && !is_blank_line(lines[prev_line_idx]) {
                         let context = if first_line_number - 1 <= lines.len() {
                             lines[first_line_number - 1].trim().to_string()
                         } else {
@@ -234,7 +234,7 @@ impl Rule for MD032 {
                 let last_line_number = end_line;
 
                 // Check if next line (index last_line_number) exists and is not blank
-                if last_line_number < lines.len() && !is_blank_line(&lines[last_line_number]) {
+                if last_line_number < lines.len() && !is_blank_line(lines[last_line_number]) {
                     let context = if last_line_number > 0 && last_line_number - 1 < lines.len() {
                         lines[last_line_number - 1].trim().to_string()
                     } else {

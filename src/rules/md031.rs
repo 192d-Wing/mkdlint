@@ -119,7 +119,7 @@ impl Rule for MD031 {
                     }
 
                     // Check for blank line before fence
-                    if idx > 0 && !is_blank_line(&lines[idx - 1]) {
+                    if idx > 0 && !is_blank_line(lines[idx - 1]) {
                         // Get the prefix for fix info
                         let prefix = get_code_fence_prefix(line).unwrap_or_default();
                         let insert_text = if prefix.is_empty() {
@@ -176,7 +176,7 @@ impl Rule for MD031 {
                         }
 
                         // Check for blank line after fence
-                        if idx + 1 < lines.len() && !is_blank_line(&lines[idx + 1]) {
+                        if idx + 1 < lines.len() && !is_blank_line(lines[idx + 1]) {
                             // Get the prefix for fix info
                             let prefix = get_code_fence_prefix(line).unwrap_or_default();
                             let insert_text = if prefix.is_empty() {
