@@ -34,7 +34,7 @@ jobs:
         with:
           shared-key: "test-${{ matrix.os }}"
 
-      - name: Run tests
+      - name: Run tests (includes proptest suite)
         run: cargo nextest run --all-features --verbose
 
       - name: Run doc tests

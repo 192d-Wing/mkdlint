@@ -9,15 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.10.1] - 2026-02-16
 
+### Added
+
+- **Inline configuration** via HTML comments — suppress or
+  re-enable rules within a document:
+  - `<!-- markdownlint-disable MD009 -->`
+  - `<!-- markdownlint-enable MD009 -->`
+  - `<!-- markdownlint-disable-next-line MD009 -->`
+  - `<!-- markdownlint-disable-file MD009 -->`
+  - Disable all rules: `<!-- markdownlint-disable -->`
+
 ### Fixed
 
 - **MD013**: Panic on multi-byte UTF-8 input — replaced byte-index slice with char-safe truncation
 - **MD018**: Panic on multi-byte UTF-8 context truncation — replaced with char-safe `.chars().take(N)`
-- **MD022**: Out-of-bounds line access when parser reports heading line numbers beyond line count — added bounds check
+- **MD018/MD009**: Fix oscillation loop on empty ATX headings (e.g., `##\n`)
+- **MD022**: Out-of-bounds line access when parser reports heading line numbers beyond line count
+- **MD003**: Helper error for setext underline deletion leaked empty `rule_names`
+- **CRLF line endings**: `apply_fixes` now normalizes inserted newlines to match the document's line ending style, and skips conflicting fixes on lines restructured by newline insertions
+- **LSP**: Fixed type errors from `&'static str` migration in diagnostics and code actions
+
+### Changed
+
+- **Performance**: Precompute enabled rules once per lint invocation instead of per file — eliminates redundant HashMap lookups in multi-file linting
 
 ### Technical
 
-- Added property-based test suite (`tests/proptest_tests.rs`) with 13 properties (~3,450 cases) covering lint-never-panics, parser-never-panics, fix-roundtrip safety, and more
+- Property-based test suite (`tests/proptest_tests.rs`) with 12 properties (~3,250 cases) covering lint-never-panics, parser-never-panics, fix-roundtrip safety, CRLF preservation, and more
 
 ## [0.10.0] - 2026-02-16
 
