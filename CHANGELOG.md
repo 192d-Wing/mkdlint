@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-02-16
+
+### Added
+
+- **MD003 Auto-Fix** - Heading style conversion:
+  - Automatic conversion between ATX (`# Heading`), ATX-closed (`# Heading #`), and Setext styles
+  - Supports all style configurations: `atx`, `atx_closed`, `setext`, `setext_with_atx`, `setext_with_atx_closed`, `consistent`
+  - Properly handles Setext underline deletion when converting to ATX/ATX-closed
+  - Adds helpful suggestions for each heading style mismatch
+  - Auto-fix coverage increased to 35/54 rules (65%)
+
+### Changed
+
+- MD003 now includes "fixable" tag
+- Setext heading conversions generate helper fix for underline deletion
+
 ## [0.5.0] - 2026-02-16
 
 ### Added
@@ -278,7 +294,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parallel file processing
 - Inline configuration comments support
 
-[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/192d-Wing/mkdlint/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/192d-Wing/mkdlint/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/192d-Wing/mkdlint/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/192d-Wing/mkdlint/compare/v0.4.0...v0.4.1

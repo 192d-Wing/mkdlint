@@ -473,7 +473,10 @@ mod tests {
         let rule = MD003;
         let all_errors = rule.lint(&params);
         // Filter out underline deletion errors (helper errors with empty rule_names)
-        let errors: Vec<_> = all_errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let errors: Vec<_> = all_errors
+            .iter()
+            .filter(|e| !e.rule_names.is_empty())
+            .collect();
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 3);
         assert!(errors[0].error_detail.as_ref().unwrap().contains("atx"));
@@ -506,7 +509,10 @@ mod tests {
         let rule = MD003;
         let all_errors = rule.lint(&params);
         // Filter out underline deletion errors (helper errors with empty rule_names)
-        let errors: Vec<_> = all_errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let errors: Vec<_> = all_errors
+            .iter()
+            .filter(|e| !e.rule_names.is_empty())
+            .collect();
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 3);
     }
@@ -565,7 +571,10 @@ mod tests {
         let rule = MD003;
         let all_errors = rule.lint(&params);
         // Filter out underline deletion errors (helper errors with empty rule_names)
-        let errors: Vec<_> = all_errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let errors: Vec<_> = all_errors
+            .iter()
+            .filter(|e| !e.rule_names.is_empty())
+            .collect();
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 3);
     }
