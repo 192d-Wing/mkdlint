@@ -9,7 +9,7 @@
 //! - `punctuation`: Characters to treat as punctuation (default: `.,;:!?。，；：！？`)
 
 use crate::parser::TokenExt;
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 
 pub struct MD036;
 
@@ -33,7 +33,7 @@ impl Rule for MD036 {
     }
 
     fn tags(&self) -> &[&'static str] {
-        &["headings", "emphasis"]
+        &["headings", "emphasis", "fixable"]
     }
 
     fn parser_type(&self) -> ParserType {
@@ -128,6 +128,29 @@ impl Rule for MD036 {
                         && child.token_type == "data"
                         && !punctuation_re.is_match(&text_token.text)
                     {
+                        // Find parent emphasis/strong token to get full range with markers
+                        let parent_token = text_token
+                            .parent
+                            .and_then(|p_idx| params.tokens.get(p_idx))
+                            .filter(|p| p.token_type == emphasis_type[0]);
+
+                        let fix_info = if let Some(parent) = parent_token {
+                            // Full range from start of parent (including opening marker)
+                            // to end of parent (including closing marker)
+                            let start_col = parent.start_column;
+                            let end_col = parent.end_column;
+                            let total_len = end_col - start_col;
+
+                            Some(FixInfo {
+                                line_number: None,
+                                edit_column: Some(start_col),
+                                delete_count: Some(total_len as i32),
+                                insert_text: Some(format!("## {}", text_token.text)),
+                            })
+                        } else {
+                            None
+                        };
+
                         errors.push(LintError {
                             line_number: text_token.start_line,
                             rule_names: self.names().iter().map(|s| s.to_string()).collect(),
@@ -136,7 +159,7 @@ impl Rule for MD036 {
                             error_context: Some(text_token.text.clone()),
                             rule_information: self.information().map(|s| s.to_string()),
                             error_range: None,
-                            fix_info: None,
+                            fix_info,
                             severity: Severity::Error,
                         });
                     }
@@ -201,13 +224,16 @@ mod tests {
     fn test_md036_emphasis_as_heading() {
         // Create a simple token structure:
         // content (0) -> paragraph (1) -> emphasis (2) -> emphasisText (3) -> data (4)
-        let tokens = vec![
+        let mut tokens = vec![
             create_token("content", 1, "", vec![1], None),
             create_token("paragraph", 1, "", vec![2], Some(0)),
             create_token("emphasis", 1, "", vec![3], Some(1)),
             create_token("emphasisText", 1, "Heading", vec![4], Some(2)),
             create_token("data", 1, "Heading", vec![], Some(3)),
         ];
+        // Set proper column positions for emphasis token
+        tokens[2].start_column = 1;
+        tokens[2].end_column = 10;
 
         let lines = vec!["_Heading_\n".to_string()];
 
@@ -231,13 +257,16 @@ mod tests {
     fn test_md036_strong_as_heading() {
         // Create a simple token structure:
         // content (0) -> paragraph (1) -> strong (2) -> strongText (3) -> data (4)
-        let tokens = vec![
+        let mut tokens = vec![
             create_token("content", 1, "", vec![1], None),
             create_token("paragraph", 1, "", vec![2], Some(0)),
             create_token("strong", 1, "", vec![3], Some(1)),
             create_token("strongText", 1, "Heading", vec![4], Some(2)),
             create_token("data", 1, "Heading", vec![], Some(3)),
         ];
+        // Set proper column positions for strong token
+        tokens[2].start_column = 1;
+        tokens[2].end_column = 13;
 
         let lines = vec!["**Heading**\n".to_string()];
 
@@ -306,5 +335,74 @@ mod tests {
         let rule = MD036;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
+    }
+
+    #[test]
+    fn test_md036_fix_emphasis_to_heading() {
+        // Create token structure with proper parent relationships
+        // emphasis (2) is parent of emphasisText (3)
+        let mut tokens = vec![
+            create_token("content", 1, "", vec![1], None),
+            create_token("paragraph", 1, "", vec![2], Some(0)),
+            create_token("emphasis", 1, "", vec![3], Some(1)),
+            create_token("emphasisText", 1, "Heading", vec![4], Some(2)),
+            create_token("data", 1, "Heading", vec![], Some(3)),
+        ];
+        // Set proper column positions for emphasis token (includes markers)
+        tokens[2].start_column = 1;
+        tokens[2].end_column = 10; // "_Heading_" = 9 chars + 1 for end position
+
+        let lines = vec!["_Heading_\n".to_string()];
+
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &tokens,
+            config: &HashMap::new(),
+        };
+
+        let rule = MD036;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        assert_eq!(fix.edit_column, Some(1));
+        assert_eq!(fix.delete_count, Some(9)); // Full length
+        assert_eq!(fix.insert_text, Some("## Heading".to_string()));
+    }
+
+    #[test]
+    fn test_md036_fix_strong_to_heading() {
+        // Create token structure with proper parent relationships
+        let mut tokens = vec![
+            create_token("content", 1, "", vec![1], None),
+            create_token("paragraph", 1, "", vec![2], Some(0)),
+            create_token("strong", 1, "", vec![3], Some(1)),
+            create_token("strongText", 1, "Heading", vec![4], Some(2)),
+            create_token("data", 1, "Heading", vec![], Some(3)),
+        ];
+        // Set proper column positions for strong token (includes markers)
+        tokens[2].start_column = 1;
+        tokens[2].end_column = 13; // "**Heading**" = 11 chars + 1 for end position
+
+        let lines = vec!["**Heading**\n".to_string()];
+
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &tokens,
+            config: &HashMap::new(),
+        };
+
+        let rule = MD036;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        assert_eq!(fix.edit_column, Some(1));
+        assert_eq!(fix.delete_count, Some(12)); // Full length
+        assert_eq!(fix.insert_text, Some("## Heading".to_string()));
     }
 }
