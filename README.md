@@ -1,16 +1,18 @@
-# mdlint
+# mkdlint
 
-[![docs.rs](https://img.shields.io/docsrs/mdlint?style=for-the-badge&logo=rust)](https://docs.rs/ntp-usg/latest/mdlint)
-[![Crates.io](https://img.shields.io/crates/v/mdlint.svg?style=for-the-badge&logo=rust)](https://crates.io/crates/mdlint)
-![Crates.io Total Downloads](https://img.shields.io/crates/d/mdlint?style=for-the-badge&logo=rust)
-[![License](https://img.shields.io/crates/l/mdlint.svg?style=for-the-badge)](https://github.com/192d-Wing/mdlint#license)
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/192d-Wing/mdlint/ci.yml?branch=master&style=for-the-badge&logo=github)](https://github.com/192d-Wing/mdlint/actions/workflows/ci.yml)
-[![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/192d-Wing/mdlint?style=for-the-badge&logo=github)](https://github.com/192d-Wing/mdlint/issues)
-[![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr/192d-Wing/mdlint?style=for-the-badge&logo=github)](https://github.com/192d-Wing/mdlint/pulls)
+[![docs.rs](https://img.shields.io/docsrs/mkdlint?style=for-the-badge&logo=rust)](https://docs.rs/ntp-usg/latest/mkdlint)
+[![Crates.io](https://img.shields.io/crates/v/mkdlint.svg?style=for-the-badge&logo=rust)](https://crates.io/crates/mkdlint)
+![Crates.io Total Downloads](https://img.shields.io/crates/d/mkdlint?style=for-the-badge&logo=rust)
+[![License](https://img.shields.io/crates/l/mkdlint.svg?style=for-the-badge)](https://github.com/192d-Wing/mkdlint#license)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/192d-Wing/mkdlint/ci.yml?branch=master&style=for-the-badge&logo=github)](https://github.com/192d-Wing/mkdlint/actions/workflows/ci.yml)
+[![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/192d-Wing/mkdlint?style=for-the-badge&logo=github)](https://github.com/192d-Wing/mkdlint/issues)
+[![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr/192d-Wing/mkdlint?style=for-the-badge&logo=github)](https://github.com/192d-Wing/mkdlint/pulls)
 
-[![Security Audit](https://github.com/192d-Wing/mdlint/workflows/Security%20Audit/badge.svg)](https://github.com/192d-Wing/mdlint/actions/workflows/security.yml)
-[![codecov](https://codecov.io/gh/192d-Wing/mdlint/branch/main/graph/badge.svg)](https://codecov.io/gh/192d-Wing/mdlint)
+<!--
+[![Security Audit](https://github.com/192d-Wing/mkdlint/workflows/Security%20Audit/badge.svg)](https://github.com/192d-Wing/mkdlint/actions/workflows/security.yml)
+[![codecov](https://codecov.io/gh/192d-Wing/mkdlint/branch/main/graph/badge.svg)](https://codecov.io/gh/192d-Wing/mkdlint)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+-->
 
 A fast Markdown linter written in Rust, inspired by [markdownlint](https://github.com/DavidAnson/markdownlint).
 
@@ -36,7 +38,7 @@ cargo install --path .
 
 ```toml
 [dependencies]
-mdlint = { version = "0.1", default-features = false }
+mkdlint = { version = "0.1", default-features = false }
 ```
 
 ## CLI Usage
@@ -45,67 +47,67 @@ mdlint = { version = "0.1", default-features = false }
 
 ```sh
 # Lint files
-mdlint README.md docs/*.md
+mkdlint README.md docs/*.md
 
 # Lint with auto-fix
-mdlint --fix README.md
+mkdlint --fix README.md
 
 # Lint a directory recursively
-mdlint docs/
+mkdlint docs/
 
 # Lint from stdin
-cat README.md | mdlint --stdin
+cat README.md | mkdlint --stdin
 
 # List all available rules with descriptions
-mdlint --list-rules
+mkdlint --list-rules
 ```
 
 ### Configuration Management
 
 ```sh
 # Initialize a new config file with defaults
-mdlint init
+mkdlint init
 
 # Initialize with custom path and format
-mdlint init --output .mdlint.yaml --format yaml
+mkdlint init --output .mkdlint.yaml --format yaml
 
 # Use a specific config file
-mdlint --config .markdownlint.json README.md
+mkdlint --config .markdownlint.json README.md
 
 # Enable/disable specific rules on the fly
-mdlint --enable MD001 --disable MD013 README.md
+mkdlint --enable MD001 --disable MD013 README.md
 
 # Combine multiple rule overrides
-mdlint --config base.json --enable MD001 --disable MD033 docs/
+mkdlint --config base.json --enable MD001 --disable MD033 docs/
 ```
 
 ### Output Control
 
 ```sh
 # Output in JSON format (machine-readable)
-mdlint --output-format json README.md
+mkdlint --output-format json README.md
 
 # Output in SARIF format (for CI/CD integration)
-mdlint --output-format sarif README.md
+mkdlint --output-format sarif README.md
 
 # Quiet mode - only show filenames with errors
-mdlint --quiet docs/
+mkdlint --quiet docs/
 
 # Verbose mode - show detailed error statistics
-mdlint --verbose docs/
+mkdlint --verbose docs/
 
 # Disable colored output (for CI environments)
-mdlint --no-color README.md
+mkdlint --no-color README.md
 ```
 
 ### Advanced Usage
 
 ```sh
 # Ignore specific files/patterns
-mdlint --ignore "**/node_modules/**" --ignore "**/.git/**" .
+mkdlint --ignore "**/node_modules/**" --ignore "**/.git/**" .
 
 # Combine multiple options
-mdlint --config .mdlint.json \
+mkdlint --config .mkdlint.json \
        --ignore "build/**" \
        --ignore "dist/**" \
        --fix \
@@ -113,15 +115,15 @@ mdlint --config .mdlint.json \
        .
 
 # Fix with specific rules disabled
-mdlint --fix --disable MD013 --disable MD033 docs/
+mkdlint --fix --disable MD013 --disable MD033 docs/
 
 # Stdin with fix output to stdout
-cat README.md | mdlint --stdin --fix > README_fixed.md
+cat README.md | mkdlint --stdin --fix > README_fixed.md
 ```
 
 ### Example Output
 
-mdlint provides rich error display with source context:
+mkdlint provides rich error display with source context:
 
 ```text
 README.md: 42: MD009/no-trailing-spaces Trailing spaces [Expected: 0; Actual: 3]
@@ -139,8 +141,8 @@ README.md: 58: MD034/no-bare-urls Bare URL used
 
 | Command | Description |
 |---------|-------------|
-| `mdlint [FILES...]` | Lint markdown files (default command) |
-| `mdlint init` | Create a new configuration file with defaults |
+| `mkdlint [FILES...]` | Lint markdown files (default command) |
+| `mkdlint init` | Create a new configuration file with defaults |
 
 ### Options
 
@@ -162,7 +164,7 @@ README.md: 58: MD034/no-bare-urls Bare URL used
 ## Library Usage
 
 ```rust
-use mdlint::{lint_sync, apply_fixes, LintOptions};
+use mkdlint::{lint_sync, apply_fixes, LintOptions};
 
 let options = LintOptions {
     files: vec!["README.md".to_string()],
@@ -180,7 +182,7 @@ for (file, errors) in results.iter() {
 ### Auto-fixing
 
 ```rust
-use mdlint::{lint_sync, apply_fixes, LintOptions};
+use mkdlint::{lint_sync, apply_fixes, LintOptions};
 use std::collections::HashMap;
 
 let content = "# Title\n\nSome text   \n";
