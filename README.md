@@ -60,7 +60,7 @@ cargo install mkdlint --features lsp
 # The binary will be available as: mkdlint-lsp
 ```
 
-### GitHub Action
+### GitHub Action (Quick Start)
 
 Add to your workflow:
 
@@ -72,7 +72,7 @@ Add to your workflow:
 
 See [GitHub Action documentation](.github/actions/mkdlint/README.md) for full details.
 
-### As a library dependency
+### As a Library Dependency
 
 ```toml
 [dependencies]
@@ -420,7 +420,7 @@ Rules can be enabled/disabled by name (`"MD013"`) or alias (`"line-length"`). Pa
 | Rule | Alias | Description | Fixable |
 |------|-------|-------------|---------|
 | MD001 | heading-increment | Heading levels should increment by one | Yes |
-| MD003 | heading-style | Heading style | |
+| MD003 | heading-style | Heading style | Yes |
 | MD004 | ul-style | Unordered list style | Yes |
 | MD005 | list-indent | Inconsistent indentation for list items | Yes |
 | MD007 | ul-indent | Unordered list indentation | Yes |
@@ -436,8 +436,8 @@ Rules can be enabled/disabled by name (`"MD013"`) or alias (`"line-length"`). Pa
 | MD021 | no-multiple-space-closed-atx | Multiple spaces inside hashes on closed atx heading | Yes |
 | MD022 | blanks-around-headings | Headings should be surrounded by blank lines | Yes |
 | MD023 | heading-start-left | Headings must start at the beginning of the line | Yes |
-| MD024 | no-duplicate-heading | No duplicate heading content | |
-| MD025 | single-title | Single title / single h1 | |
+| MD024 | no-duplicate-heading | No duplicate heading content | Yes |
+| MD025 | single-title | Single title / single h1 | Yes |
 | MD026 | no-trailing-punctuation | Trailing punctuation in heading | Yes |
 | MD027 | no-multiple-space-blockquote | Multiple spaces after blockquote symbol | Yes |
 | MD028 | no-blanks-blockquote | Blank line inside blockquote | Yes |
@@ -457,7 +457,7 @@ Rules can be enabled/disabled by name (`"MD013"`) or alias (`"line-length"`). Pa
 | MD042 | no-empty-links | No empty links | Yes |
 | MD043 | required-headings | Required heading structure | |
 | MD044 | proper-names | Proper names should have correct capitalization | Yes |
-| MD045 | no-alt-text | Images should have alternate text | |
+| MD045 | no-alt-text | Images should have alternate text | Yes |
 | MD046 | code-block-style | Code block style | |
 | MD047 | single-trailing-newline | Files should end with a single trailing newline | Yes |
 | MD048 | code-fence-style | Code fence style | Yes |
@@ -467,10 +467,11 @@ Rules can be enabled/disabled by name (`"MD013"`) or alias (`"line-length"`). Pa
 | MD052 | reference-links-images | Reference links and images should use a defined label | Yes |
 | MD053 | link-image-reference-definitions | Link and image reference definitions should be needed | Yes |
 | MD054 | link-image-style | Link and image style | |
+| MD055 | table-pipe-style | Table pipe style | Yes |
 | MD056 | table-column-count | Table column count | |
 | MD058 | blanks-around-tables | Tables should be surrounded by blank lines | Yes |
 | MD059 | emphasis-marker-style-math | Emphasis marker style in math | |
-| MD060 | table-column-style | Table column style | |
+| MD060 | dollar-in-code-fence | Dollar signs in fenced code blocks | Yes |
 
 **45 of 53 rules** have auto-fix support (84.9% coverage).
 

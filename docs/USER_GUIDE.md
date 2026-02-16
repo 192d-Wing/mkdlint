@@ -21,6 +21,12 @@ Complete guide to using mkdlint for linting and auto-fixing Markdown files.
 # Install CLI tool
 cargo install mkdlint
 
+# With Homebrew (macOS/Linux)
+brew install 192d-Wing/tap/mkdlint
+
+# With Docker
+docker run --rm -v $(pwd):/work ghcr.io/192d-wing/mkdlint .
+
 # Install with LSP support
 cargo install mkdlint --features lsp
 ```
@@ -68,7 +74,7 @@ mkdlint includes a full-featured LSP server for real-time linting in your editor
 ### Features
 
 - ✅ **Real-time diagnostics** as you type (300ms debounced)
-- ✅ **Code actions** (quick fixes) for all 44 auto-fixable rules
+- ✅ **Code actions** (quick fixes) for all 45 auto-fixable rules
 - ✅ **"Fix All" command** to apply all fixes at once
 - ✅ **Automatic config discovery** (walks up to workspace root)
 - ✅ **Multi-workspace support**
@@ -88,54 +94,7 @@ mkdlint-lsp --version
 
 #### VS Code
 
-Create `.vscode/extensions/mkdlint-lsp/package.json`:
-
-```json
-{
-  "name": "mkdlint-lsp",
-  "version": "1.0.0",
-  "engines": { "vscode": "^1.75.0" },
-  "activationEvents": ["onLanguage:markdown"],
-  "main": "./out/extension.js"
-}
-```
-
-Create `.vscode/extensions/mkdlint-lsp/src/extension.ts`:
-
-```typescript
-import { workspace, ExtensionContext } from 'vscode';
-import {
-  LanguageClient,
-  LanguageClientOptions,
-  ServerOptions,
-} from 'vscode-languageclient/node';
-
-let client: LanguageClient;
-
-export function activate(context: ExtensionContext) {
-  const serverOptions: ServerOptions = {
-    command: 'mkdlint-lsp',
-    args: [],
-  };
-
-  const clientOptions: LanguageClientOptions = {
-    documentSelector: [{ scheme: 'file', language: 'markdown' }],
-  };
-
-  client = new LanguageClient(
-    'mkdlint',
-    'mkdlint LSP',
-    serverOptions,
-    clientOptions
-  );
-
-  client.start();
-}
-
-export function deactivate() {
-  return client?.stop();
-}
-```
+Install the [mkdlint extension](https://marketplace.visualstudio.com/items?itemName=192d-wing.mkdlint) from the Marketplace or search "mkdlint" in the Extensions panel. The extension bundles the LSP server automatically.
 
 #### Neovim
 
@@ -396,7 +355,7 @@ mkdlint --ignore "**/node_modules/**" --ignore "vendor/**" .
 
 ### What Can Be Fixed
 
-mkdlint can automatically fix **43 out of 54 rules (80%)**:
+mkdlint can automatically fix **45 out of 53 rules (84.9%)**:
 
 **Headings (11 rules)**:
 - MD001: Heading level increments
@@ -490,15 +449,13 @@ mkdlint's auto-fix is safe:
 
 ### What Cannot Be Fixed
 
-11 rules cannot be auto-fixed because they require human judgment:
+8 rules cannot be auto-fixed because they require human judgment:
 
 - **MD013**: Line length (requires context-aware wrapping)
-- **MD024**: Duplicate headings (which to rename?)
 - **MD033**: Inline HTML (may be intentional)
 - **MD043**: Required heading structure (document-specific)
 - **MD046**: Code block style (complex conversion)
 - **MD051**: Link fragment validation (requires checking targets)
-- **MD052**: Reference link validation (external validation)
 - **MD054**: Link/image style (multiple valid options)
 - **MD056**: Table column count (structural issue)
 - **MD059**: Emphasis vs math syntax (context-dependent)
@@ -522,15 +479,21 @@ The easiest way to integrate mkdlint is through your editor's task runner or bui
 
 ### Option 2: LSP Integration (Advanced)
 
-For real-time inline diagnostics and code actions, use `mkdlint-lsp`(built with`--features lsp`).
+For real-time inline diagnostics and code actions, use `mkdlint-lsp` (built with `--features lsp`).
 
-**Note:** The LSP server is currently in development. For now, use CLI integration with watch mode.
+**For VS Code:** Install the [mkdlint extension](https://marketplace.visualstudio.com/items?itemName=192d-wing.mkdlint) which bundles the LSP server automatically.
+
+**For other editors:** See the [LSP section](#language-server-protocol-lsp) above for setup instructions.
 
 ---
 
 ### Visual Studio Code
 
-#### Method 1: Tasks (Recommended)
+#### Method 1: Extension (Recommended)
+
+Install the [mkdlint extension](https://marketplace.visualstudio.com/items?itemName=192d-wing.mkdlint) for real-time diagnostics, quick-fix code actions, and a "Fix All" command. The extension bundles the LSP server -- no separate install needed.
+
+#### Method 2: Tasks
 
 Create `.vscode/tasks.json`:
 
@@ -600,7 +563,7 @@ Create `.vscode/tasks.json`:
 }
 ```
 
-#### Method 2: Auto-run on Save
+#### Method 3: Auto-run on Save
 
 Add to `.vscode/settings.json`:
 
@@ -619,7 +582,7 @@ Add to `.vscode/settings.json`:
 
 Requires: [Run on Save extension](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave)
 
-#### Method 3: Watch Mode in Terminal
+#### Method 4: Watch Mode in Terminal
 
 1. Open integrated terminal
 2. Run: `mkdlint --watch --fix`
@@ -840,9 +803,9 @@ Create `mkdlint.sublime-build`:
 
 ---
 
-### Generic LSP Setup (Future)
+### Generic LSP Setup
 
-Once `mkdlint-lsp` is stable, any LSP-compatible editor can use it:
+Any LSP-compatible editor can use `mkdlint-lsp`:
 
 **Installation:**
 
@@ -928,13 +891,10 @@ markdown-lint:
 
 ```yaml
 repos:
-  - repo: local
+  - repo: https://github.com/192d-Wing/mkdlint
+    rev: main
     hooks:
       - id: mkdlint
-        name: mkdlint
-        entry: mkdlint
-        language: system
-        files: \.md$
 ```
 
 ### Make Target
@@ -1118,12 +1078,18 @@ Add `revert-buffer` to your fix function:
 
 #### LSP: "mkdlint-lsp not found"
 
-**Note:** LSP support is currently in development.
+**Solution:**
 
-**Current Status:**
-- CLI integration is fully supported and recommended
-- LSP server is planned for future releases
-- Use watch mode with terminal splits for now
+```bash
+# Install with LSP support
+cargo install mkdlint --features lsp
+
+# Verify installation
+which mkdlint-lsp
+mkdlint-lsp --version
+```
+
+For VS Code users, install the [mkdlint extension](https://marketplace.visualstudio.com/items?itemName=192d-wing.mkdlint) which bundles the binary.
 
 #### "Too many errors"
 
@@ -1213,7 +1179,7 @@ mkdlint --fix --enable MD001 MD003 MD018 file.md
 
 ### Q: Can I create custom rules
 
-A: Not yet, but it's on the roadmap! Custom rule API is planned for v0.7.0.
+A: Not yet, but it's on the roadmap. A custom rule API is planned for a future release.
 
 ### Q: Why is auto-fix changing my code blocks
 
@@ -1245,7 +1211,7 @@ A: Yes! Add it to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mkdlint = "0.6"
+mkdlint = "0.9"
 ```
 
 See the [API documentation](https://docs.rs/mkdlint) for details.
