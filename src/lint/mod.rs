@@ -3,56 +3,105 @@
 use crate::config::Config;
 use crate::parser;
 use crate::types::{LintError, LintOptions, LintResults, MarkdownlintError, Result};
+use rayon::prelude::*;
 
 /// Lint markdown content synchronously
+///
+/// Files are read sequentially (for proper error reporting) then linted
+/// in parallel using rayon.
 pub fn lint_sync(options: &LintOptions) -> Result<LintResults> {
     let mut results = LintResults::new();
 
     // Load configuration
     let config = load_config(options)?;
 
-    // Lint files
+    // Read all files first (sequential for proper error reporting)
+    let mut inputs: Vec<(String, String)> = Vec::new();
     for file_path in &options.files {
         let content = std::fs::read_to_string(file_path)
             .map_err(|_| MarkdownlintError::FileNotFound(file_path.clone()))?;
-
-        let errors = lint_content(&content, &config, file_path)?;
-        results.add(file_path.clone(), errors);
+        inputs.push((file_path.clone(), content));
+    }
+    for (name, content) in &options.strings {
+        inputs.push((name.clone(), content.clone()));
     }
 
-    // Lint strings
-    for (name, content) in &options.strings {
-        let errors = lint_content(content, &config, name)?;
-        results.add(name.clone(), errors);
+    // Lint all inputs in parallel
+    let file_results: Vec<(String, std::result::Result<Vec<LintError>, MarkdownlintError>)> =
+        inputs
+            .par_iter()
+            .map(|(name, content)| {
+                let errors = lint_content(content, &config, name);
+                (name.clone(), errors)
+            })
+            .collect();
+
+    for (name, result) in file_results {
+        results.add(name, result?);
     }
 
     Ok(results)
 }
 
 /// Lint markdown content asynchronously
+///
+/// Files are read concurrently with tokio, then linted in parallel
+/// using spawn_blocking (CPU-bound work).
 #[cfg(feature = "async")]
 pub async fn lint_async(options: &LintOptions) -> Result<LintResults> {
+    use std::sync::Arc;
     use tokio::fs;
 
     let mut results = LintResults::new();
 
     // Load configuration
-    let config = load_config(options)?;
+    let config = Arc::new(load_config(options)?);
 
-    // Lint files
-    for file_path in &options.files {
-        let content = fs::read_to_string(file_path)
-            .await
-            .map_err(|_| MarkdownlintError::FileNotFound(file_path.clone()))?;
+    // Read all files concurrently
+    let read_handles: Vec<_> = options
+        .files
+        .iter()
+        .map(|file_path| {
+            let path = file_path.clone();
+            tokio::spawn(async move {
+                let content = fs::read_to_string(&path)
+                    .await
+                    .map_err(|_| MarkdownlintError::FileNotFound(path.clone()));
+                (path, content)
+            })
+        })
+        .collect();
 
-        let errors = lint_content(&content, &config, file_path)?;
-        results.add(file_path.clone(), errors);
+    let mut inputs: Vec<(String, String)> = Vec::new();
+    for handle in read_handles {
+        let (path, content_result) = handle.await.map_err(|e| {
+            MarkdownlintError::AsyncRuntime(format!("Task join error: {}", e))
+        })?;
+        inputs.push((path, content_result?));
     }
 
-    // Lint strings
+    // Add string inputs
     for (name, content) in &options.strings {
-        let errors = lint_content(content, &config, name)?;
-        results.add(name.clone(), errors);
+        inputs.push((name.clone(), content.clone()));
+    }
+
+    // Lint all inputs concurrently using spawn_blocking (CPU-bound)
+    let lint_handles: Vec<_> = inputs
+        .into_iter()
+        .map(|(name, content)| {
+            let config = Arc::clone(&config);
+            tokio::task::spawn_blocking(move || {
+                let errors = lint_content(&content, &config, &name);
+                (name, errors)
+            })
+        })
+        .collect();
+
+    for handle in lint_handles {
+        let (name, error_result) = handle.await.map_err(|e| {
+            MarkdownlintError::AsyncRuntime(format!("Task join error: {}", e))
+        })?;
+        results.add(name, error_result?);
     }
 
     Ok(results)

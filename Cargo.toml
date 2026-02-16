@@ -68,6 +68,10 @@ default = ["cli"]
 cli = ["dep:clap", "dep:colored", "dep:walkdir", "dep:globset"]
 async = ["dep:tokio"]
 
+[[bench]]
+name = "lint_bench"
+harness = false
+
 [profile.release]
 opt-level = 3
 lto = true
