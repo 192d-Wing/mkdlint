@@ -18,7 +18,7 @@ impl Rule for MD030 {
     }
 
     fn tags(&self) -> &[&'static str] {
-        &["ol", "ul", "whitespace"]
+        &["ol", "ul", "whitespace", "fixable"]
     }
 
     fn parser_type(&self) -> ParserType {
