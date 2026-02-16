@@ -34,6 +34,8 @@ mdlint = { version = "0.1", default-features = false }
 
 ## CLI Usage
 
+### Basic Commands
+
 ```sh
 # Lint files
 mdlint README.md docs/*.md
@@ -44,14 +46,70 @@ mdlint --fix README.md
 # Lint a directory recursively
 mdlint docs/
 
-# Use a config file
+# Lint from stdin
+cat README.md | mdlint --stdin
+
+# List all available rules with descriptions
+mdlint --list-rules
+```
+
+### Configuration Management
+
+```sh
+# Initialize a new config file with defaults
+mdlint init
+
+# Initialize with custom path and format
+mdlint init --output .mdlint.yaml --format yaml
+
+# Use a specific config file
 mdlint --config .markdownlint.json README.md
 
-# Output in JSON format
+# Enable/disable specific rules on the fly
+mdlint --enable MD001 --disable MD013 README.md
+
+# Combine multiple rule overrides
+mdlint --config base.json --enable MD001 --disable MD033 docs/
+```
+
+### Output Control
+
+```sh
+# Output in JSON format (machine-readable)
 mdlint --output-format json README.md
 
-# Ignore specific files
+# Output in SARIF format (for CI/CD integration)
+mdlint --output-format sarif README.md
+
+# Quiet mode - only show filenames with errors
+mdlint --quiet docs/
+
+# Verbose mode - show detailed error statistics
+mdlint --verbose docs/
+
+# Disable colored output (for CI environments)
+mdlint --no-color README.md
+```
+
+### Advanced Usage
+
+```sh
+# Ignore specific files/patterns
 mdlint --ignore "**/node_modules/**" --ignore "**/.git/**" .
+
+# Combine multiple options
+mdlint --config .mdlint.json \
+       --ignore "build/**" \
+       --ignore "dist/**" \
+       --fix \
+       --verbose \
+       .
+
+# Fix with specific rules disabled
+mdlint --fix --disable MD013 --disable MD033 docs/
+
+# Stdin with fix output to stdout
+cat README.md | mdlint --stdin --fix > README_fixed.md
 ```
 
 ### Example Output
@@ -70,6 +128,13 @@ README.md: 58: MD034/no-bare-urls Bare URL used
      |        ^^^^^^^^^^^^^^^^^^^
 ```
 
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `mdlint [FILES...]` | Lint markdown files (default command) |
+| `mdlint init` | Create a new configuration file with defaults |
+
 ### Options
 
 | Flag | Description |
@@ -78,6 +143,12 @@ README.md: 58: MD034/no-bare-urls Bare URL used
 | `-c`, `--config <PATH>` | Path to configuration file (.json, .yaml, or .toml) |
 | `-o`, `--output-format <FORMAT>` | Output format: `text` (default), `json`, or `sarif` |
 | `--ignore <PATTERN>` | Glob pattern to ignore (can be repeated) |
+| `--stdin` | Read input from stdin instead of files |
+| `--list-rules` | List all available linting rules with descriptions |
+| `--enable <RULE>` | Enable specific rule (can be repeated) |
+| `--disable <RULE>` | Disable specific rule (can be repeated) |
+| `-v`, `--verbose` | Show detailed output with error statistics |
+| `-q`, `--quiet` | Quiet mode - only show filenames with errors |
 | `--no-color` | Disable colored output |
 | `--no-inline-config` | Disable inline configuration comments |
 
