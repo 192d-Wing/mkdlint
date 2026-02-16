@@ -62,7 +62,7 @@ impl Rule for MD014 {
                         delete_count: Some(delete_count),
                         insert_text: None,
                     }),
-                    suggestion: None,
+                    suggestion: Some("Remove the $ prefix from this command".to_string()),
                     severity: Severity::Error,
                 });
             }
