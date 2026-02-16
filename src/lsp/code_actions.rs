@@ -31,7 +31,7 @@ pub fn fix_to_code_action(
     let title = format!(
         "Fix: {} ({})",
         error.rule_description,
-        error.rule_names.first().unwrap_or(&"unknown".to_string())
+        error.rule_names.first().unwrap_or(&"unknown")
     );
 
     let code_action = CodeAction {

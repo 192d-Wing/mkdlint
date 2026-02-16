@@ -14,7 +14,7 @@ pub fn lint_error_to_diagnostic(error: &LintError, lines: &[String]) -> Diagnost
     let code = error
         .rule_names
         .first()
-        .map(|name| NumberOrString::String(name.clone()));
+        .map(|name| NumberOrString::String(name.to_string()));
 
     Diagnostic {
         range,
@@ -58,7 +58,7 @@ fn severity_to_lsp(severity: Severity) -> DiagnosticSeverity {
 
 /// Format the diagnostic message
 fn format_message(error: &LintError) -> String {
-    let mut parts = vec![error.rule_description.clone()];
+    let mut parts = vec![error.rule_description.to_string()];
 
     if let Some(detail) = &error.error_detail {
         parts.push(format!("({})", detail));

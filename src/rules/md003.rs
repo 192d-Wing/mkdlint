@@ -263,11 +263,14 @@ impl Rule for MD003 {
                         if style == HeadingStyle::Setext && heading.end_line > heading.start_line {
                             errors.push(LintError {
                                 line_number: heading.end_line,
-                                rule_names: &[],
-                                rule_description: "",
-                                error_detail: None,
+                                rule_names: self.names(),
+                                rule_description: self.description(),
+                                error_detail: Some(
+                                    "Delete setext underline (part of style conversion)"
+                                        .to_string(),
+                                ),
                                 error_context: None,
-                                rule_information: None,
+                                rule_information: self.information(),
                                 error_range: None,
                                 fix_info: Some(FixInfo {
                                     line_number: Some(heading.end_line),
@@ -472,15 +475,27 @@ mod tests {
 
         let rule = MD003;
         let all_errors = rule.lint(&params);
-        // Filter out underline deletion errors (helper errors with empty rule_names)
-        let errors: Vec<_> = all_errors
-            .iter()
-            .filter(|e| !e.rule_names.is_empty())
-            .collect();
-        assert_eq!(errors.len(), 1);
-        assert_eq!(errors[0].line_number, 3);
-        assert!(errors[0].error_detail.as_ref().unwrap().contains("atx"));
-        assert!(errors[0].error_detail.as_ref().unwrap().contains("setext"));
+        // 2 errors: style mismatch + underline deletion helper
+        assert_eq!(all_errors.len(), 2);
+        // First error: the style violation on the setext heading
+        assert_eq!(all_errors[0].line_number, 3);
+        assert!(all_errors[0].error_detail.as_ref().unwrap().contains("atx"));
+        assert!(
+            all_errors[0]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("setext")
+        );
+        // Second error: underline deletion helper
+        assert_eq!(all_errors[1].line_number, 4);
+        assert!(
+            all_errors[1]
+                .error_detail
+                .as_ref()
+                .unwrap()
+                .contains("underline")
+        );
     }
 
     #[test]

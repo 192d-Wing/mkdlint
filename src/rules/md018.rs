@@ -39,7 +39,11 @@ impl Rule for MD018 {
                 let hash_count = trimmed.chars().take_while(|&c| c == '#').count();
                 if hash_count > 0 && hash_count <= 6 {
                     let after_hash = &trimmed[hash_count..];
+                    // Skip if nothing follows the hashes (empty heading),
+                    // if content is only whitespace/newlines (avoids MD009 oscillation),
+                    // or if a space/tab already exists.
                     if !after_hash.is_empty()
+                        && !after_hash.trim().is_empty()
                         && !after_hash.starts_with(' ')
                         && !after_hash.starts_with('\t')
                     {

@@ -16,13 +16,15 @@ fn md_line() -> impl Strategy<Value = String> {
         // Plain text
         "[a-zA-Z0-9 ,.!?]{0,120}".prop_map(|s| s),
         // ATX heading
-        (1..=6u8, "[a-zA-Z0-9 ]{0,60}")
-            .prop_map(|(level, text)| format!("{} {}", "#".repeat(level as usize), text)),
+        (1..=6u8, "[a-zA-Z0-9 ]{0,60}").prop_map(|(level, text)| format!(
+            "{} {}",
+            "#".repeat(level as usize),
+            text
+        )),
         // Unordered list item
         "[a-zA-Z0-9 ]{1,40}".prop_map(|text| format!("- {}", text)),
         // Ordered list item
-        (1..100u32, "[a-zA-Z0-9 ]{1,40}")
-            .prop_map(|(n, text)| format!("{}. {}", n, text)),
+        (1..100u32, "[a-zA-Z0-9 ]{1,40}").prop_map(|(n, text)| format!("{}. {}", n, text)),
         // Fenced code block
         "[a-z]{0,10}".prop_map(|lang| format!("```{}\ncode\n```", lang)),
         // Blockquote
@@ -38,8 +40,7 @@ fn md_line() -> impl Strategy<Value = String> {
         // Horizontal rule
         prop_oneof![Just("---".to_string()), Just("***".to_string()),],
         // Table row
-        ("[a-zA-Z0-9]{1,10}", "[a-zA-Z0-9]{1,10}")
-            .prop_map(|(a, b)| format!("| {} | {} |", a, b)),
+        ("[a-zA-Z0-9]{1,10}", "[a-zA-Z0-9]{1,10}").prop_map(|(a, b)| format!("| {} | {} |", a, b)),
     ]
 }
 
@@ -294,12 +295,6 @@ proptest! {
 
         let errors = lint_string_with_config(&doc, config);
         for error in &errors {
-            // Some rules emit helper fix entries with empty rule_names
-            // (e.g., MD003 emits a second entry to delete setext underlines).
-            // Skip those — only check real diagnostic errors.
-            if error.rule_names.is_empty() {
-                continue;
-            }
             prop_assert!(
                 error.rule_names.contains(&chosen),
                 "Expected only {} errors but got {:?}",
