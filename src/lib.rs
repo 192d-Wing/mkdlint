@@ -75,6 +75,7 @@
 #![warn(clippy::all)]
 
 pub mod config;
+pub mod formatters;
 pub mod helpers;
 pub mod lint;
 pub mod parser;

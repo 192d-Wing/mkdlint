@@ -4,7 +4,16 @@
 use clap::Parser;
 
 #[cfg(feature = "cli")]
-use mdlint::{apply_fixes, lint_sync, LintOptions};
+use mdlint::{apply_fixes, formatters, lint_sync, LintOptions};
+
+#[cfg(feature = "cli")]
+#[derive(clap::ValueEnum, Clone, Debug, Default)]
+enum OutputFormat {
+    #[default]
+    Text,
+    Json,
+    Sarif,
+}
 
 #[cfg(feature = "cli")]
 #[derive(Parser, Debug)]
@@ -19,6 +28,10 @@ struct Args {
     /// Path to configuration file
     #[arg(short, long)]
     config: Option<String>,
+
+    /// Output format
+    #[arg(short = 'o', long, default_value = "text")]
+    output_format: OutputFormat,
 
     /// Disable inline configuration comments
     #[arg(long)]
@@ -72,7 +85,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else if results.is_empty() {
         println!("No errors found!");
     } else {
-        println!("{}", results);
+        let output = match args.output_format {
+            OutputFormat::Text => formatters::format_text(&results),
+            OutputFormat::Json => formatters::format_json(&results),
+            OutputFormat::Sarif => formatters::format_sarif(&results),
+        };
+        println!("{}", output);
         std::process::exit(1);
     }
 
