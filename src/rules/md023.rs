@@ -43,7 +43,9 @@ impl Rule for MD023 {
                         rule_names: self.names().iter().map(|s| s.to_string()).collect(),
                         rule_description: self.description().to_string(),
                         error_detail: Some(format!("Expected: 0; Actual: {}", indent_count)),
-                        error_context: Some(trimmed_no_newline[..20.min(trimmed_no_newline.len())].to_string()),
+                        error_context: Some(
+                            trimmed_no_newline[..20.min(trimmed_no_newline.len())].to_string(),
+                        ),
                         rule_information: self.information().map(|s| s.to_string()),
                         error_range: Some((1, indent_count)),
                         fix_info: Some(FixInfo {
