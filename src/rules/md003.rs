@@ -136,7 +136,20 @@ fn generate_heading_fix(
             }
             let underline_char = if level == 1 { '=' } else { '-' };
             let underline = underline_char.to_string().repeat(heading_text.len().max(3));
-            format!("{}\n{}", heading_text, underline)
+            // If the line before this heading is not blank, prepend a blank line
+            // to prevent an MD022 violation after conversion.
+            let needs_leading_blank = start_line > 1 && {
+                let prev = lines[start_line - 2]
+                    .trim_end_matches('\n')
+                    .trim_end_matches('\r')
+                    .trim();
+                !prev.is_empty()
+            };
+            if needs_leading_blank {
+                format!("\n{}\n{}", heading_text, underline)
+            } else {
+                format!("{}\n{}", heading_text, underline)
+            }
         }
         _ => return None,
     };

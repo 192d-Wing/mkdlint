@@ -614,8 +614,9 @@ impl LanguageServer for MkdlintLanguageServer {
             None => return Ok(None),
         };
 
-        // Get diagnostics range
+        // Get diagnostics range and context diagnostics
         let range = params.range;
+        let context_diagnostics = params.context.diagnostics;
 
         // Find errors that overlap with the requested range
         let mut actions = Vec::new();
@@ -628,8 +629,22 @@ impl LanguageServer for MkdlintLanguageServer {
             // Check if error line is within range
             let error_line = (error.line_number - 1) as u32;
             if error_line >= range.start.line && error_line <= range.end.line {
-                // Generate code action
-                if let Some(action) = code_actions::fix_to_code_action(&uri, error, &doc.content) {
+                // Match this error to a context diagnostic by line and rule code
+                let matched_diag = context_diagnostics.iter().find(|d| {
+                    d.range.start.line == error_line
+                        && error.rule_names.first().is_some_and(|name| {
+                            d.code
+                                == Some(NumberOrString::String(name.to_string()))
+                        })
+                });
+
+                // Generate code action, linking to the matched diagnostic
+                if let Some(action) = code_actions::fix_to_code_action(
+                    &uri,
+                    error,
+                    &doc.content,
+                    matched_diag.cloned(),
+                ) {
                     actions.push(action);
                 }
             }

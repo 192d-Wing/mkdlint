@@ -268,3 +268,9 @@ fn snapshot_kramdown_rules() {
     let output = lint_fixture_with_preset("kramdown_rules.md", "kramdown");
     insta::assert_snapshot!(output);
 }
+
+#[test]
+fn snapshot_github_rules() {
+    let output = lint_fixture_with_preset("github_rules.md", "github");
+    insta::assert_snapshot!(output);
+}

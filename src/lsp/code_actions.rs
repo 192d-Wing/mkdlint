@@ -7,14 +7,19 @@ use super::utils::to_position;
 
 // Import all LSP types from tower-lsp which re-exports lsp-types
 use tower_lsp::lsp_types::{
-    CodeAction, CodeActionKind, CodeActionOrCommand, Position, Range, TextEdit, Url, WorkspaceEdit,
+    CodeAction, CodeActionKind, CodeActionOrCommand, Diagnostic, Position, Range, TextEdit, Url,
+    WorkspaceEdit,
 };
 
-/// Convert a LintError with fix_info to a CodeAction
+/// Convert a LintError with fix_info to a CodeAction.
+///
+/// If `diagnostic` is provided, the action will reference it so the editor
+/// can show a lightbulb specifically for that diagnostic.
 pub fn fix_to_code_action(
     uri: &Url,
     error: &LintError,
     content: &str,
+    diagnostic: Option<Diagnostic>,
 ) -> Option<CodeActionOrCommand> {
     let fix_info = error.fix_info.as_ref()?;
 
@@ -38,6 +43,7 @@ pub fn fix_to_code_action(
         title,
         kind: Some(CodeActionKind::QUICKFIX),
         edit: Some(workspace_edit),
+        diagnostics: diagnostic.map(|d| vec![d]),
         ..Default::default()
     };
 
@@ -152,7 +158,7 @@ mod tests {
         let content = "# Test\n";
         let uri = Url::parse("file:///tmp/test.md").unwrap();
 
-        let action = fix_to_code_action(&uri, &error, content);
+        let action = fix_to_code_action(&uri, &error, content, None);
         assert!(action.is_some());
 
         if let Some(CodeActionOrCommand::CodeAction(ca)) = action {
@@ -184,7 +190,7 @@ mod tests {
         let content = "#  Test\n"; // Two spaces
         let uri = Url::parse("file:///tmp/test.md").unwrap();
 
-        let action = fix_to_code_action(&uri, &error, content);
+        let action = fix_to_code_action(&uri, &error, content, None);
         assert!(action.is_some());
 
         if let Some(CodeActionOrCommand::CodeAction(ca)) = action {
@@ -212,7 +218,7 @@ mod tests {
         let content = "_Heading_\n";
         let uri = Url::parse("file:///tmp/test.md").unwrap();
 
-        let action = fix_to_code_action(&uri, &error, content);
+        let action = fix_to_code_action(&uri, &error, content, None);
         assert!(action.is_some());
 
         if let Some(CodeActionOrCommand::CodeAction(ca)) = action {
@@ -240,7 +246,7 @@ mod tests {
         let content = "> line 1\n\n> line 2\n";
         let uri = Url::parse("file:///tmp/test.md").unwrap();
 
-        let action = fix_to_code_action(&uri, &error, content);
+        let action = fix_to_code_action(&uri, &error, content, None);
         assert!(action.is_some());
 
         if let Some(CodeActionOrCommand::CodeAction(ca)) = action {
@@ -269,7 +275,7 @@ mod tests {
         let content = "# Test\n";
         let uri = Url::parse("file:///tmp/test.md").unwrap();
 
-        let action = fix_to_code_action(&uri, &error, content);
+        let action = fix_to_code_action(&uri, &error, content, None);
         assert!(action.is_none());
     }
 }

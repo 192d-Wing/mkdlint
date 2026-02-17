@@ -1,0 +1,11 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:7: MD022/blanks-around-headings/blanks-around-headers Headings should be surrounded by blank lines [Expected blank line after heading] [fixable]
+test.md:14: MD003/heading-style Heading style [Expected: atx; Actual: setext] [fixable]
+test.md:14: MD022/blanks-around-headings/blanks-around-headers Headings should be surrounded by blank lines [Expected blank line after heading] [fixable]
+test.md:15: MD003/heading-style Heading style [Delete setext underline (part of style conversion)] [fixable]
+test.md:19: MD001/heading-increment Heading levels should only increment by one level at a time [Expected: h3; Actual: h4] [fixable]
+test.md:25: MD044/proper-names Proper names should have the correct capitalization [Expected: GitHub; Actual: github] (col 19, len 6) [fixable]
+test.md:27: MD044/proper-names Proper names should have the correct capitalization [Expected: GitHub; Actual: github] (col 56, len 6) [fixable]
