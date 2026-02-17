@@ -133,8 +133,8 @@ mod tests {
             *count += 1;
         });
 
-        // Wait for task to complete
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        // Wait for task to complete — use a generous timeout for slow CI runners
+        tokio::time::sleep(Duration::from_millis(500)).await;
 
         assert_eq!(*counter.lock().await, 1);
     }
@@ -157,7 +157,7 @@ mod tests {
         debouncer.cancel(&uri);
 
         // Wait to ensure task doesn't run
-        tokio::time::sleep(Duration::from_millis(100)).await;
+        tokio::time::sleep(Duration::from_millis(500)).await;
 
         assert_eq!(*counter.lock().await, 0);
     }

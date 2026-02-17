@@ -43,17 +43,22 @@ pub fn format_sarif(results: &LintResults) -> String {
                     *idx
                 } else {
                     let idx = rule_map.len();
-                    let rule_entry = serde_json::json!({
+                    let mut rule_entry = serde_json::json!({
                         "id": rule_id,
                         "name": error.rule_names.get(1).or_else(|| error.rule_names.first()).copied().unwrap_or("unknown"),
                         "shortDescription": {
                             "text": error.rule_description
                         },
-                        "helpUri": error.rule_information.unwrap_or(""),
                         "properties": {
                             "tags": error.rule_names.iter().skip(1).collect::<Vec<_>>()
                         }
                     });
+                    // Only include helpUri when a non-empty URL is available
+                    if let Some(url) = error.rule_information {
+                        if !url.is_empty() {
+                            rule_entry["helpUri"] = serde_json::json!(url);
+                        }
+                    }
                     rule_map.insert(rule_id.to_string(), (idx, rule_entry));
                     idx
                 };
@@ -102,17 +107,33 @@ pub fn format_sarif(results: &LintResults) -> String {
                     // Build a SARIF-compliant fix with artifactChanges
                     let fix_line = fix.line_number.unwrap_or(error.line_number);
                     let start_col: usize = fix.edit_column.unwrap_or(1);
-                    let end_col: usize = if let Some(del) = fix.delete_count {
+                    let inserted_text = fix.insert_text.as_deref().unwrap_or("");
+
+                    // Build the deleted region — omit endColumn when deleting
+                    // the entire line (delete_count < 0) so parsers don't have
+                    // to deal with an impossibly-large column sentinel value.
+                    let deleted_region = if let Some(del) = fix.delete_count {
                         if del < 0 {
-                            // Delete to end of line: use a sentinel large column
-                            usize::MAX / 2
+                            // Delete to end of line: no endColumn in region
+                            serde_json::json!({
+                                "startLine": fix_line,
+                                "startColumn": start_col
+                            })
                         } else {
-                            start_col + del as usize
+                            let end_col = start_col + del as usize;
+                            serde_json::json!({
+                                "startLine": fix_line,
+                                "startColumn": start_col,
+                                "endColumn": end_col
+                            })
                         }
                     } else {
-                        start_col
+                        serde_json::json!({
+                            "startLine": fix_line,
+                            "startColumn": start_col,
+                            "endColumn": start_col
+                        })
                     };
-                    let inserted_text = fix.insert_text.as_deref().unwrap_or("");
 
                     result["fixes"] = serde_json::json!([{
                         "description": {
@@ -124,11 +145,7 @@ pub fn format_sarif(results: &LintResults) -> String {
                                 "uriBaseId": "%SRCROOT%"
                             },
                             "replacements": [{
-                                "deletedRegion": {
-                                    "startLine": fix_line,
-                                    "startColumn": start_col,
-                                    "endColumn": end_col
-                                },
+                                "deletedRegion": deleted_region,
                                 "insertedContent": {
                                     "text": inserted_text
                                 }
