@@ -305,3 +305,169 @@ async fn test_unknown_execute_command() {
     // Should succeed (returns None for unknown commands, just logs warning)
     assert!(result.is_ok());
 }
+
+#[tokio::test]
+async fn test_hover_on_diagnostic() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    // Open document with a known error on line 1
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "#No space\n".to_string(), // MD018 - no space after hash
+            },
+        })
+        .await;
+
+    // Wait for lint to complete
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    // Request hover on line 1
+    let result = server
+        .hover(HoverParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 0,
+                    character: 0,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        })
+        .await
+        .unwrap();
+
+    // Should have hover content
+    assert!(result.is_some());
+    let hover = result.unwrap();
+    match hover.contents {
+        HoverContents::Markup(markup) => {
+            assert_eq!(markup.kind, MarkupKind::Markdown);
+            // Should contain rule ID and description
+            assert!(markup.value.contains("MD018"));
+            assert!(markup.value.contains("no-missing-space-atx"));
+        }
+        _ => panic!("Expected MarkupContent"),
+    }
+}
+
+#[tokio::test]
+async fn test_hover_on_clean_line() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    // Open document with no errors
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Good Heading\n".to_string(),
+            },
+        })
+        .await;
+
+    // Wait for lint
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    // Request hover on clean line
+    let result = server
+        .hover(HoverParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri },
+                position: Position {
+                    line: 0,
+                    character: 0,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        })
+        .await
+        .unwrap();
+
+    // Should return None for lines without errors
+    assert!(result.is_none());
+}
+
+#[tokio::test]
+async fn test_hover_shows_fix_availability() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    // Open document with fixable error
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "Trailing spaces   \n".to_string(), // MD009 - fixable
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    let result = server
+        .hover(HoverParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri },
+                position: Position {
+                    line: 0,
+                    character: 0,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(result.is_some());
+    let hover = result.unwrap();
+    match hover.contents {
+        HoverContents::Markup(markup) => {
+            // Should indicate auto-fixable with wrench emoji
+            assert!(markup.value.contains("Auto-fixable") || markup.value.contains("🔧"));
+        }
+        _ => panic!("Expected MarkupContent"),
+    }
+}
+
+#[tokio::test]
+async fn test_capabilities_include_hover() {
+    let server = create_test_server().await;
+
+    let result = server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+
+    // Should advertise hover capability
+    assert!(result.capabilities.hover_provider.is_some());
+}
