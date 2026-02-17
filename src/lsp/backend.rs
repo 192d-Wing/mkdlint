@@ -382,10 +382,6 @@ impl LanguageServer for MkdlintLanguageServer {
             .filter(|e| e.line_number == hover_line)
             .collect();
 
-        if matching_errors.is_empty() {
-            return Ok(None);
-        }
-
         let mut sections = Vec::new();
         for error in &matching_errors {
             let rule_id = error.rule_names.first().unwrap_or(&"unknown");
@@ -412,6 +408,37 @@ impl LanguageServer for MkdlintLanguageServer {
             }
 
             sections.push(md);
+        }
+
+        // If hovering over a rule name/alias (e.g. in a disable comment), show rule docs
+        if let Some(line_text) = doc.content.lines().nth(position.line as usize) {
+            let col = position.character as usize;
+            if let Some(word) = extract_word(line_text, col) {
+                // Check if the word matches any rule name or alias
+                let rules = crate::rules::get_rules();
+                if let Some(rule) = rules
+                    .iter()
+                    .find(|r| r.names().iter().any(|n| n.eq_ignore_ascii_case(word)))
+                {
+                    // Only show rule doc hover if it's not already shown via an error
+                    let already_shown = matching_errors
+                        .iter()
+                        .any(|e| e.rule_names.iter().any(|n| n.eq_ignore_ascii_case(word)));
+                    if !already_shown {
+                        let names = rule.names();
+                        let rule_id = names.first().copied().unwrap_or("unknown");
+                        let rule_alias = names.get(1).copied().unwrap_or(rule_id);
+                        let mut md = format!("### {} / {}\n\n", rule_id, rule_alias);
+                        md.push_str(rule.description());
+                        md.push('\n');
+                        sections.push(md);
+                    }
+                }
+            }
+        }
+
+        if sections.is_empty() {
+            return Ok(None);
         }
 
         let contents = sections.join("\n---\n\n");
@@ -903,6 +930,33 @@ fn ial_completion_items(
     }
 
     items
+}
+
+/// Extract the word (alphanumeric + `-`) under `col` in `line`.
+/// Returns `None` if the character at `col` is not a word character.
+fn extract_word(line: &str, col: usize) -> Option<&str> {
+    let chars: Vec<char> = line.chars().collect();
+    if col >= chars.len() {
+        return None;
+    }
+    let is_word_char = |c: char| c.is_alphanumeric() || c == '-';
+    if !is_word_char(chars[col]) {
+        return None;
+    }
+    // Find start
+    let mut start = col;
+    while start > 0 && is_word_char(chars[start - 1]) {
+        start -= 1;
+    }
+    // Find end
+    let mut end = col + 1;
+    while end < chars.len() && is_word_char(chars[end]) {
+        end += 1;
+    }
+    // Convert char indices to byte indices
+    let byte_start: usize = chars[..start].iter().map(|c| c.len_utf8()).sum();
+    let byte_end: usize = chars[..end].iter().map(|c| c.len_utf8()).sum();
+    Some(&line[byte_start..byte_end])
 }
 
 // We need Clone for the debouncer to work

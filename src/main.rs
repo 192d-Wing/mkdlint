@@ -426,7 +426,11 @@ fn generate_config(format: &str, options: &ConfigOptions) -> String {
 
 #[cfg(feature = "cli")]
 fn generate_json_config(options: &ConfigOptions) -> String {
-    let mut config = String::from("{\n  \"default\": true");
+    let schema_url =
+        "https://raw.githubusercontent.com/192d-Wing/mkdlint/main/schema/mkdlint-schema.json";
+    let mut config = format!(
+        "{{\n  \"$schema\": \"{schema_url}\",\n  \"default\": true"
+    );
 
     // Disabled rules
     for rule in &options.disabled_rules {
@@ -501,7 +505,9 @@ fn generate_json_config(options: &ConfigOptions) -> String {
 
 #[cfg(feature = "cli")]
 fn generate_yaml_config(options: &ConfigOptions) -> String {
-    let mut config = String::from("# mkdlint configuration\ndefault: true\n");
+    let mut config = String::from(
+        "# mkdlint configuration\n# Schema: https://raw.githubusercontent.com/192d-Wing/mkdlint/main/schema/mkdlint-schema.json\ndefault: true\n",
+    );
 
     // Disabled rules
     for rule in &options.disabled_rules {
@@ -570,7 +576,9 @@ fn generate_yaml_config(options: &ConfigOptions) -> String {
 
 #[cfg(feature = "cli")]
 fn generate_toml_config(options: &ConfigOptions) -> String {
-    let mut config = String::from("# mkdlint configuration\ndefault = true\n");
+    let mut config = String::from(
+        "# mkdlint configuration\n# Schema: https://raw.githubusercontent.com/192d-Wing/mkdlint/main/schema/mkdlint-schema.json\ndefault = true\n",
+    );
 
     // Disabled rules
     for rule in &options.disabled_rules {

@@ -152,6 +152,9 @@ mkdlint README.md docs/*.md
 # Lint with auto-fix
 mkdlint --fix README.md
 
+# Preview what --fix would change (CI-friendly, exits 1 if any fixes exist)
+mkdlint --fix-dry-run README.md
+
 # Lint a directory recursively
 mkdlint docs/
 
@@ -160,6 +163,9 @@ cat README.md | mkdlint --stdin
 
 # List all available rules with descriptions
 mkdlint --list-rules
+
+# Print JSON Schema for config file (useful for editor validation)
+mkdlint --generate-schema > schema.json
 ```
 
 ### Configuration Management
@@ -316,6 +322,7 @@ README.md: 58: MD034/no-bare-urls Bare URL used
 | Flag | Description |
 |------|-------------|
 | `-f`, `--fix` | Automatically fix violations where possible |
+| `--fix-dry-run` | Show what `--fix` would change without writing files (exits 1 if changes exist) |
 | `-c`, `--config <PATH>` | Path to configuration file (.json, .yaml, or .toml) |
 | `-o`, `--output-format <FORMAT>` | Output format: `text` (default), `json`, or `sarif` |
 | `--ignore <PATTERN>` | Glob pattern to ignore (can be repeated) |
@@ -323,6 +330,7 @@ README.md: 58: MD034/no-bare-urls Bare URL used
 | `--list-rules` | List all available linting rules with descriptions |
 | `--enable <RULE>` | Enable specific rule (can be repeated) |
 | `--disable <RULE>` | Disable specific rule (can be repeated) |
+| `--generate-schema` | Print a JSON Schema for the config file and exit |
 | `-v`, `--verbose` | Show detailed output with error statistics |
 | `-q`, `--quiet` | Quiet mode - only show filenames with errors |
 | `--no-color` | Disable colored output |

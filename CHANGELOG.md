@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.5] - 2026-02-17
+
+### Added
+
+- **`$schema` hint in generated configs**: `mkdlint init` now adds a `"$schema"`
+  field (JSON) or schema comment (YAML/TOML) to generated config files, pointing
+  to the published JSON Schema for editor validation
+- **LSP hover for rule aliases**: Hovering over a rule name or alias (e.g.
+  `MD001`, `heading-increment`) in a markdown file — even inside a disable
+  comment — now shows the rule description card
+- **README**: Documented `--fix-dry-run` and `--generate-schema` flags in the
+  CLI usage and options table sections
+
 ## [0.11.4] - 2026-02-17
 
 ### Added
