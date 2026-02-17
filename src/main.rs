@@ -52,6 +52,10 @@ struct Args {
     #[arg(short, long, global = true)]
     fix: bool,
 
+    /// Show what --fix would change without writing any files
+    #[arg(long, global = true)]
+    fix_dry_run: bool,
+
     /// List all available rules
     #[arg(long, global = true)]
     list_rules: bool,
@@ -91,6 +95,10 @@ struct Args {
     /// Watch specific paths (default: all input files/directories)
     #[arg(long, action = clap::ArgAction::Append, global = true)]
     watch_paths: Vec<String>,
+
+    /// Print the JSON Schema for the configuration file to stdout
+    #[arg(long, global = true)]
+    generate_schema: bool,
 }
 
 #[cfg(feature = "cli")]
@@ -952,6 +960,85 @@ fn list_presets() {
     );
 }
 
+/// Generate a JSON Schema for the mkdlint configuration file.
+///
+/// The schema describes all top-level config keys (`default`, `extends`,
+/// `preset`) as well as every rule ID as a known property with a description.
+#[cfg(feature = "cli")]
+fn generate_config_schema() -> String {
+    use mkdlint::rules::get_rules;
+
+    let rules = get_rules();
+
+    // Build per-rule property definitions
+    let mut rule_props = serde_json::Map::new();
+    for rule in rules.iter() {
+        let id = rule.names()[0];
+        let description = rule.description();
+        let tags: Vec<&str> = rule.tags().to_vec();
+        let is_fixable = tags.contains(&"fixable");
+
+        // Each rule can be true/false, "warning"/"error", or an object with options
+        let prop = serde_json::json!({
+            "description": format!(
+                "{description}{}",
+                if is_fixable { " [auto-fixable]" } else { "" }
+            ),
+            "oneOf": [
+                { "type": "boolean", "description": "Enable or disable the rule" },
+                {
+                    "type": "string",
+                    "enum": ["error", "warning"],
+                    "description": "Set severity level"
+                },
+                {
+                    "type": "object",
+                    "description": "Rule-specific options",
+                    "additionalProperties": true
+                }
+            ]
+        });
+        rule_props.insert(id.to_string(), prop);
+    }
+
+    let mut properties = serde_json::Map::new();
+    properties.insert("default".to_string(), serde_json::json!({
+        "description": "Default enabled/disabled state for all rules not explicitly configured",
+        "type": "boolean"
+    }));
+    properties.insert("extends".to_string(), serde_json::json!({
+        "description": "Path to another config file to extend",
+        "type": "string"
+    }));
+    properties.insert("preset".to_string(), serde_json::json!({
+        "description": "Named preset to apply (e.g. 'kramdown', 'github')",
+        "type": "string",
+        "enum": ["kramdown", "github"]
+    }));
+    for (k, v) in rule_props {
+        properties.insert(k, v);
+    }
+
+    let final_schema = serde_json::json!({
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "mkdlint configuration",
+        "description": "Configuration file for mkdlint (https://github.com/192d-Wing/mkdlint)",
+        "type": "object",
+        "properties": serde_json::Value::Object(properties),
+        "additionalProperties": {
+            "description": "Rule ID or alias (true/false/severity/options)",
+            "oneOf": [
+                { "type": "boolean" },
+                { "type": "string", "enum": ["error", "warning"] },
+                { "type": "object", "additionalProperties": true }
+            ]
+        }
+    });
+
+    serde_json::to_string_pretty(&final_schema)
+        .unwrap_or_else(|e| format!("{{\"error\": \"{e}\"}}"))
+}
+
 /// Run watch mode with file change detection
 #[cfg(feature = "cli")]
 fn run_watch_mode(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
@@ -1094,6 +1181,59 @@ fn lint_files_once(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
 
     let results = lint_sync(&options)?;
 
+    // Handle --fix-dry-run: show what would change without writing
+    if args.fix_dry_run {
+        let mut would_fix_count = 0;
+        for file_path in &files {
+            let errors = match results.get(file_path) {
+                Some(errors) if !errors.is_empty() => errors,
+                _ => continue,
+            };
+
+            let has_fixes = errors.iter().any(|e| e.fix_info.is_some());
+            if !has_fixes {
+                continue;
+            }
+
+            let content = std::fs::read_to_string(file_path)?;
+            let fixed = apply_fixes(&content, errors);
+            if fixed != content {
+                would_fix_count += 1;
+                if !args.quiet {
+                    println!("{} {}", "Would fix:".yellow().bold(), file_path);
+                    // Show per-error breakdown
+                    for error in errors.iter().filter(|e| e.fix_info.is_some()) {
+                        let rule = error.rule_names.first().copied().unwrap_or("?");
+                        println!(
+                            "  line {}: {} {}",
+                            error.line_number,
+                            rule.yellow(),
+                            error.rule_description
+                        );
+                    }
+                }
+            }
+        }
+
+        if !args.quiet {
+            if would_fix_count > 0 {
+                println!(
+                    "\n{} {} file(s) would be fixed (run with {} to apply).",
+                    "»".yellow().bold(),
+                    would_fix_count.to_string().yellow(),
+                    "--fix".bold()
+                );
+            } else {
+                println!("{}", "No fixable issues found.".dimmed());
+            }
+        }
+        // Exit with error code if there are fixable issues (useful for CI)
+        if would_fix_count > 0 {
+            std::process::exit(1);
+        }
+        return Ok(());
+    }
+
     // Handle auto-fix
     if args.fix {
         let mut fixed_count = 0;
@@ -1184,6 +1324,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }) = args.command
     {
         return init_config(&output, &format, interactive);
+    }
+
+    // Handle --generate-schema flag
+    if args.generate_schema {
+        print!("{}", generate_config_schema());
+        return Ok(());
     }
 
     // Handle --list-presets flag
@@ -1277,6 +1423,64 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let results = lint_sync(&options)?;
+
+    // Handle --fix-dry-run: show what would change without writing
+    if args.fix_dry_run {
+        use colored::Colorize;
+        let mut would_fix_count = 0;
+        let file_list: Vec<String> = if args.stdin {
+            vec!["-".to_string()]
+        } else {
+            files.clone()
+        };
+        for file_path in &file_list {
+            let errors = match results.get(file_path) {
+                Some(errors) if !errors.is_empty() => errors,
+                _ => continue,
+            };
+            let has_fixes = errors.iter().any(|e| e.fix_info.is_some());
+            if !has_fixes {
+                continue;
+            }
+            let content = if file_path == "-" {
+                options.strings.get("-").unwrap().clone()
+            } else {
+                std::fs::read_to_string(file_path)?
+            };
+            let fixed = apply_fixes(&content, errors);
+            if fixed != content {
+                would_fix_count += 1;
+                if !args.quiet {
+                    println!("{} {}", "Would fix:".yellow().bold(), file_path);
+                    for error in errors.iter().filter(|e| e.fix_info.is_some()) {
+                        let rule = error.rule_names.first().copied().unwrap_or("?");
+                        println!(
+                            "  line {}: {} {}",
+                            error.line_number,
+                            rule.yellow(),
+                            error.rule_description
+                        );
+                    }
+                }
+            }
+        }
+        if !args.quiet {
+            if would_fix_count > 0 {
+                println!(
+                    "\n{} {} file(s) would be fixed (run with {} to apply).",
+                    "»".yellow().bold(),
+                    would_fix_count.to_string().yellow(),
+                    "--fix".bold()
+                );
+            } else {
+                println!("{}", "No fixable issues found.".dimmed());
+            }
+        }
+        if would_fix_count > 0 {
+            std::process::exit(1);
+        }
+        return Ok(());
+    }
 
     if args.fix {
         let mut fixed_count = 0;

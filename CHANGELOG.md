@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.4] - 2026-02-17
+
+### Added
+
+- **`--fix-dry-run` CLI flag**: Shows which files and rules would be fixed
+  without writing any changes; exits with code 1 when fixable issues exist
+  (useful for CI pre-flight checks)
+- **`--generate-schema` CLI flag**: Prints a JSON Schema (draft-07) for the
+  `.markdownlint.json` config file to stdout, with a property entry for every
+  rule including its description and fixability
+- **SARIF improvements**:
+  - `ruleIndex` field on each result for fast rule-definition lookup
+  - `fixes` array on fixable results with a human-readable description
+  - `properties.tags` on rule entries (rule aliases)
+  - `uriBaseId: "%SRCROOT%"` on `artifactLocation` for workspace-relative paths
+  - Absolute file paths are emitted as `file://` URIs
+  - `originalUriBaseIds` entry in the run object
+  - Suggestion text added as `message.markdown` for non-fixable results
+
 ## [0.11.3] - 2026-02-17
 
 ### Added
