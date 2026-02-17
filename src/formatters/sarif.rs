@@ -61,10 +61,10 @@ pub fn format_sarif(results: &LintResults) -> String {
                         }
                     });
                     // Only include helpUri when a non-empty URL is available
-                    if let Some(url) = error.rule_information {
-                        if !url.is_empty() {
-                            rule_entry["helpUri"] = serde_json::json!(url);
-                        }
+                    if let Some(url) = error.rule_information
+                        && !url.is_empty()
+                    {
+                        rule_entry["helpUri"] = serde_json::json!(url);
                     }
                     rule_map.insert(rule_id.to_string(), (idx, rule_entry));
                     idx
