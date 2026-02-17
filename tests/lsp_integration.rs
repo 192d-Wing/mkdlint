@@ -612,3 +612,394 @@ async fn test_config_deletion_triggers_relint() {
 
     // Test passed - config deletion should trigger re-lint with default config
 }
+
+// ---------------------------------------------------------------------------
+// documentSymbol tests
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_capabilities_include_document_symbol() {
+    let server = create_test_server().await;
+
+    let result = server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+
+    assert!(
+        result.capabilities.document_symbol_provider.is_some(),
+        "Server should advertise documentSymbol capability"
+    );
+}
+
+#[tokio::test]
+async fn test_document_symbol_flat_headings() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Title\n\n## Section A\n\n## Section B\n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    let result = server
+        .document_symbol(DocumentSymbolParams {
+            text_document: TextDocumentIdentifier { uri },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(result.is_some());
+    match result.unwrap() {
+        DocumentSymbolResponse::Nested(symbols) => {
+            // Top level: "Title" with children "Section A" and "Section B"
+            assert_eq!(symbols.len(), 1, "Should have one top-level h1");
+            assert_eq!(symbols[0].name, "Title");
+            let children = symbols[0].children.as_ref().unwrap();
+            assert_eq!(children.len(), 2);
+            assert_eq!(children[0].name, "Section A");
+            assert_eq!(children[1].name, "Section B");
+        }
+        _ => panic!("Expected nested document symbols"),
+    }
+}
+
+#[tokio::test]
+async fn test_document_symbol_nested_headings() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Root\n\n## Child\n\n### Grandchild\n\n## Child 2\n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    let result = server
+        .document_symbol(DocumentSymbolParams {
+            text_document: TextDocumentIdentifier { uri },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    match result.unwrap() {
+        DocumentSymbolResponse::Nested(symbols) => {
+            assert_eq!(symbols.len(), 1);
+            assert_eq!(symbols[0].name, "Root");
+            let children = symbols[0].children.as_ref().unwrap();
+            assert_eq!(children.len(), 2);
+            assert_eq!(children[0].name, "Child");
+            // Grandchild should be nested under Child
+            let grandchildren = children[0].children.as_ref().unwrap();
+            assert_eq!(grandchildren.len(), 1);
+            assert_eq!(grandchildren[0].name, "Grandchild");
+            assert_eq!(children[1].name, "Child 2");
+        }
+        _ => panic!("Expected nested document symbols"),
+    }
+}
+
+#[tokio::test]
+async fn test_document_symbol_empty_document() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "Just some text, no headings.\n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    let result = server
+        .document_symbol(DocumentSymbolParams {
+            text_document: TextDocumentIdentifier { uri },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    match result.unwrap() {
+        DocumentSymbolResponse::Nested(symbols) => {
+            assert!(symbols.is_empty(), "No headings = no symbols");
+        }
+        _ => panic!("Expected nested document symbols"),
+    }
+}
+
+#[tokio::test]
+async fn test_document_symbol_skips_code_blocks() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Real Heading\n\n```\n# Not a heading\n```\n\n## Another\n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    let result = server
+        .document_symbol(DocumentSymbolParams {
+            text_document: TextDocumentIdentifier { uri },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    match result.unwrap() {
+        DocumentSymbolResponse::Nested(symbols) => {
+            assert_eq!(symbols.len(), 1, "Should have one top-level heading");
+            assert_eq!(symbols[0].name, "Real Heading");
+            let children = symbols[0].children.as_ref().unwrap();
+            assert_eq!(children.len(), 1);
+            assert_eq!(children[0].name, "Another");
+        }
+        _ => panic!("Expected nested document symbols"),
+    }
+}
+
+#[tokio::test]
+async fn test_document_symbol_detail_shows_level() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "## Level 2\n\n### Level 3\n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    let result = server
+        .document_symbol(DocumentSymbolParams {
+            text_document: TextDocumentIdentifier { uri },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    match result.unwrap() {
+        DocumentSymbolResponse::Nested(symbols) => {
+            assert_eq!(symbols[0].detail, Some("h2".to_string()));
+            let children = symbols[0].children.as_ref().unwrap();
+            assert_eq!(children[0].detail, Some("h3".to_string()));
+        }
+        _ => panic!("Expected nested document symbols"),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Additional hover/diagnostic edge case tests
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_hover_multiple_errors_same_line() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    // Line with multiple errors: no space after hash AND trailing whitespace
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "#No space and trailing   \n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    let result = server
+        .hover(HoverParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri },
+                position: Position {
+                    line: 0,
+                    character: 0,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(result.is_some());
+    match result.unwrap().contents {
+        HoverContents::Markup(markup) => {
+            // Should contain multiple rule sections separated by ---
+            assert!(markup.value.contains("MD018"), "Should contain MD018");
+            assert!(markup.value.contains("MD009"), "Should contain MD009");
+        }
+        _ => panic!("Expected MarkupContent"),
+    }
+}
+
+#[tokio::test]
+async fn test_hover_on_unknown_document() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    // Hover on a document we never opened
+    let uri = Url::parse("file:///nonexistent.md").unwrap();
+    let result = server
+        .hover(HoverParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri },
+                position: Position {
+                    line: 0,
+                    character: 0,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(result.is_none(), "Hover on unknown doc should return None");
+}
+
+#[tokio::test]
+async fn test_code_action_on_clean_document() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Clean Document\n\nNo issues here.\n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    let result = server
+        .code_action(CodeActionParams {
+            text_document: TextDocumentIdentifier { uri },
+            range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: 2,
+                    character: 0,
+                },
+            },
+            context: CodeActionContext {
+                diagnostics: vec![],
+                only: None,
+                trigger_kind: None,
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    // Clean document should have no code actions
+    assert!(
+        result.is_none(),
+        "Clean document should not produce code actions"
+    );
+}

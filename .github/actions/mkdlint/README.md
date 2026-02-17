@@ -5,7 +5,7 @@ Fast Markdown linting with auto-fix and SARIF Code Scanning support.
 ## Features
 
 - ⚡ **Fast binary caching** - 10-100x faster than building from source
-- 🔧 **Auto-fix** - Automatically fix 45/53 rules (84.9% coverage)
+- 🔧 **Auto-fix** - Automatically fix 48/53 rules (90.6% coverage)
 - 📊 **SARIF Support** - Native GitHub Code Scanning integration
 - 📋 **Job Summary** - Rich markdown summary with stats and top violated rules
 - 🔄 **Incremental Linting** - Only lint changed files in pull requests
@@ -222,7 +222,7 @@ with:
 | Feature | mkdlint | markdownlint-cli | markdownlint-cli2 |
 |---------|---------|------------------|-------------------|
 | Speed | ⚡ Rust (parallel) | Node.js | Node.js |
-| Auto-fix | 84.9% (45/53) | Limited | Limited |
+| Auto-fix | 90.6% (48/53) | Limited | Limited |
 | SARIF | ✅ Native | ❌ | ✅ Via plugin |
 | Binary caching | ✅ Yes | ❌ | ❌ |
 | Job summary | ✅ Yes | ❌ | ❌ |

@@ -76,13 +76,13 @@ See [GitHub Action documentation](.github/actions/mkdlint/README.md) for full de
 
 ```toml
 [dependencies]
-mkdlint = "0.9"
+mkdlint = "0.10"
 
 # With async support
-mkdlint = { version = "0.9", features = ["async"] }
+mkdlint = { version = "0.10", features = ["async"] }
 
 # With LSP support
-mkdlint = { version = "0.9", features = ["lsp"] }
+mkdlint = { version = "0.10", features = ["lsp"] }
 ```
 
 ## Auto-Fix Showcase

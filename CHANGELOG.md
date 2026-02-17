@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.3] - 2026-02-17
+
 ### Added
 
 - **MD046** (code-block-style): Auto-fix support for converting between
@@ -16,6 +18,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MD059** (emphasis-marker-style-math): Auto-fix support for escaping
   emphasis underscores in math contexts
 - Auto-fix coverage increased from 45/53 (84.9%) to 48/53 (90.6%)
+- **LSP**: `textDocument/documentSymbol` provider — headings appear as
+  outline symbols for breadcrumb navigation and document structure view
+- **Test coverage expansion**: 576 total tests (up from 469)
+  - 73 new integration tests (124 total)
+  - 14 new snapshot tests (26 total)
+  - 6 new property tests (19 total) with extended UTF-8/setext/tilde strategies
+  - 14 new edge case unit tests across 8 rule files
+  - 7 new Criterion benchmarks (15 total) including per-rule and inline config overhead
+
+### Changed
+
+- Updated documentation with current auto-fix coverage stats (90.6%)
+- Updated LSP.md with implemented features (hover, config watching)
+- Updated library dependency examples to v0.10
 
 ## [0.10.2] - 2026-02-16
 
@@ -605,7 +621,10 @@ This release makes existing auto-fixes discoverable by properly tagging them. No
 - Parallel file processing
 - Inline configuration comments support
 
-[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.10.3...HEAD
+[0.10.3]: https://github.com/192d-Wing/mkdlint/compare/v0.10.2...v0.10.3
+[0.10.2]: https://github.com/192d-Wing/mkdlint/compare/v0.10.1...v0.10.2
+[0.10.1]: https://github.com/192d-Wing/mkdlint/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/192d-Wing/mkdlint/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/192d-Wing/mkdlint/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/192d-Wing/mkdlint/compare/v0.8.1...v0.9.0

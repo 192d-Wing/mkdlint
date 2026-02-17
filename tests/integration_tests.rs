@@ -398,6 +398,22 @@ fn test_md001_no_violation_sequential() {
     );
 }
 
+// ---- MD001 fix round-trip ----
+
+#[test]
+fn test_md001_fix_round_trip() {
+    let input = "# H1\n\n### H3\n";
+    let errors = lint_string(input);
+    assert!(has_rule(&errors, "MD001"), "MD001 should fire");
+    let fixed = apply_fixes(input, &errors);
+    let errors2 = lint_string(&fixed);
+    assert!(
+        !has_rule(&errors2, "MD001"),
+        "MD001 should not fire after fix. Fixed:\n{}",
+        fixed
+    );
+}
+
 // ---- New: Config wiring (MD013 line_length) ----
 
 #[test]

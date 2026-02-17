@@ -143,6 +143,7 @@ impl LanguageServer for MkdlintLanguageServer {
                     work_done_progress_options: WorkDoneProgressOptions::default(),
                 }),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
+                document_symbol_provider: Some(OneOf::Left(true)),
                 ..Default::default()
             },
             server_info: Some(ServerInfo {
@@ -339,6 +340,148 @@ impl LanguageServer for MkdlintLanguageServer {
             }),
             range: None,
         }))
+    }
+
+    async fn document_symbol(
+        &self,
+        params: DocumentSymbolParams,
+    ) -> Result<Option<DocumentSymbolResponse>> {
+        let uri = params.text_document.uri;
+
+        let doc = match self.document_manager.get(&uri) {
+            Some(doc) => doc,
+            None => return Ok(None),
+        };
+
+        let lines: Vec<&str> = doc.content.lines().collect();
+        let total_lines = lines.len() as u32;
+
+        // Parse headings from document content
+        let mut headings: Vec<(usize, u32, String)> = Vec::new(); // (level, line, text)
+        let mut in_code_block = false;
+
+        for (idx, line) in lines.iter().enumerate() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+                in_code_block = !in_code_block;
+                continue;
+            }
+            if in_code_block {
+                continue;
+            }
+            if trimmed.starts_with('#') {
+                let level = trimmed.chars().take_while(|&c| c == '#').count();
+                if (1..=6).contains(&level) {
+                    let text = trimmed[level..].trim().trim_end_matches('#').trim();
+                    if !text.is_empty() {
+                        headings.push((level, idx as u32, text.to_string()));
+                    }
+                }
+            }
+        }
+
+        if headings.is_empty() {
+            return Ok(Some(DocumentSymbolResponse::Nested(vec![])));
+        }
+
+        // Build nested DocumentSymbol tree using a stack-based approach
+        fn build_tree(headings: &[(usize, u32, String)], total_lines: u32) -> Vec<DocumentSymbol> {
+            if headings.is_empty() {
+                return vec![];
+            }
+
+            // For each heading, compute end line (just before the next heading at same or higher level, or EOF)
+            let end_lines: Vec<u32> = headings
+                .iter()
+                .enumerate()
+                .map(|(i, (level, _, _))| {
+                    // Find next heading at same or higher (lower number) level
+                    for h in &headings[(i + 1)..] {
+                        if h.0 <= *level {
+                            return h.1.saturating_sub(1);
+                        }
+                    }
+                    total_lines.saturating_sub(1)
+                })
+                .collect();
+
+            // Recursive: build symbols for headings at the current nesting level
+            fn build_level(
+                headings: &[(usize, u32, String)],
+                end_lines: &[u32],
+                start: usize,
+                end: usize,
+                parent_level: usize,
+            ) -> Vec<DocumentSymbol> {
+                let mut symbols = Vec::new();
+                let mut i = start;
+                while i < end {
+                    let (level, line, ref text) = headings[i];
+                    if level != parent_level {
+                        i += 1;
+                        continue;
+                    }
+
+                    // Find children: headings between this one and the next sibling
+                    let sibling_end = {
+                        let mut j = i + 1;
+                        while j < end && headings[j].0 > level {
+                            j += 1;
+                        }
+                        j
+                    };
+
+                    let children = if sibling_end > i + 1 {
+                        // Find the min child level
+                        let child_level = headings[i + 1..sibling_end]
+                            .iter()
+                            .map(|(l, _, _)| *l)
+                            .min()
+                            .unwrap_or(level + 1);
+                        build_level(headings, end_lines, i + 1, sibling_end, child_level)
+                    } else {
+                        vec![]
+                    };
+
+                    let end_line = end_lines[i];
+                    #[allow(deprecated)]
+                    symbols.push(DocumentSymbol {
+                        name: text.clone(),
+                        detail: Some(format!("h{}", level)),
+                        kind: SymbolKind::STRING,
+                        tags: None,
+                        deprecated: None,
+                        range: Range {
+                            start: Position { line, character: 0 },
+                            end: Position {
+                                line: end_line,
+                                character: 0,
+                            },
+                        },
+                        selection_range: Range {
+                            start: Position { line, character: 0 },
+                            end: Position {
+                                line,
+                                character: text.len() as u32 + level as u32 + 1,
+                            },
+                        },
+                        children: if children.is_empty() {
+                            None
+                        } else {
+                            Some(children)
+                        },
+                    });
+                    i = sibling_end;
+                }
+                symbols
+            }
+
+            let top_level = headings.iter().map(|(l, _, _)| *l).min().unwrap_or(1);
+            build_level(headings, &end_lines, 0, headings.len(), top_level)
+        }
+
+        let symbols = build_tree(&headings, total_lines);
+        Ok(Some(DocumentSymbolResponse::Nested(symbols)))
     }
 
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {

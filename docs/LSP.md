@@ -29,7 +29,7 @@ The mkdlint LSP server provides real-time linting and code actions in your favor
 🔧 **Code Actions (Quick Fixes)**
 - Individual fixes for each fixable error
 - "Fix All" command to apply all fixes at once
-- 44/54 rules support auto-fix (81.5% coverage)
+- 48/53 rules support auto-fix (90.6% coverage)
 
 📂 **Workspace Aware**
 - Automatic config discovery (`.markdownlint.json`, `.yaml`, `.yml`)
@@ -385,6 +385,8 @@ The mkdlint LSP server advertises these capabilities:
 - **Text Document Sync**: Full document sync
 - **Code Action Provider**: Provides quick-fix actions
 - **Execute Command Provider**: `mkdlint.fixAll` command
+- **Hover Provider**: Rule documentation on hover
+- **Document Symbol Provider**: Heading outline for breadcrumbs and navigation
 
 ### Supported Methods
 
@@ -398,14 +400,17 @@ The mkdlint LSP server advertises these capabilities:
 | `textDocument/didSave` | Document saved, immediate lint |
 | `textDocument/didClose` | Document closed, clear diagnostics |
 | `textDocument/codeAction` | Provide quick-fix actions |
+| `textDocument/hover` | Show rule documentation and error details |
+| `textDocument/documentSymbol` | Show headings as outline symbols |
 | `workspace/executeCommand` | Execute commands (e.g., Fix All) |
+| `workspace/didChangeWatchedFiles` | Reload config on file change |
 
 ### Planned Features
 
-- [ ] `textDocument/hover` - Show rule documentation
+- [x] `textDocument/hover` - Show rule documentation
 - [ ] `textDocument/formatting` - Format entire document
-- [ ] `textDocument/documentSymbol` - Show headings as symbols
-- [ ] `workspace/didChangeWatchedFiles` - Reload config on change
+- [x] `textDocument/documentSymbol` - Show headings as symbols
+- [x] `workspace/didChangeWatchedFiles` - Reload config on change
 - [ ] `workspace/configuration` - Client-provided settings
 
 ## Configuration

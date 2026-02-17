@@ -19,6 +19,30 @@
 | lint_multi_20_files | 501 µs | ~40K files/sec |
 | lint_multi_100_files | 2.60 ms | ~38K files/sec |
 
+### Auto-Fix Performance
+
+| Benchmark | Time | Notes |
+|-----------|------|-------|
+| apply_fixes | 1.55 µs | Small document with few fixes |
+| apply_fixes_large | ~15 µs | 200 trailing whitespace + 100 proper names |
+
+### Per-Rule Benchmarks
+
+| Benchmark | Time | Notes |
+|-----------|------|-------|
+| lint_rule_md013 | ~350 µs | 200 lines of varying length |
+| lint_rule_md044 | ~400 µs | 200 lines with proper name violations |
+| lint_rule_md049_md050 | ~250 µs | 100 lines with emphasis markers |
+| lint_none_parser_rules | ~150 µs | Line-based rules only (MD009, MD010, MD013, MD044) |
+| lint_micromark_rules | ~800 µs | Parser-dependent rules with headings, lists, emphasis |
+
+### Inline Config Overhead
+
+| Benchmark | Time | Notes |
+|-----------|------|-------|
+| inline_config/with_directives | ~300 µs | 100 enable/disable directive pairs |
+| inline_config/plain | ~200 µs | Same content without directives |
+
 ### Configuration Loading
 
 | Benchmark | Time |
