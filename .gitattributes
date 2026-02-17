@@ -1,0 +1,13 @@
+# Normalize line endings to LF for consistent behavior across platforms
+* text=auto eol=lf
+
+# Ensure shell scripts always have LF (Windows runners need this for bash)
+*.sh text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.gif binary
+*.gz binary
+*.zip binary
+*.tar binary
