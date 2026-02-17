@@ -37,7 +37,10 @@ fn kramdown_preset() -> Config {
     rules.insert("MD041".to_string(), RuleConfig::Enabled(false));
 
     // ── Kramdown extension rules (KMD) ───────────────────────────────────────
-    for name in &["KMD001", "KMD002", "KMD003", "KMD004", "KMD005", "KMD006"] {
+    for name in &[
+        "KMD001", "KMD002", "KMD003", "KMD004", "KMD005", "KMD006", "KMD007", "KMD008", "KMD009",
+        "KMD010",
+    ] {
         rules.insert(name.to_string(), RuleConfig::Enabled(true));
     }
 
@@ -60,6 +63,8 @@ mod tests {
         assert!(!config.is_rule_enabled("MD041"));
         assert!(config.is_rule_enabled("KMD001"));
         assert!(config.is_rule_enabled("KMD006"));
+        assert!(config.is_rule_enabled("KMD007"));
+        assert!(config.is_rule_enabled("KMD010"));
     }
 
     #[test]

@@ -14,7 +14,7 @@ A fast Markdown linter written in Rust, inspired by [markdownlint](https://githu
 
 ## Features
 
-- **59 lint rules** (MD001-MD060 + KMD001-KMD006) enforcing Markdown best practices
+- **63 lint rules** (MD001-MD060 + KMD001-KMD010) enforcing Markdown best practices
 - **Automatic fixing** for **48 rules (90.6% coverage)** with `--fix` flag
 - **Helpful suggestions** for all rules with actionable guidance
 - **VS Code extension** with bundled LSP server
@@ -211,14 +211,19 @@ The `kramdown` preset:
 | KMD003 | `footnote-defs-used` | `[^label]:` defs must be referenced in the document |
 | KMD004 | `abbreviation-defs-used` | `*[ABBR]: ...` defs must appear as text |
 | KMD005 | `no-duplicate-heading-ids` | Heading IDs (explicit or auto-slug) must be unique |
-| KMD006 | `valid-ial-syntax` | `{: ...}` lines must be well-formed IAL |
+| KMD006 | `valid-ial-syntax` | `{: ...}` block-level IAL lines must be well-formed |
+| KMD007 | `math-block-delimiters` | Block `$$` math fences must be matched |
+| KMD008 | `block-extension-syntax` | `{::name}...{:/name}` extensions must be opened and closed |
+| KMD009 | `ald-defs-used` | `{:ref-name: attrs}` ALDs must be referenced |
+| KMD010 | `inline-ial-syntax` | Inline `*text*{: .class}` IAL must be well-formed |
 
 You can enable individual KMD rules without the full preset:
 
 ```json
 {
   "KMD002": true,
-  "KMD006": true
+  "KMD007": true,
+  "KMD010": true
 }
 ```
 

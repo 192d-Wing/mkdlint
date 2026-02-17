@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Activatable via `--preset kramdown` CLI flag or `"preset": "kramdown"` in config
   - Disables MD033 (inline HTML — conflicts with IAL `{: #id .class}` syntax) and
     MD041 (first heading — RFC preambles often start with metadata)
-  - Enables 6 new Kramdown-specific lint rules (KMD001–KMD006, off by default)
+  - Enables 10 new Kramdown-specific lint rules (KMD001–KMD010, off by default)
 - **KMD001** (`definition-list-term-has-definition`): Definition list terms must be
   followed by a `: definition` line
 - **KMD002** (`footnote-refs-defined`): Footnote references `[^label]` must have
@@ -25,7 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **KMD005** (`no-duplicate-heading-ids`): Heading IDs (explicit `{#id}` or
   auto-generated slugs) must be unique
 - **KMD006** (`valid-ial-syntax`): Inline Attribute List lines `{: ...}` must be
-  well-formed
+  well-formed (block-level)
+- **KMD007** (`math-block-delimiters`): Block math `$$` fences must have a
+  matching closing `$$`
+- **KMD008** (`block-extension-syntax`): Block extensions `{::name}...{:/name}`
+  must be properly opened and closed; self-closing `{::name .../}` is valid
+- **KMD009** (`ald-defs-used`): Attribute List Definitions `{:ref-name: attrs}`
+  must be referenced somewhere in the document
+- **KMD010** (`inline-ial-syntax`): IAL syntax used inline on spans
+  (e.g. `*text*{: .class}`) must be well-formed
 
 ## [0.10.3] - 2026-02-17
 

@@ -1663,3 +1663,91 @@ fn test_preset_explicit_rules_override_preset() {
         "KMD001 should still be enabled from the preset"
     );
 }
+
+// ── KMD007: math block delimiters ────────────────────────────────────────────
+
+#[test]
+fn test_kmd007_unclosed_math_block() {
+    let content = "# H\n\n$$\nx = 1\n";
+    let errors = lint_with_preset(content, "kramdown");
+    assert!(
+        errors.iter().any(|e| e.rule_names[0] == "KMD007"),
+        "should fire on unclosed math block"
+    );
+}
+
+#[test]
+fn test_kmd007_closed_math_block_ok() {
+    let content = "# H\n\n$$\nx = 1\n$$\n";
+    let errors = lint_with_preset(content, "kramdown");
+    assert!(
+        !errors.iter().any(|e| e.rule_names[0] == "KMD007"),
+        "matched $$ block should not fire"
+    );
+}
+
+// ── KMD008: block extension syntax ───────────────────────────────────────────
+
+#[test]
+fn test_kmd008_unclosed_extension() {
+    let content = "# H\n\n{::comment}\nsome text\n";
+    let errors = lint_with_preset(content, "kramdown");
+    assert!(
+        errors.iter().any(|e| e.rule_names[0] == "KMD008"),
+        "should fire on unclosed block extension"
+    );
+}
+
+#[test]
+fn test_kmd008_closed_extension_ok() {
+    let content = "# H\n\n{::comment}\nsome text\n{:/comment}\n";
+    let errors = lint_with_preset(content, "kramdown");
+    assert!(
+        !errors.iter().any(|e| e.rule_names[0] == "KMD008"),
+        "matched comment block should not fire"
+    );
+}
+
+// ── KMD009: ALD definitions used ─────────────────────────────────────────────
+
+#[test]
+fn test_kmd009_unused_ald() {
+    let content = "# H\n\n{:myref: .highlight}\n\nA paragraph.\n";
+    let errors = lint_with_preset(content, "kramdown");
+    assert!(
+        errors.iter().any(|e| e.rule_names[0] == "KMD009"),
+        "should fire when ALD is never referenced"
+    );
+}
+
+#[test]
+fn test_kmd009_used_ald_ok() {
+    let content = "# H\n\n{:myref: .highlight}\n\nA paragraph.\n{:myref}\n";
+    let errors = lint_with_preset(content, "kramdown");
+    assert!(
+        !errors.iter().any(|e| e.rule_names[0] == "KMD009"),
+        "referenced ALD should not fire"
+    );
+}
+
+// ── KMD010: inline IAL syntax ────────────────────────────────────────────────
+
+#[test]
+fn test_kmd010_malformed_inline_ial() {
+    let content = "# H\n\n*text*{: bad!!syntax}\n";
+    let errors = lint_with_preset(content, "kramdown");
+    assert!(
+        errors.iter().any(|e| e.rule_names[0] == "KMD010"),
+        "should fire on malformed inline IAL"
+    );
+}
+
+#[test]
+fn test_kmd010_valid_inline_ial_ok() {
+    let content = "# H\n\n*text*{: .highlight}\n";
+    let errors = lint_with_preset(content, "kramdown");
+    assert!(
+        !errors.iter().any(|e| e.rule_names[0] == "KMD010"),
+        "valid inline IAL should not fire"
+    );
+}
