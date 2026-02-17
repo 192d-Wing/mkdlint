@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-02-17
+
+### Added
+
+- **KMD011** (`inline-math-balanced`): New Kramdown rule — inline `$...$` math
+  spans must have balanced `$` delimiters; fires when a line has an odd number of
+  unescaped `$` outside code spans and block-math fences
+- **GitHub preset snapshot test**: `tests/fixtures/github_rules.md` +
+  `snapshot_github_rules` integration test covering MD003/MD022/MD001/MD044
+  behaviour with MD013/MD034 disabled
+- **LSP code actions**: Per-diagnostic `diagnostics` field now set on QUICKFIX
+  code actions so editors show the lightbulb linked to the specific diagnostic
+
+### Fixed
+
+- **MD003 ATX→setext fix**: Conversion now prepends a blank line when the
+  preceding line is non-empty, preventing cascading MD022 violations in a
+  single fix pass
+
 ## [0.11.2] - 2026-02-17
 
 ### Added

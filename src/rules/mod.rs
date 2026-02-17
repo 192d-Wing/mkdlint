@@ -15,6 +15,7 @@ mod kmd007;
 mod kmd008;
 mod kmd009;
 mod kmd010;
+mod kmd011;
 
 mod md001;
 mod md003;
@@ -84,6 +85,7 @@ pub static RULES: Lazy<Vec<BoxedRule>> = Lazy::new(|| {
         Box::new(kmd008::KMD008),
         Box::new(kmd009::KMD009),
         Box::new(kmd010::KMD010),
+        Box::new(kmd011::KMD011),
         // Standard markdownlint rules
         Box::new(md001::MD001),
         Box::new(md003::MD003),
@@ -166,11 +168,11 @@ mod tests {
     fn test_rule_counts() {
         let rules = get_rules();
         // 53 standard rules (MD001-MD060 minus 7 deprecated: MD002, MD006, MD008, MD015, MD016, MD017, MD057)
-        // + 6 Kramdown extension rules (KMD001-KMD006)
+        // + 11 Kramdown extension rules (KMD001-KMD011)
         assert_eq!(
             rules.len(),
-            63,
-            "Should have 53 standard + 6 KMD extension rules"
+            64,
+            "Should have 53 standard + 11 KMD extension rules"
         );
     }
 

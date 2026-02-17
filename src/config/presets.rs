@@ -67,7 +67,7 @@ fn kramdown_preset() -> Config {
     // ── Kramdown extension rules (KMD) ───────────────────────────────────────
     for name in &[
         "KMD001", "KMD002", "KMD003", "KMD004", "KMD005", "KMD006", "KMD007", "KMD008", "KMD009",
-        "KMD010",
+        "KMD010", "KMD011",
     ] {
         rules.insert(name.to_string(), RuleConfig::Enabled(true));
     }

@@ -14,8 +14,8 @@ A fast Markdown linter written in Rust, inspired by [markdownlint](https://githu
 
 ## Features
 
-- **63 lint rules** (MD001-MD060 + KMD001-KMD010) enforcing Markdown best practices
-- **Automatic fixing** for **58 rules (92.1% coverage)** with `--fix` flag
+- **64 lint rules** (MD001-MD060 + KMD001-KMD011) enforcing Markdown best practices
+- **Automatic fixing** for **58 rules (90.6% coverage)** with `--fix` flag
 - **Helpful suggestions** for all rules with actionable guidance
 - **VS Code extension** with bundled LSP server
 - **Language Server Protocol (LSP)** for real-time linting in any editor
@@ -87,7 +87,7 @@ mkdlint = { version = "0.11", features = ["lsp"] }
 
 ## Auto-Fix Showcase
 
-mkdlint can automatically fix **58 out of 63 rules (92.1%)**! Here are some examples:
+mkdlint can automatically fix **58 out of 64 rules (90.6%)**! Here are some examples:
 
 ### Before Auto-Fix
 
@@ -202,7 +202,7 @@ The `kramdown` preset:
 
 - **Disables** MD033 (inline HTML) — Kramdown IAL syntax `{: #id .class key="val"}` looks like inline HTML
 - **Disables** MD041 (first heading required) — RFC preambles often start with metadata, not headings
-- **Enables** 10 Kramdown-specific rules (off by default):
+- **Enables** 11 Kramdown-specific rules (off by default):
 
 | Rule | Name | Description |
 | ---- | ---- | ----------- |
@@ -216,6 +216,7 @@ The `kramdown` preset:
 | KMD008 | `block-extension-syntax` | `{::name}...{:/name}` extensions must be opened and closed |
 | KMD009 | `ald-defs-used` | `{:ref-name: attrs}` ALDs must be referenced |
 | KMD010 | `inline-ial-syntax` | Inline `*text*{: .class}` IAL must be well-formed |
+| KMD011 | `inline-math-balanced` | Inline `$...$` math spans must have balanced `$` delimiters |
 
 You can enable individual KMD rules without the full preset:
 
@@ -553,8 +554,9 @@ Rules can be enabled/disabled by name (`"MD013"`) or alias (`"line-length"`). Pa
 | KMD008 | block-extension-syntax              | Block extensions must be properly opened and closed            | Yes     |
 | KMD009 | ald-defs-used                       | Attribute List Definitions must be referenced in the document  | Yes     |
 | KMD010 | inline-ial-syntax                   | Inline IAL syntax must be well-formed                          | Yes     |
+| KMD011 | inline-math-balanced                | Inline math spans must have balanced '$' delimiters            |         |
 
-**58 of 63 rules** have auto-fix support (92.1% coverage).
+**58 of 64 rules** have auto-fix support (90.6% coverage).
 
 ## License
 
