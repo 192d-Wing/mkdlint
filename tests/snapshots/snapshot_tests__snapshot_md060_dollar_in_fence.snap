@@ -1,0 +1,8 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:4: MD014/commands-show-output Dollar signs used before commands without showing output [Context: "$ echo hello"] (col 1, len 13) [fixable]
+test.md:4: MD060/dollar-in-code-fence Dollar signs used before commands in fenced code blocks without output [Context: "$ echo hello"] [fixable]
+test.md:5: MD014/commands-show-output Dollar signs used before commands without showing output [Context: "$ npm install"] (col 1, len 14) [fixable]
+test.md:5: MD060/dollar-in-code-fence Dollar signs used before commands in fenced code blocks without output [Context: "$ npm install"] [fixable]

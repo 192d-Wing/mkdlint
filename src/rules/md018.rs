@@ -123,4 +123,45 @@ mod tests {
         assert_eq!(errors.len(), 2);
         assert!(errors[0].fix_info.is_some());
     }
+
+    #[test]
+    fn test_md018_fix_info_inserts_space() {
+        let lines = vec!["#Title\n"];
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+        let rule = MD018;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        assert_eq!(fix.edit_column, Some(2)); // insert after the #
+        assert_eq!(fix.insert_text, Some(" ".to_string()));
+        assert!(fix.delete_count.is_none());
+    }
+
+    #[test]
+    fn test_md018_empty_hash_no_error() {
+        // A lone "#" with nothing meaningful after it should not trigger
+        let lines = vec!["#\n"];
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+        let rule = MD018;
+        let errors = rule.lint(&params);
+        assert_eq!(
+            errors.len(),
+            0,
+            "Lone # with no content should not trigger MD018"
+        );
+    }
 }

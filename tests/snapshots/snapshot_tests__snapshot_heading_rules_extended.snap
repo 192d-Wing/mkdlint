@@ -1,0 +1,17 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:3: MD001/heading-increment Heading levels should only increment by one level at a time [Expected: h2; Actual: h3] [fixable]
+test.md:5: MD018/no-missing-space-atx No space after hash on atx style heading [Context: "#No space a"] (col 2, len 1) [fixable]
+test.md:7: MD019/no-multiple-space-atx Multiple spaces after hash on atx style heading [Expected: 1; Actual: 2] (col 3, len 1) [fixable]
+test.md:7: MD025/single-title/single-h1 Multiple top-level headings in the same document [Context: "Multiple spaces after hash"] [fixable]
+test.md:9: MD003/heading-style Heading style [Expected: atx; Actual: atx_closed] [fixable]
+test.md:9: MD025/single-title/single-h1 Multiple top-level headings in the same document [Context: "Closed ATX Title"] [fixable]
+test.md:11: MD003/heading-style Heading style [Expected: atx; Actual: atx_closed] [fixable]
+test.md:11: MD019/no-multiple-space-atx Multiple spaces after hash on atx style heading [Expected: 1; Actual: 2] (col 3, len 1) [fixable]
+test.md:11: MD021/no-multiple-space-closed-atx Multiple spaces inside hashes on closed atx style heading [Expected: 1; Actual: 2] [Context: "#  Closed multi-space  #"] [fixable]
+test.md:11: MD021/no-multiple-space-closed-atx Multiple spaces inside hashes on closed atx style heading [Expected: 1; Actual: 2] [Context: "#  Closed multi-space  #"] [fixable]
+test.md:11: MD025/single-title/single-h1 Multiple top-level headings in the same document [Context: "Closed multi-space"] [fixable]
+test.md:13: MD023/heading-start-left Headings must start at the beginning of the line [Expected: 0; Actual: 2] [Context: "## Indented heading"] (col 1, len 2) [fixable]
+test.md:17: MD024/no-duplicate-heading/no-duplicate-header Multiple headings with the same content [Duplicate heading: 'Duplicate' (occurrence #2)] [Context: "Duplicate"] [fixable]

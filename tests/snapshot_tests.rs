@@ -127,3 +127,91 @@ fn snapshot_md044_proper_names() {
     let output = lint_snapshot("# Title\n\nUsing javascript and github in text.\n");
     insta::assert_snapshot!(output);
 }
+
+// --- New fixture-based snapshot tests ---
+
+#[test]
+fn snapshot_list_rules() {
+    let output = lint_fixture("list_rules.md");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_code_block_rules() {
+    let output = lint_fixture("code_block_rules.md");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_table_rules() {
+    let output = lint_fixture("table_rules.md");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_math_rules() {
+    let output = lint_fixture("math_rules.md");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_misc_rules() {
+    let output = lint_fixture("misc_rules.md");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_heading_rules_extended() {
+    let output = lint_fixture("heading_rules_extended.md");
+    insta::assert_snapshot!(output);
+}
+
+// --- New inline snapshot tests for specific rule behaviors ---
+
+#[test]
+fn snapshot_md003_setext_vs_atx() {
+    let output = lint_snapshot("Title\n=====\n\n## Section\n");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_md011_reversed_link() {
+    let output = lint_snapshot("# Title\n\n(text)[url]\n");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_md018_no_space() {
+    let output = lint_snapshot("#Title without space\n");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_md024_duplicate_headings() {
+    let output = lint_snapshot("# Title\n\n## Section\n\n## Section\n");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_md036_emphasis_heading() {
+    let output = lint_snapshot("# Title\n\n**Bold Heading**\n\nSome text.\n");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_md047_missing_newline() {
+    let output = lint_snapshot("# Title\n\nText without final newline");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_md051_broken_fragment() {
+    let output = lint_snapshot("# Title\n\n[link](#missing)\n");
+    insta::assert_snapshot!(output);
+}
+
+#[test]
+fn snapshot_md060_dollar_in_fence() {
+    let output = lint_snapshot("# Title\n\n```bash\n$ echo hello\n$ npm install\n```\n");
+    insta::assert_snapshot!(output);
+}

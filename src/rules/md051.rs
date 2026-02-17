@@ -269,4 +269,29 @@ mod tests {
         assert_eq!(extract_heading_text("Not heading"), None);
         assert_eq!(extract_heading_text("#"), None); // Empty heading
     }
+
+    #[test]
+    fn test_md051_punctuation_only_heading_no_panic() {
+        // Heading with only punctuation produces empty ID after stripping
+        let rule = MD051;
+        let lines = vec!["## ???\n", "\n", "[link](#)\n"];
+        let config = HashMap::new();
+        let params = make_params(&lines, &config);
+        // Should not panic — just produce an error for invalid fragment
+        let _errors = rule.lint(&params);
+    }
+
+    #[test]
+    fn test_md051_unicode_heading() {
+        let rule = MD051;
+        let lines = vec![
+            "# Caf\u{00e9} Guide\n",
+            "\n",
+            "[link](#caf\u{00e9}-guide)\n",
+        ];
+        let config = HashMap::new();
+        let params = make_params(&lines, &config);
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 0, "Unicode heading IDs should match");
+    }
 }

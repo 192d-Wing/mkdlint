@@ -1,0 +1,5 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:3: MD051/link-fragments Link fragments should be valid [No matching heading for fragment: #missing] [Context: "[link](#missing)"]

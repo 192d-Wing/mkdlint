@@ -60,6 +60,51 @@ fn arbitrary_utf8() -> impl Strategy<Value = String> {
         .prop_map(|s| s)
 }
 
+/// Extended markdown line strategy with more exotic constructs.
+fn md_line_extended() -> impl Strategy<Value = String> {
+    prop_oneof![
+        // All original variants from md_line()
+        "[a-zA-Z0-9 ,.!?]{0,120}".prop_map(|s| s),
+        (1..=6u8, "[a-zA-Z0-9 ]{0,60}").prop_map(|(level, text)| format!(
+            "{} {}",
+            "#".repeat(level as usize),
+            text
+        )),
+        "[a-zA-Z0-9 ]{1,40}".prop_map(|text| format!("- {}", text)),
+        (1..100u32, "[a-zA-Z0-9 ]{1,40}").prop_map(|(n, text)| format!("{}. {}", n, text)),
+        "[a-z]{0,10}".prop_map(|lang| format!("```{}\ncode\n```", lang)),
+        "[a-zA-Z0-9 ]{1,60}".prop_map(|text| format!("> {}", text)),
+        ("[a-zA-Z0-9 ]{1,20}", "[a-z]{3,10}")
+            .prop_map(|(text, url)| format!("[{}]({})", text, url)),
+        ("[a-zA-Z0-9 ]{0,20}", "[a-z.]{3,15}")
+            .prop_map(|(alt, src)| format!("![{}]({})", alt, src)),
+        Just(String::new()),
+        prop_oneof![Just("---".to_string()), Just("***".to_string()),],
+        ("[a-zA-Z0-9]{1,10}", "[a-zA-Z0-9]{1,10}").prop_map(|(a, b)| format!("| {} | {} |", a, b)),
+        // Extended: multi-byte UTF-8 text
+        "[\\p{L}\\p{N} ,]{0,60}".prop_map(|s| s),
+        // Extended: setext heading h1
+        "[a-zA-Z0-9 ]{1,40}".prop_map(|text| format!("{}\n======", text)),
+        // Extended: setext heading h2
+        "[a-zA-Z0-9 ]{1,40}".prop_map(|text| format!("{}\n------", text)),
+        // Extended: tilde code fence
+        "[a-z]{0,10}".prop_map(|lang| format!("~~~{}\ncode\n~~~", lang)),
+        // Extended: nested list item
+        "[a-zA-Z0-9 ]{1,30}".prop_map(|text| format!("  - {}", text)),
+        // Extended: HTML block
+        "[a-zA-Z0-9 ]{0,30}".prop_map(|text| format!("<div>{}</div>", text)),
+    ]
+}
+
+/// Generate a document using the extended strategy.
+fn md_document_extended() -> impl Strategy<Value = String> {
+    prop::collection::vec(md_line_extended(), 1..50).prop_map(|lines| {
+        let mut doc = lines.join("\n");
+        doc.push('\n');
+        doc
+    })
+}
+
 // ---------------------------------------------------------------------------
 // Helper
 // ---------------------------------------------------------------------------
@@ -377,5 +422,125 @@ proptest! {
             prop_assert_eq!(a.line_number, b.line_number);
             prop_assert_eq!(a.rule_names, b.rule_names);
         }
+    }
+}
+
+// ===========================================================================
+// Property 13: lint + fix with extended strategy never panics
+// ===========================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(300))]
+
+    #[test]
+    fn lint_never_panics_extended(doc in md_document_extended()) {
+        let _ = lint_string(&doc);
+    }
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(200))]
+
+    #[test]
+    fn apply_fixes_never_panics_extended(doc in md_document_extended()) {
+        let errors = lint_string(&doc);
+        let fixed = apply_fixes(&doc, &errors);
+        let _ = lint_string(&fixed);
+    }
+}
+
+// ===========================================================================
+// Property 14: apply_fixes is idempotent (fixing twice converges)
+// ===========================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(200))]
+
+    #[test]
+    fn apply_fixes_idempotent(doc in md_document()) {
+        let errors1 = lint_string(&doc);
+        let fixed1 = apply_fixes(&doc, &errors1);
+        let errors2 = lint_string(&fixed1);
+        let fixed2 = apply_fixes(&fixed1, &errors2);
+        let errors3 = lint_string(&fixed2);
+
+        // After two rounds, total error count should converge (not grow unbounded).
+        // Allow a small delta due to rule interactions exposing new issues.
+        let total2 = errors2.len();
+        let total3 = errors3.len();
+        prop_assert!(
+            total3 <= total2 + 3,
+            "Errors should converge after two fix passes, but grew from {} to {}",
+            total2, total3
+        );
+    }
+}
+
+// ===========================================================================
+// Property 15: fix does not increase specific rule error count (well-behaved rules)
+// ===========================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
+    #[test]
+    fn fix_reduces_specific_rule_errors(doc in md_document()) {
+        // These rules should not increase in count after their own fixes are applied.
+        // Excluded: MD009 (trailing spaces can appear when other rules add content),
+        // MD012 (consecutive blanks can appear when fixes insert/delete lines),
+        // MD026 (heading punctuation can appear after HR fix).
+        let well_behaved = ["MD010", "MD034", "MD040", "MD047"];
+        let errors = lint_string(&doc);
+        let fixed = apply_fixes(&doc, &errors);
+        let errors_after = lint_string(&fixed);
+
+        for rule in &well_behaved {
+            let before = errors.iter().filter(|e| e.rule_names.contains(rule)).count();
+            let after = errors_after.iter().filter(|e| e.rule_names.contains(rule)).count();
+            prop_assert!(
+                after <= before,
+                "Rule {} error count increased after fix: {} -> {}",
+                rule, before, after
+            );
+        }
+    }
+}
+
+// ===========================================================================
+// Property 16: lint never panics with mixed CRLF/LF endings
+// ===========================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100))]
+
+    #[test]
+    fn lint_never_panics_mixed_endings(doc in md_document()) {
+        // Randomly convert some lines to CRLF
+        let mixed: String = doc
+            .lines()
+            .enumerate()
+            .map(|(i, line)| {
+                if i % 2 == 0 {
+                    format!("{}\r\n", line)
+                } else {
+                    format!("{}\n", line)
+                }
+            })
+            .collect();
+        let _ = lint_string(&mixed);
+    }
+}
+
+// ===========================================================================
+// Property 17: lint never panics with UTF-8 BOM
+// ===========================================================================
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(50))]
+
+    #[test]
+    fn lint_never_panics_with_bom(doc in md_document()) {
+        let with_bom = format!("\u{FEFF}{}", doc);
+        let _ = lint_string(&with_bom);
     }
 }

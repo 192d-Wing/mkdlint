@@ -1,0 +1,5 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:3: MD047/single-trailing-newline Files should end with a single newline character [fixable]

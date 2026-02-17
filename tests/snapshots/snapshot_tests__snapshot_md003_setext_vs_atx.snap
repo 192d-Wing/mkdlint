@@ -1,0 +1,6 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:1: MD022/blanks-around-headings/blanks-around-headers Headings should be surrounded by blank lines [Expected blank line after heading] [fixable]
+test.md:4: MD003/heading-style Heading style [Expected: setext; Actual: atx] [fixable]

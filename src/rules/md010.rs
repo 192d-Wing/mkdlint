@@ -112,4 +112,44 @@ mod tests {
         assert_eq!(errors[1].line_number, 2);
         assert!(errors[0].fix_info.is_some());
     }
+
+    #[test]
+    fn test_md010_fix_info_correct_column() {
+        let lines = vec!["abc\tdef\n"];
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+        let rule = MD010;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        assert_eq!(fix.edit_column, Some(4)); // tab at 4th character (1-based)
+        assert_eq!(fix.delete_count, Some(1));
+        assert_eq!(fix.insert_text, Some("    ".to_string()));
+        // error_range should match
+        assert_eq!(errors[0].error_range, Some((4, 1)));
+    }
+
+    #[test]
+    fn test_md010_multiple_tabs_same_line() {
+        let lines = vec!["\t\ttwo tabs\n"];
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+        let rule = MD010;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 2);
+        assert_eq!(errors[0].error_range, Some((1, 1)));
+        assert_eq!(errors[1].error_range, Some((2, 1)));
+    }
 }

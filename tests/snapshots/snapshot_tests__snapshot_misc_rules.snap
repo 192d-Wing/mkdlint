@@ -1,0 +1,11 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:1: MD041/first-line-heading/first-line-h1 First line in a file should be a top-level heading [fixable]
+test.md:3: MD026/no-trailing-punctuation Trailing punctuation in heading [Punctuation: '.'] [Context: "Section."] [fixable]
+test.md:5: MD011/no-reversed-links Reversed link syntax [Context: "(text)[url]"] (col 1, len 11) [fixable]
+test.md:7: MD012/no-multiple-blanks Multiple consecutive blank lines [Expected: 1; Actual: 2] [fixable]
+test.md:10: MD027/no-multiple-space-blockquote Multiple spaces after blockquote symbol [Expected: 1; Actual: 2] (col 2, len 2) [fixable]
+test.md:11: MD028/no-blanks-blockquote Blank line inside blockquote [fixable]
+test.md:13: MD028/no-blanks-blockquote Blank line inside blockquote [fixable]

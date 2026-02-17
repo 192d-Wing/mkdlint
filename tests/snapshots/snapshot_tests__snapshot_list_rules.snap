@@ -1,0 +1,13 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:4: MD004/ul-style Unordered list style [Expected: asterisk; Actual: dash] [Context: "-"] (col 1, len 1) [fixable]
+test.md:5: MD004/ul-style Unordered list style [Expected: asterisk; Actual: plus] [Context: "+"] (col 1, len 1) [fixable]
+test.md:7: MD004/ul-style Unordered list style [Expected: asterisk; Actual: dash] [Context: "-"] (col 1, len 1) [fixable]
+test.md:8: MD004/ul-style Unordered list style [Expected: asterisk; Actual: dash] [Context: "-"] (col 4, len 1) [fixable]
+test.md:8: MD007/ul-indent Unordered list indentation [Expected: 2; Actual: 3] [Context: "   - Three-space indent"] (col 1, len 3) [fixable]
+test.md:9: MD004/ul-style Unordered list style [Expected: asterisk; Actual: dash] [Context: "-"] (col 3, len 1) [fixable]
+test.md:15: MD004/ul-style Unordered list style [Expected: asterisk; Actual: dash] [Context: "-"] (col 1, len 1) [fixable]
+test.md:18: MD004/ul-style Unordered list style [Expected: asterisk; Actual: dash] [Context: "-"] (col 1, len 1) [fixable]
+test.md:19: MD004/ul-style Unordered list style [Expected: asterisk; Actual: dash] [Context: "-"] (col 1, len 1) [fixable]

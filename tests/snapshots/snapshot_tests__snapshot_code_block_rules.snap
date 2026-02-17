@@ -1,0 +1,10 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:3: MD040/fenced-code-language Fenced code blocks should have a language specified [Missing language specification] [Context: "```"] (col 1, len 3) [fixable]
+test.md:8: MD031/blanks-around-fences Fenced code blocks should be surrounded by blank lines [Context: "```python"] [fixable]
+test.md:12: MD040/fenced-code-language Fenced code blocks should have a language specified [Missing language specification] [Context: "~~~"] (col 1, len 3) [fixable]
+test.md:12: MD048/code-fence-style Code fence style [Expected: ```; Actual: ~~~] [Context: "~~~"] (col 1, len 3) [fixable]
+test.md:14: MD048/code-fence-style Code fence style [Expected: ```; Actual: ~~~] [Context: "~~~"] (col 1, len 3) [fixable]
+test.md:16: MD040/fenced-code-language Fenced code blocks should have a language specified [Missing language specification] [Context: "```"] (col 1, len 3) [fixable]

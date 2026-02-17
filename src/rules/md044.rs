@@ -276,4 +276,28 @@ mod tests {
             Some("Expected: GitHub; Actual: Github")
         );
     }
+
+    #[test]
+    fn test_md044_multibyte_utf8_no_panic() {
+        let rule = MD044;
+        // Multi-byte chars before a proper name match
+        let lines = vec!["Sch\u{00f6}ne javascript Welt.\n"];
+        let config = HashMap::new();
+        let params = make_params(&lines, &config);
+        let errors = rule.lint(&params);
+        // Should find the "javascript" match without panicking
+        assert_eq!(errors.len(), 1);
+    }
+
+    #[test]
+    fn test_md044_multibyte_in_proper_name_config() {
+        let rule = MD044;
+        let lines = vec!["Use caf\u{00e9} brew.\n"];
+        let mut config = HashMap::new();
+        config.insert("names".to_string(), serde_json::json!(["Caf\u{00e9}"]));
+        let params = make_params(&lines, &config);
+        let errors = rule.lint(&params);
+        // "caf\u{e9}" should be detected as wrong case for "Caf\u{e9}"
+        assert_eq!(errors.len(), 1);
+    }
 }

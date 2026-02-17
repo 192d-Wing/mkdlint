@@ -1,0 +1,5 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:3: MD011/no-reversed-links Reversed link syntax [Context: "(text)[url]"] (col 1, len 11) [fixable]

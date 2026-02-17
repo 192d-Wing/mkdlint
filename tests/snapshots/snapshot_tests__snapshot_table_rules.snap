@@ -1,0 +1,11 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:7: MD056/table-column-count Table column count [Expected: 3 columns; Actual: 1 columns] [Context: "a | b | c"]
+test.md:8: MD056/table-column-count Table column count [Expected: 3 columns; Actual: 1 columns] [Context: "---|---|---"]
+test.md:9: MD056/table-column-count Table column count [Expected: 3 columns; Actual: 1 columns] [Context: "1 | 2 | 3"]
+test.md:11: MD056/table-column-count Table column count [Expected: 3 columns; Actual: 1 columns] [Context: "| a |"]
+test.md:12: MD056/table-column-count Table column count [Expected: 3 columns; Actual: 1 columns] [Context: "|---|"]
+test.md:13: MD056/table-column-count Table column count [Expected: 3 columns; Actual: 2 columns] [Context: "| 1 | 2 |"]
+test.md:16: MD058/blanks-around-tables Tables should be surrounded by blank lines [Expected blank line before table] [fixable]

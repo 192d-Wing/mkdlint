@@ -1,0 +1,5 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:5: MD024/no-duplicate-heading/no-duplicate-header Multiple headings with the same content [Duplicate heading: 'Section' (occurrence #2)] [Context: "Section"] [fixable]

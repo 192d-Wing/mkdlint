@@ -123,4 +123,42 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
     }
+
+    #[test]
+    fn test_md013_code_block_excluded() {
+        let long_code = "a".repeat(120) + "\n";
+        let lines = vec!["```\n", long_code.as_str(), "```\n"];
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+        let rule = MD013;
+        let errors = rule.lint(&params);
+        assert_eq!(
+            errors.len(),
+            0,
+            "Long lines in code blocks should be excluded"
+        );
+    }
+
+    #[test]
+    fn test_md013_heading_excluded() {
+        let long_heading = format!("# {}\n", "a".repeat(120));
+        let lines = vec![long_heading.as_str()];
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+        let rule = MD013;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 0, "Long headings should be excluded");
+    }
 }

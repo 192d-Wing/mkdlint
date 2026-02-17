@@ -599,4 +599,14 @@ mod tests {
             .expect("Should have fix_info");
         assert_eq!(fix.insert_text, Some("    ".to_string()));
     }
+
+    #[test]
+    fn test_md046_unclosed_fence_no_panic() {
+        // Unclosed fence at EOF should not panic
+        let lines = vec!["# Title\n", "\n", "```rust\n", "code here\n"];
+        let config = HashMap::new();
+        let params = make_params(&lines, &config);
+        let _errors = MD046.lint(&params);
+        // Should not panic, and unclosed fence is not counted as a complete block
+    }
 }

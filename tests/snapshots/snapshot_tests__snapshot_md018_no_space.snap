@@ -1,0 +1,6 @@
+---
+source: tests/snapshot_tests.rs
+expression: output
+---
+test.md:1: MD018/no-missing-space-atx No space after hash on atx style heading [Context: "#Title with"] (col 2, len 1) [fixable]
+test.md:1: MD041/first-line-heading/first-line-h1 First line in a file should be a top-level heading [fixable]

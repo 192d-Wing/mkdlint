@@ -300,4 +300,19 @@ mod tests {
         let errors = MD059.lint(&params);
         assert_eq!(errors.len(), 0);
     }
+
+    #[test]
+    fn test_md059_indented_dollar_dollar() {
+        // Indented $$ should still toggle display math
+        let lines = vec!["  $$\n", "  _text_\n", "  $$\n"];
+        let config = HashMap::new();
+        let params = make_params(&lines, &config);
+        let errors = MD059.lint(&params);
+        // The $$ lines have extra whitespace so `trimmed.trim() == "$$"` should match
+        assert_eq!(
+            errors.len(),
+            1,
+            "Indented $$ should toggle display math block"
+        );
+    }
 }

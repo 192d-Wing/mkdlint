@@ -103,4 +103,40 @@ mod tests {
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
     }
+
+    #[test]
+    fn test_md027_no_space_no_error() {
+        // ">text" (no space at all) should not trigger MD027
+        let lines = vec![">text\n"];
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+        let rule = MD027;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 0, "Zero spaces after > should not trigger");
+    }
+
+    #[test]
+    fn test_md027_three_spaces_fires() {
+        let lines = vec![">   Three spaces\n"];
+        let params = RuleParams {
+            name: "test.md",
+            version: "0.1.0",
+            lines: &lines,
+            front_matter_lines: &[],
+            tokens: &[],
+            config: &HashMap::new(),
+        };
+        let rule = MD027;
+        let errors = rule.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().unwrap();
+        // Should delete 2 extra spaces (3 - 1 = 2)
+        assert_eq!(fix.delete_count, Some(2));
+    }
 }
