@@ -15,7 +15,7 @@ A fast Markdown linter written in Rust, inspired by [markdownlint](https://githu
 ## Features
 
 - **63 lint rules** (MD001-MD060 + KMD001-KMD010) enforcing Markdown best practices
-- **Automatic fixing** for **54 rules (85.7% coverage)** with `--fix` flag
+- **Automatic fixing** for **55 rules (87.3% coverage)** with `--fix` flag
 - **Helpful suggestions** for all rules with actionable guidance
 - **VS Code extension** with bundled LSP server
 - **Language Server Protocol (LSP)** for real-time linting in any editor
@@ -87,7 +87,7 @@ mkdlint = { version = "0.11", features = ["lsp"] }
 
 ## Auto-Fix Showcase
 
-mkdlint can automatically fix **54 out of 63 rules (85.7%)**! Here are some examples:
+mkdlint can automatically fix **55 out of 63 rules (87.3%)**! Here are some examples:
 
 ### Before Auto-Fix
 
@@ -554,7 +554,7 @@ Rules can be enabled/disabled by name (`"MD013"`) or alias (`"line-length"`). Pa
 | KMD009 | ald-defs-used                       | Attribute List Definitions must be referenced in the document  | Yes     |
 | KMD010 | inline-ial-syntax                   | Inline IAL syntax must be well-formed                          | Yes     |
 
-**54 of 63 rules** have auto-fix support (85.7% coverage).
+**55 of 63 rules** have auto-fix support (87.3% coverage).
 
 ## License
 

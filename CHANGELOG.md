@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **LSP `textDocument/completion`**: IAL attribute completions when the cursor is
+  inside a `{:` block — offers `#id`, `.class`, and common HTML/ARIA attribute
+  snippets, filtered by what the user has typed
+- **KMD001 auto-fix**: Automatically inserts a stub `:`-prefixed definition line after
+  an orphaned definition list term (auto-fix coverage: 54 → 55/63 rules, 87.3%)
+
 ## [0.11.0] - 2026-02-17
 
 ### Added

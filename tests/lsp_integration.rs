@@ -1003,3 +1003,191 @@ async fn test_code_action_on_clean_document() {
         "Clean document should not produce code actions"
     );
 }
+
+// ── Completion tests ──────────────────────────────────────────────────────────
+
+async fn open_doc(server: &MkdlintLanguageServer, uri: &Url, content: &str) {
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: content.to_string(),
+            },
+        })
+        .await;
+}
+
+#[tokio::test]
+async fn test_completion_capability_declared() {
+    let server = create_test_server().await;
+    let result = server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    assert!(
+        result.capabilities.completion_provider.is_some(),
+        "Server should declare completion_provider capability"
+    );
+}
+
+#[tokio::test]
+async fn test_completion_inside_ial_returns_items() {
+    let server = create_test_server().await;
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+
+    let uri = Url::parse("file:///test/doc.md").unwrap();
+    // Cursor is at end of "{: " on line 2 (0-based line 2)
+    let content = "# Heading\n\n{: \n";
+    open_doc(&server, &uri, content).await;
+
+    let result = server
+        .completion(CompletionParams {
+            text_document_position: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 2,
+                    character: 3,
+                }, // after "{: "
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+            context: None,
+        })
+        .await
+        .unwrap();
+
+    let items = match result {
+        Some(CompletionResponse::Array(items)) => items,
+        _ => panic!("Expected CompletionResponse::Array"),
+    };
+
+    assert!(
+        !items.is_empty(),
+        "Should return completion items inside IAL"
+    );
+
+    let labels: Vec<&str> = items.iter().map(|i| i.label.as_str()).collect();
+    assert!(labels.contains(&"#"), "Should include # (ID selector)");
+    assert!(labels.contains(&"."), "Should include . (class selector)");
+    assert!(labels.contains(&"id"), "Should include id attribute");
+    assert!(labels.contains(&"class"), "Should include class attribute");
+}
+
+#[tokio::test]
+async fn test_completion_outside_ial_returns_none() {
+    let server = create_test_server().await;
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+
+    let uri = Url::parse("file:///test/doc2.md").unwrap();
+    let content = "# Heading\n\nSome paragraph text here.\n";
+    open_doc(&server, &uri, content).await;
+
+    let result = server
+        .completion(CompletionParams {
+            text_document_position: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 2,
+                    character: 10,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+            context: None,
+        })
+        .await
+        .unwrap();
+
+    assert!(
+        result.is_none(),
+        "Should not return completions outside an IAL"
+    );
+}
+
+#[tokio::test]
+async fn test_completion_after_closed_ial_returns_none() {
+    let server = create_test_server().await;
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+
+    let uri = Url::parse("file:///test/doc3.md").unwrap();
+    // Cursor is after the closing `}` — no completions expected
+    let content = "# Heading\n\n{: #my-id}\n";
+    open_doc(&server, &uri, content).await;
+
+    let result = server
+        .completion(CompletionParams {
+            text_document_position: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 2,
+                    character: 11,
+                }, // after "}"
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+            context: None,
+        })
+        .await
+        .unwrap();
+
+    assert!(
+        result.is_none(),
+        "Should not return completions after a closed IAL"
+    );
+}
+
+#[tokio::test]
+async fn test_completion_filters_by_typed_prefix() {
+    let server = create_test_server().await;
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+
+    let uri = Url::parse("file:///test/doc4.md").unwrap();
+    // User has typed "ar" after "{: " — should filter to aria-* attributes
+    let content = "# Heading\n\n{: ar\n";
+    open_doc(&server, &uri, content).await;
+
+    let result = server
+        .completion(CompletionParams {
+            text_document_position: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 2,
+                    character: 5,
+                }, // after "{: ar"
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+            context: None,
+        })
+        .await
+        .unwrap();
+
+    let items = match result {
+        Some(CompletionResponse::Array(items)) => items,
+        _ => panic!("Expected CompletionResponse::Array"),
+    };
+
+    // All returned items should start with "ar"
+    for item in &items {
+        assert!(
+            item.label.starts_with("ar"),
+            "Filtered item '{}' should start with 'ar'",
+            item.label
+        );
+    }
+    assert!(!items.is_empty(), "Should have at least aria-* matches");
+}

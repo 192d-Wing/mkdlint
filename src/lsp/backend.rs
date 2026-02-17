@@ -152,6 +152,17 @@ impl LanguageServer for MkdlintLanguageServer {
                     work_done_progress_options: WorkDoneProgressOptions::default(),
                 }),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
+                completion_provider: Some(CompletionOptions {
+                    trigger_characters: Some(vec![
+                        "{".to_string(),
+                        " ".to_string(),
+                        ".".to_string(),
+                        "#".to_string(),
+                    ]),
+                    resolve_provider: Some(false),
+                    work_done_progress_options: WorkDoneProgressOptions::default(),
+                    ..Default::default()
+                }),
                 document_symbol_provider: Some(OneOf::Left(true)),
                 // Declare that we handle workspace/didChangeConfiguration
                 workspace: Some(WorkspaceServerCapabilities {
@@ -412,6 +423,44 @@ impl LanguageServer for MkdlintLanguageServer {
             }),
             range: None,
         }))
+    }
+
+    async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+        let uri = params.text_document_position.text_document.uri;
+        let position = params.text_document_position.position;
+
+        let doc = match self.document_manager.get(&uri) {
+            Some(doc) => doc,
+            None => return Ok(None),
+        };
+
+        let lines: Vec<&str> = doc.content.lines().collect();
+        let line = match lines.get(position.line as usize) {
+            Some(l) => *l,
+            None => return Ok(None),
+        };
+
+        // Only offer completions when the cursor is within or just after `{:`
+        // Look backwards from the cursor to find the start of an IAL
+        let col = position.character as usize;
+        let prefix = &line[..col.min(line.len())];
+
+        // Find last `{:` before the cursor (within the same line)
+        let ial_start = match prefix.rfind("{:") {
+            Some(pos) => pos,
+            None => return Ok(None),
+        };
+
+        // Ensure no closing `}` between `{:` and cursor (i.e. we are inside the IAL)
+        if prefix[ial_start..].contains('}') {
+            return Ok(None);
+        }
+
+        // The text the user has typed since `{: ` — used for filtering
+        let typed = prefix[ial_start + 2..].trim_start();
+
+        let items = ial_completion_items(typed, position.line, ial_start as u32, col as u32);
+        Ok(Some(CompletionResponse::Array(items)))
     }
 
     async fn document_symbol(
@@ -717,6 +766,128 @@ impl LanguageServer for MkdlintLanguageServer {
             }
         }
     }
+}
+
+/// Build completion items for Kramdown IAL syntax `{: ...}`.
+///
+/// Offers:
+/// - `#id`            — ID selector
+/// - `.class`         — class selector
+/// - Common HTML/aria attributes with `=` snippets
+///
+/// `typed` is what the user has typed after `{: ` (used to filter).
+/// `line`, `ial_col`, `cursor_col` are used to compute the replace range.
+fn ial_completion_items(
+    typed: &str,
+    line: u32,
+    ial_col: u32,
+    cursor_col: u32,
+) -> Vec<CompletionItem> {
+    // Replace range: from the start of what the user typed (after `{:` + whitespace) to the cursor.
+    // `typed` has leading whitespace stripped, so its length tells us how far back to start.
+    let replace_start = cursor_col.saturating_sub(typed.len() as u32);
+    let replace_range = Range {
+        start: Position {
+            line,
+            character: replace_start,
+        },
+        end: Position {
+            line,
+            character: cursor_col,
+        },
+    };
+
+    let mut items: Vec<CompletionItem> = Vec::new();
+
+    // Helper to create an item with optional snippet insert text
+    let make_item = |label: &'static str,
+                     kind: CompletionItemKind,
+                     detail: &'static str,
+                     insert: &'static str,
+                     is_snippet: bool| {
+        CompletionItem {
+            label: label.to_string(),
+            kind: Some(kind),
+            detail: Some(detail.to_string()),
+            insert_text: Some(insert.to_string()),
+            insert_text_format: Some(if is_snippet {
+                InsertTextFormat::SNIPPET
+            } else {
+                InsertTextFormat::PLAIN_TEXT
+            }),
+            text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                range: replace_range,
+                new_text: insert.to_string(),
+            })),
+            ..Default::default()
+        }
+    };
+
+    // ID selector
+    items.push(make_item(
+        "#",
+        CompletionItemKind::VALUE,
+        "ID attribute",
+        "#${1:id}",
+        true,
+    ));
+
+    // Class selector
+    items.push(make_item(
+        ".",
+        CompletionItemKind::VALUE,
+        "CSS class",
+        ".${1:class}",
+        true,
+    ));
+
+    // Common HTML attributes as key=value pairs
+    let attrs: &[(&str, &str, &str)] = &[
+        ("id", "id=\"…\"", "id=\"${1:value}\""),
+        ("class", "class=\"…\"", "class=\"${1:value}\""),
+        ("lang", "lang=\"…\"", "lang=\"${1:en}\""),
+        ("dir", "dir=\"…\"", "dir=\"${1:ltr}\""),
+        ("style", "style=\"…\"", "style=\"${1:property: value}\""),
+        ("tabindex", "tabindex=\"…\"", "tabindex=\"${1:0}\""),
+        ("role", "role=\"…\"", "role=\"${1:region}\""),
+        (
+            "aria-label",
+            "aria-label=\"…\"",
+            "aria-label=\"${1:label}\"",
+        ),
+        (
+            "aria-describedby",
+            "aria-describedby=\"…\"",
+            "aria-describedby=\"${1:id}\"",
+        ),
+        (
+            "aria-hidden",
+            "aria-hidden=\"…\"",
+            "aria-hidden=\"${1:true}\"",
+        ),
+        ("data-", "data-*=\"…\"", "data-${1:key}=\"${2:value}\""),
+    ];
+
+    for (label, detail, snippet) in attrs {
+        items.push(make_item(
+            label,
+            CompletionItemKind::PROPERTY,
+            detail,
+            snippet,
+            true,
+        ));
+    }
+
+    // Filter: keep items whose label starts with what was typed,
+    // OR single-char selector items (#, .) when the user started with that char.
+    if !typed.is_empty() {
+        items.retain(|item| {
+            item.label.starts_with(typed)
+                || (item.label.len() == 1 && typed.starts_with(item.label.as_str()))
+        });
+    }
+
+    items
 }
 
 // We need Clone for the debouncer to work

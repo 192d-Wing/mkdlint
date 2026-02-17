@@ -11,7 +11,7 @@
 //! block-level marker) is followed by a blank line or EOF without any
 //! `: definition` line.
 
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 
 pub struct KMD001;
 
@@ -56,7 +56,7 @@ impl Rule for KMD001 {
     }
 
     fn tags(&self) -> &[&'static str] {
-        &["kramdown", "definition-lists"]
+        &["kramdown", "definition-lists", "fixable"]
     }
 
     fn parser_type(&self) -> ParserType {
@@ -115,12 +115,21 @@ impl Rule for KMD001 {
                     // Look for any `: ` line in the whole document.
                     let doc_has_any_dl = lines.iter().any(|l| is_definition_line(l));
                     if doc_has_any_dl {
+                        // Fix: append "\n: " after the term line to create a stub definition
+                        let term_no_newline = trimmed;
+                        let insert_col = term_no_newline.len() + 1;
                         errors.push(LintError {
                             line_number: i + 1,
                             rule_names: self.names(),
                             rule_description: self.description(),
                             error_detail: Some("Term has no definition".to_string()),
                             severity: Severity::Error,
+                            fix_info: Some(FixInfo {
+                                line_number: Some(i + 1),
+                                edit_column: Some(insert_col),
+                                delete_count: None,
+                                insert_text: Some("\n: ".to_string()),
+                            }),
                             ..Default::default()
                         });
                     }
@@ -182,5 +191,29 @@ mod tests {
     fn test_kmd001_in_code_block_ignored() {
         let errors = lint("# H\n\n```\nterm\n: def inside code\n```\n");
         assert!(errors.is_empty(), "should not fire inside code blocks");
+    }
+
+    #[test]
+    fn test_kmd001_fix_info_present() {
+        let errors = lint("# H\n\nterm without def\n\nother paragraph\n: orphan def\n");
+        let err = errors.iter().find(|e| e.rule_names[0] == "KMD001").unwrap();
+        assert!(err.fix_info.is_some(), "KMD001 error should have fix_info");
+        let fix = err.fix_info.as_ref().unwrap();
+        assert_eq!(fix.insert_text.as_deref(), Some("\n: "));
+        assert!(fix.delete_count.is_none());
+    }
+
+    #[test]
+    fn test_kmd001_fix_round_trip() {
+        use crate::lint::apply_fixes;
+        let content = "# H\n\nterm without def\n\nother paragraph\n: orphan def\n";
+        let errors = lint(content);
+        assert!(!errors.is_empty(), "should have KMD001 errors before fix");
+        let fixed = apply_fixes(content, &errors);
+        let errors2 = lint(&fixed);
+        assert!(
+            errors2.iter().all(|e| e.rule_names[0] != "KMD001"),
+            "after fix, no KMD001 errors; fixed:\n{fixed}"
+        );
     }
 }
