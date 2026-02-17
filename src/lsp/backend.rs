@@ -153,6 +153,11 @@ impl LanguageServer for MkdlintLanguageServer {
                 }),
                 hover_provider: Some(HoverProviderCapability::Simple(true)),
                 document_symbol_provider: Some(OneOf::Left(true)),
+                // Declare that we handle workspace/didChangeConfiguration
+                workspace: Some(WorkspaceServerCapabilities {
+                    workspace_folders: None,
+                    file_operations: None,
+                }),
                 ..Default::default()
             },
             server_info: Some(ServerInfo {
@@ -196,7 +201,18 @@ impl LanguageServer for MkdlintLanguageServer {
             ),
         };
 
-        if let Err(e) = self.client.register_capability(vec![registration]).await {
+        // Also register for workspace/didChangeConfiguration
+        let config_registration = Registration {
+            id: "config-change-watcher".to_string(),
+            method: "workspace/didChangeConfiguration".to_string(),
+            register_options: None,
+        };
+
+        if let Err(e) = self
+            .client
+            .register_capability(vec![registration, config_registration])
+            .await
+        {
             self.client
                 .log_message(
                     MessageType::WARNING,
@@ -285,6 +301,53 @@ impl LanguageServer for MkdlintLanguageServer {
         self.config_manager.lock().unwrap().clear_cache();
 
         // Re-lint all open documents
+        let uris = self.document_manager.all_uris();
+        for uri in uris {
+            self.lint_and_publish(uri).await;
+        }
+    }
+
+    async fn did_change_configuration(&self, _params: DidChangeConfigurationParams) {
+        // Fetch the current mkdlint.preset value from the client
+        let config_items = vec![ConfigurationItem {
+            scope_uri: None,
+            section: Some("mkdlint.preset".to_string()),
+        }];
+
+        let new_preset: Option<String> = match self.client.configuration(config_items).await {
+            Ok(values) => values
+                .into_iter()
+                .next()
+                .and_then(|v| v.as_str().map(|s| s.to_string())),
+            Err(e) => {
+                self.client
+                    .log_message(
+                        MessageType::WARNING,
+                        format!("Failed to fetch mkdlint.preset config: {e}"),
+                    )
+                    .await;
+                return;
+            }
+        };
+
+        // Update the preset override and clear cache so next lint picks it up
+        {
+            let mut mgr = self.config_manager.lock().unwrap();
+            mgr.preset_override = new_preset.clone();
+            mgr.clear_cache();
+        }
+
+        self.client
+            .log_message(
+                MessageType::INFO,
+                format!(
+                    "mkdlint.preset changed to {:?}, re-linting open documents",
+                    new_preset
+                ),
+            )
+            .await;
+
+        // Re-lint all open documents with the new preset
         let uris = self.document_manager.all_uris();
         for uri in uris {
             self.lint_and_publish(uri).await;

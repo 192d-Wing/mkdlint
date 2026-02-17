@@ -6,7 +6,7 @@
 //! on their own line following a block element. This rule fires when a line
 //! starting with `{:` does not match valid IAL syntax, catching common typos.
 
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
@@ -87,6 +87,12 @@ impl Rule for KMD006 {
                          (expected: {{: #id .class key=\"val\"}})"
                     )),
                     severity: Severity::Error,
+                    fix_info: Some(FixInfo {
+                        line_number: Some(idx + 1),
+                        edit_column: Some(1),
+                        delete_count: Some(-1), // Delete the malformed IAL line
+                        insert_text: None,
+                    }),
                     ..Default::default()
                 });
             }

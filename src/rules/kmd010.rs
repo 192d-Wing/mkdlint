@@ -7,7 +7,7 @@
 //! This rule validates `{:...}` occurrences that appear *within* a line
 //! (i.e., inline on spans rather than as standalone block IALs).
 
-use crate::types::{LintError, ParserType, Rule, RuleParams, Severity};
+use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
@@ -54,7 +54,10 @@ impl Rule for KMD010 {
         let mut in_code_block = false;
 
         for (idx, line) in lines.iter().enumerate() {
-            let trimmed = line.trim_end_matches('\n').trim_end_matches('\r').trim();
+            let line_no_newline = line.trim_end_matches('\n').trim_end_matches('\r');
+            // leading_offset is the number of bytes stripped by .trim() on the left
+            let leading_offset = line_no_newline.len() - line_no_newline.trim_start().len();
+            let trimmed = line_no_newline.trim();
 
             // Track code fences
             if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
@@ -85,6 +88,8 @@ impl Rule for KMD010 {
                 }
 
                 if !VALID_IAL_RE.is_match(ial_text) && !EMPTY_IAL_RE.is_match(ial_text) {
+                    // Column is 1-based: leading whitespace + match start within trimmed + 1
+                    let col = leading_offset + mat.start() + 1;
                     errors.push(LintError {
                         line_number: idx + 1,
                         rule_names: self.names(),
@@ -94,6 +99,12 @@ impl Rule for KMD010 {
                              (expected: {{: #id .class key=\"val\"}})"
                         )),
                         severity: Severity::Error,
+                        fix_info: Some(FixInfo {
+                            line_number: Some(idx + 1),
+                            edit_column: Some(col),
+                            delete_count: Some(ial_text.len() as i32),
+                            insert_text: None,
+                        }),
                         ..Default::default()
                     });
                 }
