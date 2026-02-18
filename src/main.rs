@@ -1461,7 +1461,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 continue;
             }
             let content = if file_path == "-" {
-                options.strings.get("-").unwrap().clone()
+                options
+                    .strings
+                    .get("-")
+                    .expect("stdin content must be present when reading from '-'")
+                    .clone()
             } else {
                 std::fs::read_to_string(file_path)?
             };
@@ -1523,7 +1527,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             let content = if file_path == "-" {
-                options.strings.get("-").unwrap().clone()
+                options
+                    .strings
+                    .get("-")
+                    .expect("stdin content must be present when reading from '-'")
+                    .clone()
             } else {
                 std::fs::read_to_string(file_path)?
             };
