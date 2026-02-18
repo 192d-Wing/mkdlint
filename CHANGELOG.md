@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Front matter extraction**: `extract_front_matter_line_count()` function supports custom regex patterns via `LintOptions.front_matter` field
 - **Multi-pass fix convergence**: `--fix` and `--fix-dry-run` now apply fixes iteratively (up to 10 passes) until content stabilizes, resolving multi-rule interaction bugs
 - **Custom rules integration**: `LintOptions.custom_rules` now fully functional — custom rules are properly integrated into `prepare_rules()` and linted alongside built-in rules
+- **LSP heading module**: Created `src/lsp/heading.rs` with `HeadingEntry` struct and `parse_headings()` / `heading_at_line()` utilities
+- **CLI modular structure**: Created `src/cli/` directory with 9 focused modules (args, files, wizard, init, rules, schema, watch, lint, mod) — main.rs reduced from 1636 lines to 15 lines
 
 ### Changed
 
