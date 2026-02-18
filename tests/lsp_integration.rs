@@ -1406,6 +1406,267 @@ async fn test_hover_on_rule_alias_shows_docs() {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Formatting tests
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_capabilities_include_formatting() {
+    let server = create_test_server().await;
+    let result = server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    assert!(
+        result.capabilities.document_formatting_provider.is_some(),
+        "Server should advertise documentFormatting capability"
+    );
+}
+
+#[tokio::test]
+async fn test_formatting_applies_fixes() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    // Open document with fixable issues (trailing spaces on line 2)
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Title\n\nTrailing spaces   \n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    let result = server
+        .formatting(DocumentFormattingParams {
+            text_document: TextDocumentIdentifier { uri },
+            options: FormattingOptions {
+                tab_size: 4,
+                insert_spaces: true,
+                ..Default::default()
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(result.is_some(), "Should return formatting edits");
+    let edits = result.unwrap();
+    assert_eq!(edits.len(), 1, "Should have one text edit");
+    // The new text should not contain trailing spaces
+    assert!(
+        !edits[0].new_text.contains("spaces   \n"),
+        "Trailing spaces should be removed"
+    );
+}
+
+#[tokio::test]
+async fn test_formatting_returns_none_for_clean_document() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Clean Document\n\nNo issues here.\n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    let result = server
+        .formatting(DocumentFormattingParams {
+            text_document: TextDocumentIdentifier { uri },
+            options: FormattingOptions {
+                tab_size: 4,
+                insert_spaces: true,
+                ..Default::default()
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(
+        result.is_none(),
+        "Clean document should not return formatting edits"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Folding range tests
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_capabilities_include_folding_range() {
+    let server = create_test_server().await;
+    let result = server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    assert!(
+        result.capabilities.folding_range_provider.is_some(),
+        "Server should advertise foldingRange capability"
+    );
+}
+
+#[tokio::test]
+async fn test_folding_range_headings() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Title\n\nSome text.\n\n## Section A\n\nContent A.\n\n## Section B\n\nContent B.\n"
+                    .to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    let result = server
+        .folding_range(FoldingRangeParams {
+            text_document: TextDocumentIdentifier { uri },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(result.is_some(), "Should return folding ranges");
+    let ranges = result.unwrap();
+    // Should have at least 3 ranges: h1, h2 Section A, h2 Section B
+    assert!(
+        ranges.len() >= 3,
+        "Expected at least 3 folding ranges, got {}",
+        ranges.len()
+    );
+    // First heading (h1) should start at line 0
+    assert!(
+        ranges.iter().any(|r| r.start_line == 0),
+        "Should have a folding range starting at line 0 (h1)"
+    );
+}
+
+#[tokio::test]
+async fn test_folding_range_code_blocks() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Title\n\n```rust\nfn main() {}\n```\n\nMore text.\n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    let result = server
+        .folding_range(FoldingRangeParams {
+            text_document: TextDocumentIdentifier { uri },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(result.is_some());
+    let ranges = result.unwrap();
+    // Should have a code block range from line 2 to line 4
+    let code_range = ranges
+        .iter()
+        .find(|r| r.start_line == 2)
+        .expect("Should have a folding range for the code block");
+    assert_eq!(code_range.end_line, 4);
+}
+
+#[tokio::test]
+async fn test_folding_range_empty_document() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "Just a line.\n".to_string(),
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+    let result = server
+        .folding_range(FoldingRangeParams {
+            text_document: TextDocumentIdentifier { uri },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(
+        result.is_none(),
+        "Document without headings or code blocks should have no folding ranges"
+    );
+}
+
 /// Hovering over a canonical rule name (e.g., "MD009") that has no diagnostic
 /// on that line should still produce documentation via the alias lookup path.
 #[tokio::test]

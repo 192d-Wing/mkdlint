@@ -7,12 +7,50 @@ use super::{
 };
 use crate::{LintOptions, apply_fixes, lint_sync};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer};
+
+/// Walk a directory recursively and collect `.md`/`.markdown` files.
+///
+/// Skips hidden directories (starting with `.`) and common build directories
+/// (`node_modules`, `target`, `vendor`) to avoid scanning irrelevant paths.
+fn walkdir_md(root: &Path) -> std::io::Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    walk_recursive(root, &mut files);
+    Ok(files)
+}
+
+fn walk_recursive(dir: &Path, out: &mut Vec<PathBuf>) {
+    let entries = match std::fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return,
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+            // Skip hidden dirs and common build dirs
+            if name.starts_with('.')
+                || name == "node_modules"
+                || name == "target"
+                || name == "vendor"
+            {
+                continue;
+            }
+        }
+        if path.is_dir() {
+            walk_recursive(&path, out);
+        } else if let Some(ext) = path.extension().and_then(|e| e.to_str())
+            && (ext == "md" || ext == "markdown")
+        {
+            out.push(path);
+        }
+    }
+}
 
 /// The mkdlint Language Server
 pub struct MkdlintLanguageServer {
@@ -31,6 +69,79 @@ impl MkdlintLanguageServer {
             document_manager: Arc::new(DocumentManager::new()),
             config_manager: Arc::new(Mutex::new(ConfigManager::new(vec![]))),
             debouncer: Arc::new(Debouncer::new(Duration::from_millis(300))),
+        }
+    }
+
+    /// Scan workspace roots for `.md` files and publish diagnostics for each.
+    ///
+    /// Called once after initialization to populate the Problems panel with
+    /// errors from files the user hasn't opened yet.
+    async fn scan_workspace(&self) {
+        let roots: Vec<PathBuf> = self.config_manager.lock().unwrap().workspace_roots.clone();
+
+        if roots.is_empty() {
+            return;
+        }
+
+        let mut md_files: Vec<PathBuf> = Vec::new();
+        for root in &roots {
+            if let Ok(entries) = walkdir_md(root) {
+                md_files.extend(entries);
+            }
+        }
+
+        if md_files.is_empty() {
+            return;
+        }
+
+        self.client
+            .log_message(
+                MessageType::INFO,
+                format!("Scanning {} markdown file(s) in workspace", md_files.len()),
+            )
+            .await;
+
+        for path in md_files {
+            let content = match std::fs::read_to_string(&path) {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
+
+            let file_name = path.to_string_lossy().to_string();
+            let uri = match Url::from_file_path(&path) {
+                Ok(u) => u,
+                Err(_) => continue,
+            };
+
+            // Skip files already open (they have fresher diagnostics)
+            if self.document_manager.get(&uri).is_some() {
+                continue;
+            }
+
+            let config = self.config_manager.lock().unwrap().discover_config(&uri);
+
+            let mut options = LintOptions::default();
+            options.strings.insert(file_name.clone(), content.clone());
+            if let Some(config) = config {
+                options.config = Some(config);
+            }
+
+            let results = match lint_sync(&options) {
+                Ok(r) => r,
+                Err(_) => continue,
+            };
+
+            let errors = results.get(&file_name).unwrap_or(&[]).to_vec();
+            let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
+            let diags: Vec<Diagnostic> = errors
+                .iter()
+                .filter(|err| !err.fix_only)
+                .map(|err| diagnostics::lint_error_to_diagnostic(err, &lines))
+                .collect();
+
+            if !diags.is_empty() {
+                self.client.publish_diagnostics(uri, diags, None).await;
+            }
         }
     }
 
@@ -165,6 +276,8 @@ impl LanguageServer for MkdlintLanguageServer {
                     ..Default::default()
                 }),
                 document_symbol_provider: Some(OneOf::Left(true)),
+                document_formatting_provider: Some(OneOf::Left(true)),
+                folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
                 // Declare that we handle workspace/didChangeConfiguration
                 workspace: Some(WorkspaceServerCapabilities {
                     workspace_folders: None,
@@ -236,6 +349,9 @@ impl LanguageServer for MkdlintLanguageServer {
         self.client
             .log_message(MessageType::INFO, "mkdlint LSP server initialized")
             .await;
+
+        // Scan workspace for .md files and publish initial diagnostics
+        self.scan_workspace().await;
     }
 
     async fn shutdown(&self) -> Result<()> {
@@ -631,6 +747,144 @@ impl LanguageServer for MkdlintLanguageServer {
 
         let symbols = build_tree(&headings, total_lines);
         Ok(Some(DocumentSymbolResponse::Nested(symbols)))
+    }
+
+    async fn formatting(&self, params: DocumentFormattingParams) -> Result<Option<Vec<TextEdit>>> {
+        let uri = params.text_document.uri;
+
+        let doc = match self.document_manager.get(&uri) {
+            Some(doc) => doc,
+            None => return Ok(None),
+        };
+
+        // Only format if there are fixable errors
+        let has_fixes = doc.cached_errors.iter().any(|e| e.fix_info.is_some());
+        if !has_fixes {
+            return Ok(None);
+        }
+
+        let fixed_content = apply_fixes(&doc.content, &doc.cached_errors);
+        if fixed_content == doc.content {
+            return Ok(None);
+        }
+
+        // Replace entire document content
+        let line_count = doc.content.lines().count() as u32;
+        let last_line_len = doc.content.lines().last().map(|l| l.len()).unwrap_or(0) as u32;
+
+        let text_edit = TextEdit {
+            range: Range {
+                start: Position {
+                    line: 0,
+                    character: 0,
+                },
+                end: Position {
+                    line: line_count,
+                    character: last_line_len,
+                },
+            },
+            new_text: fixed_content,
+        };
+
+        Ok(Some(vec![text_edit]))
+    }
+
+    async fn folding_range(&self, params: FoldingRangeParams) -> Result<Option<Vec<FoldingRange>>> {
+        let uri = params.text_document.uri;
+
+        let doc = match self.document_manager.get(&uri) {
+            Some(doc) => doc,
+            None => return Ok(None),
+        };
+
+        let lines: Vec<&str> = doc.content.lines().collect();
+        let mut ranges = Vec::new();
+        let mut in_code_block = false;
+        let mut code_block_start: Option<u32> = None;
+
+        // Track headings for section folding
+        let mut heading_stack: Vec<(usize, u32)> = Vec::new(); // (level, start_line)
+
+        for (idx, line) in lines.iter().enumerate() {
+            let trimmed = line.trim();
+            let line_num = idx as u32;
+
+            // Code block folding
+            if crate::helpers::is_code_fence(trimmed) {
+                if in_code_block {
+                    // End of code block
+                    if let Some(start) = code_block_start.take()
+                        && line_num > start
+                    {
+                        ranges.push(FoldingRange {
+                            start_line: start,
+                            start_character: None,
+                            end_line: line_num,
+                            end_character: None,
+                            kind: Some(FoldingRangeKind::Region),
+                            collapsed_text: None,
+                        });
+                    }
+                    in_code_block = false;
+                } else {
+                    in_code_block = true;
+                    code_block_start = Some(line_num);
+                }
+                continue;
+            }
+
+            if in_code_block {
+                continue;
+            }
+
+            // Heading section folding
+            if trimmed.starts_with('#') {
+                let level = trimmed.chars().take_while(|&c| c == '#').count();
+                if (1..=6).contains(&level) {
+                    // Close all headings at same or deeper level
+                    while let Some(&(prev_level, prev_start)) = heading_stack.last() {
+                        if prev_level >= level {
+                            heading_stack.pop();
+                            let end = line_num.saturating_sub(1);
+                            if end > prev_start {
+                                ranges.push(FoldingRange {
+                                    start_line: prev_start,
+                                    start_character: None,
+                                    end_line: end,
+                                    end_character: None,
+                                    kind: Some(FoldingRangeKind::Region),
+                                    collapsed_text: None,
+                                });
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    heading_stack.push((level, line_num));
+                }
+            }
+        }
+
+        // Close remaining headings at EOF
+        let last_line = lines.len().saturating_sub(1) as u32;
+        for (_, start) in heading_stack {
+            if last_line > start {
+                ranges.push(FoldingRange {
+                    start_line: start,
+                    start_character: None,
+                    end_line: last_line,
+                    end_character: None,
+                    kind: Some(FoldingRangeKind::Region),
+                    collapsed_text: None,
+                });
+            }
+        }
+
+        if ranges.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(ranges))
+        }
     }
 
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {
