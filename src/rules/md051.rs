@@ -9,58 +9,21 @@ static FRAGMENT_LINK_RE: Lazy<Regex> =
 
 pub struct MD051;
 
-/// Convert heading text to a GitHub-style anchor ID (delegates to shared helper)
-fn heading_to_id(text: &str) -> String {
-    crate::helpers::heading_to_anchor_id(text)
-}
-
-/// Extract heading text from a markdown heading line
-fn extract_heading_text(line: &str) -> Option<String> {
-    let trimmed = line.trim();
-    if !trimmed.starts_with('#') {
-        return None;
-    }
-    let level = trimmed.chars().take_while(|&c| c == '#').count();
-    if level > 6 {
-        return None;
-    }
-    let text = trimmed[level..]
-        .trim()
-        .trim_end_matches('#')
-        .trim()
-        .to_string();
-    if text.is_empty() {
-        return None;
-    }
-    Some(text)
-}
-
 /// Collect all heading IDs with duplicate handling
 fn collect_heading_ids(lines: &[&str]) -> Vec<String> {
     let mut ids = Vec::new();
     let mut id_counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
-    let mut in_code_block = false;
 
-    for line in lines {
-        let trimmed = line.trim();
-        if crate::helpers::is_code_fence(trimmed) {
-            in_code_block = !in_code_block;
-            continue;
-        }
-        if in_code_block {
-            continue;
-        }
-        if let Some(text) = extract_heading_text(trimmed) {
-            let base_id = heading_to_id(&text);
-            let count = id_counts.entry(base_id.clone()).or_insert(0);
-            let final_id = if *count == 0 {
-                base_id
-            } else {
-                format!("{}-{}", base_id, count)
-            };
-            *count += 1;
-            ids.push(final_id);
-        }
+    for heading in crate::helpers::parse_headings(lines) {
+        let base_id = crate::helpers::heading_to_anchor_id(&heading.text);
+        let count = id_counts.entry(base_id.clone()).or_insert(0);
+        let final_id = if *count == 0 {
+            base_id
+        } else {
+            format!("{}-{}", base_id, count)
+        };
+        *count += 1;
+        ids.push(final_id);
     }
 
     ids
@@ -142,15 +105,6 @@ mod tests {
     use std::collections::HashMap;
 
     #[test]
-    fn test_heading_to_id() {
-        assert_eq!(heading_to_id("Hello World"), "hello-world");
-        assert_eq!(heading_to_id("Getting Started"), "getting-started");
-        assert_eq!(heading_to_id("What's New?"), "whats-new");
-        assert_eq!(heading_to_id("API Reference"), "api-reference");
-        assert_eq!(heading_to_id("v2.0 Release"), "v20-release");
-    }
-
-    #[test]
     fn test_collect_heading_ids_duplicates() {
         let lines = vec!["# Title\n", "## Section\n", "## Section\n", "## Section\n"];
         let ids = collect_heading_ids(&lines);
@@ -229,17 +183,6 @@ mod tests {
         let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
-    }
-
-    #[test]
-    fn test_extract_heading_text() {
-        assert_eq!(extract_heading_text("# Title"), Some("Title".to_string()));
-        assert_eq!(
-            extract_heading_text("## Sub Title"),
-            Some("Sub Title".to_string())
-        );
-        assert_eq!(extract_heading_text("Not heading"), None);
-        assert_eq!(extract_heading_text("#"), None); // Empty heading
     }
 
     #[test]

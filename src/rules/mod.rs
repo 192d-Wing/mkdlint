@@ -3,8 +3,8 @@
 use crate::types::{BoxedRule, Rule};
 use once_cell::sync::Lazy;
 
-// ALL 54 RULES IMPLEMENTED!
-// Kramdown extension rules (KMD)
+// ALL 64 RULES IMPLEMENTED!
+// (53 standard MD rules + 11 Kramdown extension KMD rules)
 mod kmd001;
 mod kmd002;
 mod kmd003;

@@ -5,7 +5,7 @@
 //!
 //! ## Features
 //!
-//! - **54 built-in rules** enforcing Markdown best practices
+//! - **64 built-in rules** enforcing Markdown best practices
 //! - **Automatic fixing** for many rule violations
 //! - **Custom rules** support via the Rule trait
 //! - **Configuration** via JSON, YAML, or TOML files

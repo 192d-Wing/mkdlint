@@ -56,6 +56,90 @@ pub fn heading_to_anchor_id(text: &str) -> String {
     id.trim_matches('-').to_string()
 }
 
+/// A heading parsed from a Markdown document, in ATX style (`# Title`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParsedHeading {
+    /// Heading level 1–6.
+    pub level: usize,
+    /// 0-based line index within the document.
+    pub line_index: usize,
+    /// Heading text, trimmed, with trailing `#` markers removed.
+    pub text: String,
+}
+
+/// Parse all ATX headings from a slice of line strings, skipping code fences.
+///
+/// Lines may be `&str` (from `str::lines()`) or `&str` with trailing newlines
+/// (from `split_inclusive`); both are handled because the code trims each line.
+///
+/// Returns headings in document order. Lines inside fenced code blocks
+/// (``` or ~~~) are skipped.
+///
+/// # Examples
+/// ```
+/// let lines = vec!["# Title", "Some text", "## Section"];
+/// let headings = mkdlint::helpers::parse_headings(&lines);
+/// assert_eq!(headings.len(), 2);
+/// assert_eq!(headings[0].level, 1);
+/// assert_eq!(headings[0].text, "Title");
+/// ```
+pub fn parse_headings(lines: &[&str]) -> Vec<ParsedHeading> {
+    let mut headings = Vec::new();
+    let mut in_code_block = false;
+    for (idx, line) in lines.iter().enumerate() {
+        let trimmed = line.trim();
+        if is_code_fence(trimmed) {
+            in_code_block = !in_code_block;
+            continue;
+        }
+        if in_code_block {
+            continue;
+        }
+        if !trimmed.starts_with('#') {
+            continue;
+        }
+        let level = trimmed.chars().take_while(|&c| c == '#').count();
+        if level > 6 {
+            continue;
+        }
+        let text = trimmed[level..].trim().trim_end_matches('#').trim();
+        if text.is_empty() {
+            continue;
+        }
+        headings.push(ParsedHeading {
+            level,
+            line_index: idx,
+            text: text.to_string(),
+        });
+    }
+    headings
+}
+
+/// Extract the ATX heading at a specific line (for single-line parsing).
+///
+/// Returns `(level, text)` or `None` if the line is not a valid heading.
+///
+/// # Examples
+/// ```
+/// assert_eq!(mkdlint::helpers::parse_heading_line("# Title"), Some((1, "Title")));
+/// assert_eq!(mkdlint::helpers::parse_heading_line("## Sub ##"), Some((2, "Sub")));
+/// assert_eq!(mkdlint::helpers::parse_heading_line("not a heading"), None);
+/// ```
+pub fn parse_heading_line(trimmed: &str) -> Option<(usize, &str)> {
+    if !trimmed.starts_with('#') {
+        return None;
+    }
+    let level = trimmed.chars().take_while(|&c| c == '#').count();
+    if level > 6 {
+        return None;
+    }
+    let text = trimmed[level..].trim().trim_end_matches('#').trim();
+    if text.is_empty() {
+        return None;
+    }
+    Some((level, text))
+}
+
 /// Split content into lines preserving line endings
 pub fn split_lines(content: &str) -> Vec<String> {
     let line_ending = detect_line_ending(content);
@@ -78,5 +162,52 @@ mod tests {
     fn test_detect_line_ending() {
         assert_eq!(detect_line_ending("line1\nline2"), "\n");
         assert_eq!(detect_line_ending("line1\r\nline2"), "\r\n");
+    }
+
+    #[test]
+    fn test_parse_headings_basic() {
+        let lines = vec!["# Title", "## Section", "### Sub"];
+        let h = parse_headings(&lines);
+        assert_eq!(h.len(), 3);
+        assert_eq!(h[0].level, 1);
+        assert_eq!(h[0].line_index, 0);
+        assert_eq!(h[0].text, "Title");
+        assert_eq!(h[1].level, 2);
+        assert_eq!(h[1].line_index, 1);
+        assert_eq!(h[1].text, "Section");
+    }
+
+    #[test]
+    fn test_parse_headings_skips_code_fences() {
+        let lines = vec!["# Outside", "```", "# Inside fence", "```", "## After"];
+        let h = parse_headings(&lines);
+        assert_eq!(h.len(), 2);
+        assert_eq!(h[0].text, "Outside");
+        assert_eq!(h[1].text, "After");
+    }
+
+    #[test]
+    fn test_parse_headings_level_7_skipped() {
+        let lines = vec!["# Valid", "####### Not a heading"];
+        let h = parse_headings(&lines);
+        assert_eq!(h.len(), 1);
+        assert_eq!(h[0].text, "Valid");
+    }
+
+    #[test]
+    fn test_parse_headings_empty_heading_skipped() {
+        let lines = vec!["#", "# Real"];
+        let h = parse_headings(&lines);
+        assert_eq!(h.len(), 1);
+        assert_eq!(h[0].text, "Real");
+    }
+
+    #[test]
+    fn test_parse_heading_line() {
+        assert_eq!(parse_heading_line("# Title"), Some((1, "Title")));
+        assert_eq!(parse_heading_line("## Sub ## "), Some((2, "Sub")));
+        assert_eq!(parse_heading_line("####### Over limit"), None);
+        assert_eq!(parse_heading_line("not a heading"), None);
+        assert_eq!(parse_heading_line("#"), None); // empty
     }
 }

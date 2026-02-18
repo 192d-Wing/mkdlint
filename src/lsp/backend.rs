@@ -669,66 +669,59 @@ impl LanguageServer for MkdlintLanguageServer {
             let typed_path = &prefix[href_start + 2..]; // text after `](`
             // Only handle file links (not anchors — those are handled above)
             if !typed_path.starts_with('#') {
-                    let doc_uri = uri.clone();
-                    let doc_dir = doc_uri
-                        .to_file_path()
-                        .ok()
-                        .and_then(|p| p.parent().map(|d| d.to_path_buf()));
+                let doc_uri = uri.clone();
+                let doc_dir = doc_uri
+                    .to_file_path()
+                    .ok()
+                    .and_then(|p| p.parent().map(|d| d.to_path_buf()));
 
-                    let roots = self.config_manager.lock().unwrap().workspace_roots.clone();
-                    let mut items: Vec<CompletionItem> = Vec::new();
+                let roots = self.config_manager.lock().unwrap().workspace_roots.clone();
+                let mut items: Vec<CompletionItem> = Vec::new();
 
-                    for root in &roots {
-                        if let Ok(files) = walkdir_md(root) {
-                            for file_path in files {
-                                // Compute a relative path from the document's directory
-                                let rel = if let Some(ref dir) = doc_dir {
-                                    file_path
-                                        .strip_prefix(dir)
-                                        .map(|p| p.to_string_lossy().replace('\\', "/"))
-                                        .or_else(|_| {
-                                            // Cross-directory: try relative from workspace root
-                                            file_path
-                                                .strip_prefix(root)
-                                                .map(|p| {
-                                                    format!(
-                                                        "/{}",
-                                                        p.to_string_lossy().replace('\\', "/")
-                                                    )
-                                                })
+                for root in &roots {
+                    if let Ok(files) = walkdir_md(root) {
+                        for file_path in files {
+                            // Compute a relative path from the document's directory
+                            let rel = if let Some(ref dir) = doc_dir {
+                                file_path
+                                    .strip_prefix(dir)
+                                    .map(|p| p.to_string_lossy().replace('\\', "/"))
+                                    .or_else(|_| {
+                                        // Cross-directory: try relative from workspace root
+                                        file_path.strip_prefix(root).map(|p| {
+                                            format!("/{}", p.to_string_lossy().replace('\\', "/"))
                                         })
-                                        .unwrap_or_else(|_| {
-                                            file_path.to_string_lossy().into_owned()
-                                        })
-                                } else {
-                                    file_path.to_string_lossy().into_owned()
+                                    })
+                                    .unwrap_or_else(|_| file_path.to_string_lossy().into_owned())
+                            } else {
+                                file_path.to_string_lossy().into_owned()
+                            };
+
+                            if rel.starts_with(typed_path) {
+                                let replace_start = (href_start as u32 + 2).min(col as u32);
+                                let replace_range = Range {
+                                    start: Position {
+                                        line: position.line,
+                                        character: replace_start,
+                                    },
+                                    end: Position {
+                                        line: position.line,
+                                        character: col as u32,
+                                    },
                                 };
-
-                                if rel.starts_with(typed_path) {
-                                    let replace_start = (href_start as u32 + 2).min(col as u32);
-                                    let replace_range = Range {
-                                        start: Position {
-                                            line: position.line,
-                                            character: replace_start,
-                                        },
-                                        end: Position {
-                                            line: position.line,
-                                            character: col as u32,
-                                        },
-                                    };
-                                    items.push(CompletionItem {
-                                        label: rel.clone(),
-                                        kind: Some(CompletionItemKind::FILE),
-                                        text_edit: Some(CompletionTextEdit::Edit(TextEdit {
-                                            range: replace_range,
-                                            new_text: rel,
-                                        })),
-                                        ..Default::default()
-                                    });
-                                }
+                                items.push(CompletionItem {
+                                    label: rel.clone(),
+                                    kind: Some(CompletionItemKind::FILE),
+                                    text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                                        range: replace_range,
+                                        new_text: rel,
+                                    })),
+                                    ..Default::default()
+                                });
                             }
                         }
                     }
+                }
 
                 if !items.is_empty() {
                     return Ok(Some(CompletionResponse::Array(items)));
