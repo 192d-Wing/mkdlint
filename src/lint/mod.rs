@@ -519,13 +519,14 @@ pub fn apply_fixes(content: &str, errors: &[LintError]) -> String {
         }
     }
 
-    // Remove deleted lines (iterate in reverse to preserve indices)
-    let mut deleted_sorted: Vec<usize> = deleted_lines.into_iter().collect();
-    deleted_sorted.sort_unstable_by(|a, b| b.cmp(a));
-    for idx in deleted_sorted {
-        if idx < lines.len() {
-            lines.remove(idx);
-        }
+    // Remove deleted lines in a single pass
+    if !deleted_lines.is_empty() {
+        let mut idx = 0;
+        lines.retain(|_| {
+            let keep = !deleted_lines.contains(&idx);
+            idx += 1;
+            keep
+        });
     }
 
     // Rejoin with line endings
