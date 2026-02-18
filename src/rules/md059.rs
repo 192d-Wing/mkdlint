@@ -188,25 +188,11 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> RuleParams<'a> {
-        RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config,
-        }
-    }
-
     #[test]
     fn test_md059_no_emphasis_in_math() {
         let lines = vec!["$x^2$\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let rule = MD059;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
@@ -216,7 +202,7 @@ mod tests {
     fn test_md059_emphasis_in_math() {
         let lines = vec!["$_text_$\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let rule = MD059;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
@@ -236,7 +222,7 @@ mod tests {
         // "$_text_$" — underscore match at column 2 (1-based), length 6
         let lines = vec!["$_text_$"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD059.lint(&params);
         assert_eq!(errors.len(), 1);
         let fix = errors[0].fix_info.as_ref().expect("Should have fix_info");
@@ -250,7 +236,7 @@ mod tests {
         // The fix should target the content line (line 2), not the $$ start line
         let lines = vec!["$$\n", "_text_\n", "$$\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD059.lint(&params);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 2, "Error should be on content line");
@@ -265,7 +251,7 @@ mod tests {
         // "$$_x_$$" — underscore match inside $$...$$
         let lines = vec!["$$_x_$$"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD059.lint(&params);
         assert_eq!(errors.len(), 1);
         let fix = errors[0].fix_info.as_ref().expect("Should have fix_info");
@@ -279,7 +265,7 @@ mod tests {
         // Two emphasis patterns in one math span
         let lines = vec!["$_a_ + _b_$"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD059.lint(&params);
         assert_eq!(errors.len(), 2);
         assert_eq!(
@@ -297,7 +283,7 @@ mod tests {
         // Single underscore (subscript like x_1) should not trigger — needs _text_ pattern
         let lines = vec!["$x_1$"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD059.lint(&params);
         assert_eq!(errors.len(), 0);
     }
@@ -307,7 +293,7 @@ mod tests {
         // Indented $$ should still toggle display math
         let lines = vec!["  $$\n", "  _text_\n", "  $$\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD059.lint(&params);
         // The $$ lines have extra whitespace so `trimmed.trim() == "$$"` should match
         assert_eq!(

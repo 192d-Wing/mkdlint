@@ -9,7 +9,8 @@ use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-static CODE_FENCE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)(`{3,}|~{3,})").expect("valid regex"));
+static CODE_FENCE_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^(\s*)(`{3,}|~{3,})").expect("valid regex"));
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum BlockStyle {
@@ -333,25 +334,11 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> RuleParams<'a> {
-        RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config,
-        }
-    }
-
     #[test]
     fn test_md046_fenced_only() {
         let lines = vec!["# Title\n", "\n", "```\n", "code\n", "```\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         assert_eq!(errors.len(), 0, "Fenced-only should not trigger MD046");
     }
@@ -360,7 +347,7 @@ mod tests {
     fn test_md046_indented_only() {
         let lines = vec!["# Title\n", "\n", "    code block\n", "    more code\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         assert_eq!(errors.len(), 0, "Indented-only should not trigger MD046");
     }
@@ -377,7 +364,7 @@ mod tests {
             "    indented code\n",
         ];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         // Primary error + 0 helper deletes (single-line indented block)
         let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
@@ -402,7 +389,7 @@ mod tests {
             "style".to_string(),
             serde_json::Value::String("fenced".to_string()),
         );
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
@@ -418,7 +405,7 @@ mod tests {
             "style".to_string(),
             serde_json::Value::String("indented".to_string()),
         );
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
@@ -429,7 +416,7 @@ mod tests {
     fn test_md046_tilde_fenced() {
         let lines = vec!["~~~\n", "code\n", "~~~\n", "\n", "    indented\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(
@@ -444,7 +431,7 @@ mod tests {
     fn test_md046_no_code_blocks() {
         let lines = vec!["# Title\n", "\n", "Just a paragraph.\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         assert_eq!(errors.len(), 0, "No code blocks should not trigger MD046");
     }
@@ -454,7 +441,7 @@ mod tests {
         // 4-space indent immediately after a paragraph is NOT an indented code block
         let lines = vec!["# Title\n", "Some text\n", "    not code\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         assert_eq!(errors.len(), 0);
     }
@@ -479,7 +466,7 @@ mod tests {
             "style".to_string(),
             serde_json::Value::String("fenced".to_string()),
         );
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(
@@ -493,7 +480,7 @@ mod tests {
     fn test_md046_has_fix_info() {
         let lines = vec!["```\n", "code\n", "```\n", "\n", "    indented\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
@@ -512,7 +499,7 @@ mod tests {
             "style".to_string(),
             serde_json::Value::String("fenced".to_string()),
         );
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
@@ -544,7 +531,7 @@ mod tests {
             "style".to_string(),
             serde_json::Value::String("indented".to_string()),
         );
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
@@ -570,7 +557,7 @@ mod tests {
             "style".to_string(),
             serde_json::Value::String("indented".to_string()),
         );
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         // 1 primary + 3 helper deletes (lines 4, 5, 6)
         let helper_errors: Vec<_> = errors.iter().filter(|e| e.fix_only).collect();
@@ -591,7 +578,7 @@ mod tests {
             "style".to_string(),
             serde_json::Value::String("indented".to_string()),
         );
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD046.lint(&params);
         let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
@@ -607,7 +594,7 @@ mod tests {
         // Unclosed fence at EOF should not panic
         let lines = vec!["# Title\n", "\n", "```rust\n", "code here\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let _errors = MD046.lint(&params);
         // Should not panic, and unclosed fence is not counted as a complete block
     }

@@ -157,7 +157,9 @@ mod tests {
     fn test_kmd011_unbalanced() {
         let errors = lint("# H\n\nSolve $x = 1 and done.\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD011")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD011")),
             "odd number of $ should fire"
         );
     }

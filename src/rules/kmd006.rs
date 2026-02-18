@@ -20,7 +20,8 @@ static IAL_LINE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:").expect("valid
 static BLOCK_EXT_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:[:/]").expect("valid regex"));
 
 /// Matches an ALD definition: `{:identifier:` — skip in KMD006
-static ALD_DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:[A-Za-z][\w-]*:").expect("valid regex"));
+static ALD_DEF_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^\{:[A-Za-z][\w-]*:").expect("valid regex"));
 
 /// A valid IAL: `{:` followed by zero or more valid attributes, then `}`
 ///
@@ -171,7 +172,9 @@ mod tests {
     fn test_kmd006_malformed_ial() {
         let errors = lint("# H\n\n{: bad!!syntax}\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD006")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD006")),
             "should fire on malformed IAL"
         );
     }
@@ -180,7 +183,9 @@ mod tests {
     fn test_kmd006_unclosed_ial() {
         let errors = lint("# H\n\n{: #id\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD006")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD006")),
             "should fire on unclosed IAL"
         );
     }

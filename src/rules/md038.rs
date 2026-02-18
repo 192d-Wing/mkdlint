@@ -4,7 +4,8 @@ use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-static CODE_SPACE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"`( +[^`]+?[^ `]+ +)`").expect("valid regex"));
+static CODE_SPACE_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"`( +[^`]+?[^ `]+ +)`").expect("valid regex"));
 
 pub struct MD038;
 
@@ -71,27 +72,12 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        tokens: &'a [crate::parser::Token],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> crate::types::RuleParams<'a> {
-        crate::types::RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens,
-            config,
-        }
-    }
-
     #[test]
     fn test_md038_no_spaces() {
         let lines: Vec<&str> = "Use `code` here\n".lines().collect();
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let rule = MD038;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
@@ -102,7 +88,7 @@ mod tests {
         let lines: Vec<&str> = "Use ` code ` here\n".lines().collect();
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let rule = MD038;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
@@ -115,7 +101,7 @@ mod tests {
         let lines: Vec<&str> = vec!["Use ` code ` here"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let rule = MD038;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
@@ -138,7 +124,7 @@ mod tests {
         let lines: Vec<&str> = vec!["Check `  foo bar  ` end"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let rule = MD038;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
@@ -157,7 +143,7 @@ mod tests {
         let lines: Vec<&str> = vec!["Use `code` here"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let rule = MD038;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);

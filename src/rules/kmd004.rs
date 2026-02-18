@@ -11,7 +11,8 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 
 /// Matches abbreviation definitions: `*[TERM]: expansion`
-static ABBR_DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\*\[([^\]]+)\]:").expect("valid regex"));
+static ABBR_DEF_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^\*\[([^\]]+)\]:").expect("valid regex"));
 
 pub struct KMD004;
 
@@ -131,7 +132,9 @@ mod tests {
     fn test_kmd004_abbr_unused() {
         let errors = lint("# H\n\nSome text.\n\n*[HTML]: HyperText Markup Language\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD004")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD004")),
             "should fire when abbreviation is never used"
         );
     }
@@ -145,7 +148,10 @@ mod tests {
     #[test]
     fn test_kmd004_fix_info_present() {
         let errors = lint("# H\n\nSome text.\n\n*[HTML]: HyperText Markup Language\n");
-        let err = errors.iter().find(|e| e.rule_names.first() == Some(&"KMD004")).unwrap();
+        let err = errors
+            .iter()
+            .find(|e| e.rule_names.first() == Some(&"KMD004"))
+            .unwrap();
         assert!(err.fix_info.is_some(), "KMD004 error should have fix_info");
         let fix = err.fix_info.as_ref().unwrap();
         assert_eq!(fix.delete_count, Some(-1));
@@ -161,7 +167,9 @@ mod tests {
         let fixed = apply_fixes(content, &errors);
         let errors2 = lint(&fixed);
         assert!(
-            errors2.iter().all(|e| e.rule_names.first() != Some(&"KMD004")),
+            errors2
+                .iter()
+                .all(|e| e.rule_names.first() != Some(&"KMD004")),
             "after fix, no KMD004 errors; fixed:\n{fixed}"
         );
     }

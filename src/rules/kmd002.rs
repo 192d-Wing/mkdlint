@@ -143,7 +143,9 @@ mod tests {
     fn test_kmd002_ref_undefined() {
         let errors = lint("# H\n\nText[^1] here.\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD002")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD002")),
             "should fire when footnote ref is undefined"
         );
     }
@@ -163,7 +165,10 @@ mod tests {
     #[test]
     fn test_kmd002_fix_info_present() {
         let errors = lint("# H\n\nText[^1] here.\n");
-        let err = errors.iter().find(|e| e.rule_names.first() == Some(&"KMD002")).unwrap();
+        let err = errors
+            .iter()
+            .find(|e| e.rule_names.first() == Some(&"KMD002"))
+            .unwrap();
         assert!(err.fix_info.is_some(), "KMD002 error should have fix_info");
         let fix = err.fix_info.as_ref().unwrap();
         assert_eq!(fix.insert_text.as_deref(), Some("\n[^1]: "));
@@ -179,7 +184,9 @@ mod tests {
         let fixed = apply_fixes(content, &errors);
         let errors2 = lint(&fixed);
         assert!(
-            errors2.iter().all(|e| e.rule_names.first() != Some(&"KMD002")),
+            errors2
+                .iter()
+                .all(|e| e.rule_names.first() != Some(&"KMD002")),
             "after fix, no KMD002 errors; fixed:\n{fixed}"
         );
     }

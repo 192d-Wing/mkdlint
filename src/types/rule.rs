@@ -39,6 +39,30 @@ pub struct RuleParams<'a> {
     pub config: &'a HashMap<String, serde_json::Value>,
 }
 
+#[cfg(test)]
+impl<'a> RuleParams<'a> {
+    /// Create test params with lines, tokens, and config.
+    pub fn test_with_tokens(
+        lines: &'a [&'a str],
+        tokens: &'a [Token],
+        config: &'a HashMap<String, serde_json::Value>,
+    ) -> Self {
+        Self {
+            name: "test.md",
+            version: "0.1.0",
+            lines,
+            front_matter_lines: &[],
+            tokens,
+            config,
+        }
+    }
+
+    /// Create test params with lines and config (no tokens).
+    pub fn test(lines: &'a [&'a str], config: &'a HashMap<String, serde_json::Value>) -> Self {
+        Self::test_with_tokens(lines, &[], config)
+    }
+}
+
 /// Callback type for reporting errors
 pub type OnErrorFn<'a> = &'a mut dyn FnMut(LintError);
 

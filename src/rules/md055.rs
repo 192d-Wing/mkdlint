@@ -99,21 +99,6 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        tokens: &'a [crate::parser::Token],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> crate::types::RuleParams<'a> {
-        crate::types::RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens,
-            config,
-        }
-    }
-
     #[test]
     fn test_md055_consistent_leading_and_trailing_pipes() {
         let rule = MD055;
@@ -124,7 +109,7 @@ mod tests {
         ];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
     }
@@ -139,7 +124,7 @@ mod tests {
         ];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
     }
@@ -150,7 +135,7 @@ mod tests {
         let lines: Vec<&str> = vec!["| Header 1 | Header 2\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
     }
@@ -161,7 +146,7 @@ mod tests {
         let lines: Vec<&str> = vec!["Header 1 | Header 2 |\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
     }
@@ -172,7 +157,7 @@ mod tests {
         let lines: Vec<&str> = vec!["| Header 1 | Header 2\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
 
         assert_eq!(errors.len(), 1);
@@ -191,7 +176,7 @@ mod tests {
         let lines: Vec<&str> = vec!["Header 1 | Header 2 |\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
 
         assert_eq!(errors.len(), 1);
@@ -210,7 +195,7 @@ mod tests {
         let lines: Vec<&str> = vec!["  | Header 1 | Header 2\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
 
         assert_eq!(errors.len(), 1);

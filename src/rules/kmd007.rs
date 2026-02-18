@@ -126,7 +126,9 @@ mod tests {
     fn test_kmd007_unclosed_math_block() {
         let errors = lint("# H\n\n$$\nx = 1\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD007")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD007")),
             "should fire on unclosed math block"
         );
     }
@@ -152,7 +154,10 @@ mod tests {
     #[test]
     fn test_kmd007_fix_info_present() {
         let errors = lint("# H\n\n$$\nx = 1\n");
-        let err = errors.iter().find(|e| e.rule_names.first() == Some(&"KMD007")).unwrap();
+        let err = errors
+            .iter()
+            .find(|e| e.rule_names.first() == Some(&"KMD007"))
+            .unwrap();
         assert!(err.fix_info.is_some(), "KMD007 error should have fix_info");
         let fix = err.fix_info.as_ref().unwrap();
         assert_eq!(fix.insert_text.as_deref(), Some("\n$$\n"));
@@ -168,7 +173,9 @@ mod tests {
         let fixed = apply_fixes(content, &errors);
         let errors2 = lint(&fixed);
         assert!(
-            errors2.iter().all(|e| e.rule_names.first() != Some(&"KMD007")),
+            errors2
+                .iter()
+                .all(|e| e.rule_names.first() != Some(&"KMD007")),
             "after fix, no KMD007 errors; fixed:\n{fixed}"
         );
     }

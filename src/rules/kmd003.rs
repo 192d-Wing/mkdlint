@@ -133,7 +133,9 @@ mod tests {
     fn test_kmd003_def_unused() {
         let errors = lint("# H\n\nText here.\n\n[^1]: An unused note.\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD003")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD003")),
             "should fire when footnote def is never referenced"
         );
     }
@@ -153,7 +155,10 @@ mod tests {
     #[test]
     fn test_kmd003_fix_info_present() {
         let errors = lint("# H\n\nText here.\n\n[^1]: An unused note.\n");
-        let err = errors.iter().find(|e| e.rule_names.first() == Some(&"KMD003")).unwrap();
+        let err = errors
+            .iter()
+            .find(|e| e.rule_names.first() == Some(&"KMD003"))
+            .unwrap();
         assert!(err.fix_info.is_some(), "KMD003 error should have fix_info");
         let fix = err.fix_info.as_ref().unwrap();
         assert_eq!(fix.delete_count, Some(-1));
@@ -169,7 +174,9 @@ mod tests {
         let fixed = apply_fixes(content, &errors);
         let errors2 = lint(&fixed);
         assert!(
-            errors2.iter().all(|e| e.rule_names.first() != Some(&"KMD003")),
+            errors2
+                .iter()
+                .all(|e| e.rule_names.first() != Some(&"KMD003")),
             "after fix, no KMD003 errors; fixed:\n{fixed}"
         );
     }

@@ -17,10 +17,12 @@ use regex::Regex;
 
 /// Matches an opening block extension tag: `{::name}` or `{::name attrs}`
 /// Does NOT match self-closing (those end with `/}`).
-static OPEN_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{::(\w+)(?:\s[^}]*)?\}$").expect("valid regex"));
+static OPEN_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^\{::(\w+)(?:\s[^}]*)?\}$").expect("valid regex"));
 
 /// Matches a self-closing block extension: `{::name .../}`
-static SELF_CLOSING_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{::(\w+)[^}]*/\}$").expect("valid regex"));
+static SELF_CLOSING_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^\{::(\w+)[^}]*/\}$").expect("valid regex"));
 
 /// Matches a closing block extension tag: `{:/name}`
 static CLOSE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:/(\w+)\}$").expect("valid regex"));
@@ -169,7 +171,9 @@ mod tests {
     fn test_kmd008_unclosed_extension() {
         let errors = lint("# H\n\n{::comment}\nsome text\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD008")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD008")),
             "should fire on unclosed block extension"
         );
     }
@@ -178,7 +182,9 @@ mod tests {
     fn test_kmd008_unexpected_close() {
         let errors = lint("# H\n\n{:/comment}\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD008")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD008")),
             "should fire on close tag with no opener"
         );
     }
@@ -187,7 +193,9 @@ mod tests {
     fn test_kmd008_mismatched_tags() {
         let errors = lint("# H\n\n{::comment}\ntext\n{:/nomarkdown}\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD008")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD008")),
             "should fire on mismatched open/close names"
         );
     }
@@ -216,7 +224,10 @@ mod tests {
     #[test]
     fn test_kmd008_fix_info_present() {
         let errors = lint("# H\n\n{::comment}\nsome text\n");
-        let err = errors.iter().find(|e| e.rule_names.first() == Some(&"KMD008")).unwrap();
+        let err = errors
+            .iter()
+            .find(|e| e.rule_names.first() == Some(&"KMD008"))
+            .unwrap();
         assert!(err.fix_info.is_some(), "KMD008 error should have fix_info");
         let fix = err.fix_info.as_ref().unwrap();
         assert_eq!(fix.insert_text.as_deref(), Some("\n{:/comment}\n"));
@@ -232,7 +243,9 @@ mod tests {
         let fixed = apply_fixes(content, &errors);
         let errors2 = lint(&fixed);
         assert!(
-            errors2.iter().all(|e| e.rule_names.first() != Some(&"KMD008")),
+            errors2
+                .iter()
+                .all(|e| e.rule_names.first() != Some(&"KMD008")),
             "after fix, no KMD008 errors; fixed:\n{fixed}"
         );
     }

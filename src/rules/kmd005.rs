@@ -240,7 +240,9 @@ mod tests {
     fn test_kmd005_duplicate_auto_slug() {
         let errors = lint("# Setup\n\n## Setup\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD005")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD005")),
             "should fire when two headings produce the same auto-slug"
         );
     }
@@ -249,7 +251,9 @@ mod tests {
     fn test_kmd005_explicit_id_duplicate() {
         let errors = lint("# Title {#intro}\n\n## Other {#intro}\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD005")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD005")),
             "should fire when two headings share an explicit ID"
         );
     }
@@ -265,7 +269,9 @@ mod tests {
     fn test_kmd005_setext_duplicate() {
         let errors = lint("Title\n=====\n\nTitle\n=====\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD005")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD005")),
             "should fire on duplicate setext headings"
         );
     }
@@ -275,7 +281,9 @@ mod tests {
         // ATX # Title and setext Title\n----- produce the same slug
         let errors = lint("# Title\n\nTitle\n-----\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD005")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD005")),
             "should fire when setext and ATX heading share the same slug"
         );
     }
@@ -293,7 +301,10 @@ mod tests {
     #[test]
     fn test_kmd005_fix_info_present() {
         let errors = lint("# Setup\n\n## Setup\n");
-        let err = errors.iter().find(|e| e.rule_names.first() == Some(&"KMD005")).unwrap();
+        let err = errors
+            .iter()
+            .find(|e| e.rule_names.first() == Some(&"KMD005"))
+            .unwrap();
         assert!(
             err.fix_info.is_some(),
             "duplicate heading should have fix_info"
@@ -313,7 +324,9 @@ mod tests {
         // After fix, re-linting should produce no KMD005 errors
         let errors2 = lint(&fixed);
         assert!(
-            errors2.iter().all(|e| e.rule_names.first() != Some(&"KMD005")),
+            errors2
+                .iter()
+                .all(|e| e.rule_names.first() != Some(&"KMD005")),
             "after fix, no KMD005 errors expected; got: {errors2:?}"
         );
     }
@@ -335,7 +348,9 @@ mod tests {
         let fixed = apply_fixes(content, &errors);
         let errors2 = lint(&fixed);
         assert!(
-            errors2.iter().all(|e| e.rule_names.first() != Some(&"KMD005")),
+            errors2
+                .iter()
+                .all(|e| e.rule_names.first() != Some(&"KMD005")),
             "after fix, no KMD005 errors; got: {errors2:?}"
         );
     }

@@ -176,7 +176,9 @@ mod tests {
     fn test_kmd001_term_no_definition() {
         let errors = lint("# H\n\nterm without def\n\nother paragraph\n: orphan def\n");
         assert!(
-            errors.iter().any(|e| e.rule_names.first() == Some(&"KMD001")),
+            errors
+                .iter()
+                .any(|e| e.rule_names.first() == Some(&"KMD001")),
             "should fire when DL term has no definition"
         );
     }
@@ -197,7 +199,10 @@ mod tests {
     #[test]
     fn test_kmd001_fix_info_present() {
         let errors = lint("# H\n\nterm without def\n\nother paragraph\n: orphan def\n");
-        let err = errors.iter().find(|e| e.rule_names.first() == Some(&"KMD001")).unwrap();
+        let err = errors
+            .iter()
+            .find(|e| e.rule_names.first() == Some(&"KMD001"))
+            .unwrap();
         assert!(err.fix_info.is_some(), "KMD001 error should have fix_info");
         let fix = err.fix_info.as_ref().unwrap();
         assert_eq!(fix.insert_text.as_deref(), Some("\n: "));
@@ -213,7 +218,9 @@ mod tests {
         let fixed = apply_fixes(content, &errors);
         let errors2 = lint(&fixed);
         assert!(
-            errors2.iter().all(|e| e.rule_names.first() != Some(&"KMD001")),
+            errors2
+                .iter()
+                .all(|e| e.rule_names.first() != Some(&"KMD001")),
             "after fix, no KMD001 errors; fixed:\n{fixed}"
         );
     }

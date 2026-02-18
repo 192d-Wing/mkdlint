@@ -5,25 +5,31 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 
 // Inline link: [text](url)
-static INLINE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\(([^)]*)\)").expect("valid regex"));
+static INLINE_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\[([^\]]*)\]\(([^)]*)\)").expect("valid regex"));
 
 // Full reference link: [text][label]
-static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").expect("valid regex"));
+static FULL_REF_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").expect("valid regex"));
 
 // Collapsed reference link: [text][]
-static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").expect("valid regex"));
+static COLLAPSED_REF_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").expect("valid regex"));
 
 // Shortcut reference link: [text] not followed by ( or [
-static SHORTCUT_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\](?:[^(\[])").expect("valid regex"));
+static SHORTCUT_REF_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\[([^\]]+)\](?:[^(\[])").expect("valid regex"));
 
 // Autolink: <http://...> or <https://...>
-static AUTOLINK_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"<(https?://[^>]+)>").expect("valid regex"));
+static AUTOLINK_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"<(https?://[^>]+)>").expect("valid regex"));
 
 // Inline code span regex for stripping
 static INLINE_CODE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"`[^`]+`").expect("valid regex"));
 
 // Code fence opening/closing
-static CODE_FENCE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(`{3,}|~{3,})").expect("valid regex"));
+static CODE_FENCE_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^(`{3,}|~{3,})").expect("valid regex"));
 
 pub struct MD054;
 
@@ -332,20 +338,6 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> RuleParams<'a> {
-        RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config,
-        }
-    }
-
     #[test]
     fn test_md054_all_styles_allowed() {
         let lines = vec![
@@ -356,7 +348,7 @@ mod tests {
             "<https://example.com>\n",
         ];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let rule = MD054;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
@@ -367,7 +359,7 @@ mod tests {
         let lines = vec!["[full ref][label]\n"];
         let mut config = HashMap::new();
         config.insert("full".to_string(), serde_json::Value::Bool(false));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let rule = MD054;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
@@ -386,7 +378,7 @@ mod tests {
         let lines = vec!["<https://example.com>\n"];
         let mut config = HashMap::new();
         config.insert("autolink".to_string(), serde_json::Value::Bool(false));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let rule = MD054;
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
@@ -406,7 +398,7 @@ mod tests {
         let lines = vec!["[text][] is a link\n"];
         let mut config = HashMap::new();
         config.insert("collapsed".to_string(), serde_json::Value::Bool(false));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD054.lint(&params);
         assert_eq!(errors.len(), 1);
         let fix = errors[0].fix_info.as_ref().expect("Should have fix_info");
@@ -421,7 +413,7 @@ mod tests {
         let lines = vec!["[text] is a link\n"];
         let mut config = HashMap::new();
         config.insert("shortcut".to_string(), serde_json::Value::Bool(false));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD054.lint(&params);
         assert_eq!(errors.len(), 1);
         let fix = errors[0].fix_info.as_ref().expect("Should have fix_info");
@@ -437,7 +429,7 @@ mod tests {
         let lines = vec!["<https://example.com>\n"];
         let mut config = HashMap::new();
         config.insert("autolink".to_string(), serde_json::Value::Bool(false));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD054.lint(&params);
         assert_eq!(errors.len(), 1);
         let fix = errors[0].fix_info.as_ref().expect("Should have fix_info");
@@ -456,7 +448,7 @@ mod tests {
         let mut config = HashMap::new();
         config.insert("collapsed".to_string(), serde_json::Value::Bool(false));
         config.insert("shortcut".to_string(), serde_json::Value::Bool(false));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD054.lint(&params);
         assert_eq!(errors.len(), 1);
         assert!(
@@ -472,7 +464,7 @@ mod tests {
         let mut config = HashMap::new();
         config.insert("autolink".to_string(), serde_json::Value::Bool(false));
         config.insert("inline".to_string(), serde_json::Value::Bool(false));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = MD054.lint(&params);
         assert_eq!(errors.len(), 1);
         assert!(

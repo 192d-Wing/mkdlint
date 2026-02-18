@@ -177,26 +177,12 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> crate::types::RuleParams<'a> {
-        crate::types::RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config,
-        }
-    }
-
     #[test]
     fn test_md043_no_config() {
         let rule = MD043;
         let lines = vec!["# Title\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         assert_eq!(rule.lint(&params).len(), 0);
     }
 
@@ -209,7 +195,7 @@ mod tests {
             "headings".to_string(),
             serde_json::json!(["# Title", "## Section"]),
         );
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         assert_eq!(rule.lint(&params).len(), 0);
     }
 
@@ -222,7 +208,7 @@ mod tests {
             "headings".to_string(),
             serde_json::json!(["# Title", "## Section"]),
         );
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
         assert!(
@@ -240,7 +226,7 @@ mod tests {
         let lines = vec!["# Title\n", "\n", "## Section\n", "\n", "## Extra\n"];
         let mut config = HashMap::new();
         config.insert("headings".to_string(), serde_json::json!(["# Title"]));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 2); // Two extra headings
     }
@@ -251,7 +237,7 @@ mod tests {
         let lines = vec!["# Any Title\n", "\n", "## Anything\n"];
         let mut config = HashMap::new();
         config.insert("headings".to_string(), serde_json::json!(["# *", "## *"]));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         assert_eq!(rule.lint(&params).len(), 0);
     }
 
@@ -261,7 +247,7 @@ mod tests {
         let lines = vec!["# Title\n", "\n", "### Deep heading\n"];
         let mut config = HashMap::new();
         config.insert("headings".to_string(), serde_json::json!(["#+", "#+"]));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         assert_eq!(rule.lint(&params).len(), 0);
     }
 
@@ -271,7 +257,7 @@ mod tests {
         let lines = vec!["## Not Title\n"];
         let mut config = HashMap::new();
         config.insert("headings".to_string(), serde_json::json!(["# Title"]));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
     }

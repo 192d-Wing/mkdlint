@@ -76,28 +76,13 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        tokens: &'a [crate::parser::Token],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> crate::types::RuleParams<'a> {
-        crate::types::RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens,
-            config,
-        }
-    }
-
     #[test]
     fn test_md060_no_dollar_signs() {
         let rule = MD060;
         let lines: Vec<&str> = vec!["```bash\n", "echo hello\n", "ls -la\n", "```\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
     }
@@ -108,7 +93,7 @@ mod tests {
         let lines: Vec<&str> = vec!["```bash\n", "$ echo hello\n", "$ ls -la\n", "```\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 2);
     }
@@ -119,7 +104,7 @@ mod tests {
         let lines: Vec<&str> = vec!["$ echo hello\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
     }
@@ -130,7 +115,7 @@ mod tests {
         let lines: Vec<&str> = vec!["~~~\n", "$ npm install\n", "~~~\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
     }
@@ -141,7 +126,7 @@ mod tests {
         let lines: Vec<&str> = vec!["```\n", "$ echo hello\n", "hello\n", "```\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
     }
@@ -152,7 +137,7 @@ mod tests {
         let lines: Vec<&str> = vec!["```bash\n", "$ echo hello\n", "```\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
 
         assert_eq!(errors.len(), 1);
@@ -170,7 +155,7 @@ mod tests {
         let lines: Vec<&str> = vec!["```bash\n", "$echo\n", "```\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
 
         assert_eq!(errors.len(), 1);
@@ -188,7 +173,7 @@ mod tests {
         let lines: Vec<&str> = vec!["```bash\n", "  $ echo hello\n", "```\n"];
         let tokens = vec![];
         let config = HashMap::new();
-        let params = make_params(&lines, &tokens, &config);
+        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
         let errors = rule.lint(&params);
 
         assert_eq!(errors.len(), 1);

@@ -6,13 +6,16 @@ use regex::Regex;
 use std::collections::HashSet;
 
 /// Regex for reference link definitions: `[label]: url`
-static DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\s*\[([^\]]+)\]:\s+").expect("valid regex"));
+static DEF_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^\s*\[([^\]]+)\]:\s+").expect("valid regex"));
 
 /// Regex for full reference links: `[text][label]`
-static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").expect("valid regex"));
+static FULL_REF_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").expect("valid regex"));
 
 /// Regex for collapsed reference links: `[label][]`
-static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").expect("valid regex"));
+static COLLAPSED_REF_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").expect("valid regex"));
 
 /// Regex for shortcut reference links: `[label]` (not followed by `[` or `(` or `:`)
 static SHORTCUT_REF_RE: Lazy<Regex> =
@@ -156,20 +159,6 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> RuleParams<'a> {
-        RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config,
-        }
-    }
-
     #[test]
     fn test_md053_all_used() {
         let lines: Vec<&str> = vec![
@@ -178,7 +167,7 @@ mod tests {
             "[foo]: https://example.com\n",
         ];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD053;
         let errors = rule.lint(&params);
@@ -189,7 +178,7 @@ mod tests {
     fn test_md053_unused_definition() {
         let lines: Vec<&str> = vec!["This is some text.\n", "\n", "[foo]: https://example.com\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD053;
         let errors = rule.lint(&params);
@@ -201,7 +190,7 @@ mod tests {
     fn test_md053_ignored_definition() {
         let lines: Vec<&str> = vec!["This is some text.\n", "\n", "[//]: https://example.com\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD053;
         let errors = rule.lint(&params);
@@ -212,7 +201,7 @@ mod tests {
     fn test_md053_fix_unused_definition() {
         let lines: Vec<&str> = vec!["This is some text.\n", "\n", "[foo]: https://example.com\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD053;
         let errors = rule.lint(&params);
@@ -236,7 +225,7 @@ mod tests {
             "[baz]: https://example.net\n",
         ];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD053;
         let errors = rule.lint(&params);
@@ -258,7 +247,7 @@ mod tests {
             "[foo]: https://example.com\n",
         ];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD053;
         let errors = rule.lint(&params);

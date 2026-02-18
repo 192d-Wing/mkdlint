@@ -127,26 +127,12 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> crate::types::RuleParams<'a> {
-        crate::types::RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config,
-        }
-    }
-
     #[test]
     fn test_md044_default_names() {
         let rule = MD044;
         let lines = vec!["I love javascript and github.\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 2);
     }
@@ -156,7 +142,7 @@ mod tests {
         let rule = MD044;
         let lines = vec!["I love JavaScript and GitHub.\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
     }
@@ -167,7 +153,7 @@ mod tests {
         let lines = vec!["Use rust for everything.\n"];
         let mut config = HashMap::new();
         config.insert("names".to_string(), serde_json::json!(["Rust"]));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
     }
@@ -177,7 +163,7 @@ mod tests {
         let rule = MD044;
         let lines = vec!["```\n", "javascript code\n", "```\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0); // code blocks excluded by default
     }
@@ -188,7 +174,7 @@ mod tests {
         let lines = vec!["```\n", "javascript code\n", "```\n"];
         let mut config = HashMap::new();
         config.insert("code_blocks".to_string(), serde_json::json!(true));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1); // code blocks checked when configured
     }
@@ -198,7 +184,7 @@ mod tests {
         let rule = MD044;
         let lines = vec!["I love javascript.\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
 
@@ -215,7 +201,7 @@ mod tests {
         let rule = MD044;
         let lines = vec!["javascript and javascript are great.\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 2);
 
@@ -235,7 +221,7 @@ mod tests {
         let rule = MD044;
         let lines = vec!["JavaScript and javascript here.\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         // Only the second occurrence is wrong
         assert_eq!(errors.len(), 1);
@@ -253,7 +239,7 @@ mod tests {
         let lines = vec!["Use rust for everything.\n"];
         let mut config = HashMap::new();
         config.insert("names".to_string(), serde_json::json!(["Rust"]));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
 
@@ -269,7 +255,7 @@ mod tests {
         let rule = MD044;
         let lines = vec!["I use Github daily.\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
         assert_eq!(
@@ -284,7 +270,7 @@ mod tests {
         // Multi-byte chars before a proper name match
         let lines = vec!["Sch\u{00f6}ne javascript Welt.\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         // Should find the "javascript" match without panicking
         assert_eq!(errors.len(), 1);
@@ -296,7 +282,7 @@ mod tests {
         let lines = vec!["Use caf\u{00e9} brew.\n"];
         let mut config = HashMap::new();
         config.insert("names".to_string(), serde_json::json!(["Caf\u{00e9}"]));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         // "caf\u{e9}" should be detected as wrong case for "Caf\u{e9}"
         assert_eq!(errors.len(), 1);

@@ -18,11 +18,9 @@ fn heading_to_id(text: &str) -> String {
         if ch.is_alphanumeric() {
             id.push(ch);
             prev_hyphen = false;
-        } else if ch == ' ' || ch == '-' {
-            if !prev_hyphen {
-                id.push('-');
-                prev_hyphen = true;
-            }
+        } else if (ch == ' ' || ch == '-') && !prev_hyphen {
+            id.push('-');
+            prev_hyphen = true;
         }
         // Skip other characters (punctuation, etc.)
     }
@@ -157,20 +155,6 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> crate::types::RuleParams<'a> {
-        crate::types::RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config,
-        }
-    }
-
     #[test]
     fn test_heading_to_id() {
         assert_eq!(heading_to_id("Hello World"), "hello-world");
@@ -198,7 +182,7 @@ mod tests {
             "See [title](#title) and [start](#getting-started).\n",
         ];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
     }
@@ -208,7 +192,7 @@ mod tests {
         let rule = MD051;
         let lines = vec!["# Title\n", "\n", "See [missing](#nonexistent).\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
         assert!(
@@ -231,7 +215,7 @@ mod tests {
             "See [first](#section) and [second](#section-1).\n",
         ];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
     }
@@ -241,7 +225,7 @@ mod tests {
         let rule = MD051;
         let lines = vec!["# Title\n", "```\n", "[link](#nonexistent)\n", "```\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0);
     }
@@ -256,7 +240,7 @@ mod tests {
             "See [a](#title) and [b](#missing).\n",
         ];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 1);
     }
@@ -278,7 +262,7 @@ mod tests {
         let rule = MD051;
         let lines = vec!["## ???\n", "\n", "[link](#)\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         // Should not panic — just produce an error for invalid fragment
         let _errors = rule.lint(&params);
     }
@@ -292,7 +276,7 @@ mod tests {
             "[link](#caf\u{00e9}-guide)\n",
         ];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
         let errors = rule.lint(&params);
         assert_eq!(errors.len(), 0, "Unicode heading IDs should match");
     }

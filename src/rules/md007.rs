@@ -8,7 +8,8 @@ use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-static UL_MARKER_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)[*+\-]\s").expect("valid regex"));
+static UL_MARKER_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^(\s*)[*+\-]\s").expect("valid regex"));
 
 pub struct MD007;
 
@@ -97,25 +98,11 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    fn make_params<'a>(
-        lines: &'a [&'a str],
-        config: &'a HashMap<String, serde_json::Value>,
-    ) -> RuleParams<'a> {
-        RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config,
-        }
-    }
-
     #[test]
     fn test_md007_correct_indentation() {
         let lines: Vec<&str> = vec!["* Item 1\n", "  * Nested item\n", "    * Deep nested\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD007;
         let errors = rule.lint(&params);
@@ -129,7 +116,7 @@ mod tests {
             "   * Nested item\n", // 3 spaces, should be 2 or 4
         ];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD007;
         let errors = rule.lint(&params);
@@ -149,7 +136,7 @@ mod tests {
         ];
         let mut config = HashMap::new();
         config.insert("indent".to_string(), serde_json::json!(4));
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD007;
         let errors = rule.lint(&params);
@@ -160,7 +147,7 @@ mod tests {
     fn test_md007_top_level_no_error() {
         let lines: Vec<&str> = vec!["* Item 1\n", "* Item 2\n", "- Item 3\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD007;
         let errors = rule.lint(&params);
@@ -171,7 +158,7 @@ mod tests {
     fn test_md007_in_code_block_ignored() {
         let lines: Vec<&str> = vec!["```\n", "   * not a list\n", "```\n"];
         let config = HashMap::new();
-        let params = make_params(&lines, &config);
+        let params = crate::types::RuleParams::test(&lines, &config);
 
         let rule = MD007;
         let errors = rule.lint(&params);
