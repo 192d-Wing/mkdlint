@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.7] - 2026-02-17
+
+### Changed
+
+- **Safety**: Replaced `.unwrap()` with `.expect()` for stdin content lookups in
+  `--fix` and `--fix-dry-run` paths — clearer panic messages on impossible state
+- **Safety**: Replaced `rule_names[0]` with `.first()` in 11 KMD test files —
+  prevents potential panics on empty `rule_names`
+- **Safety**: Replaced `Regex::new().unwrap()` with `.expect("valid regex")` in
+  24 rule files — clearer compile-time regex failure messages
+
+### Improved
+
+- **Performance**: O(n²) → O(n) hyphen collapsing in MD051 heading-to-ID
+  conversion using single-pass state machine
+- **Performance**: O(d·n) → O(n) line deletion in `apply_fixes()` via
+  `Vec::retain()` with `HashSet` lookup
+- **Performance**: Eliminated per-call `Regex::new()` in KMD005 slug generation
+  with single-pass state machine (same pattern as MD051)
+
+### Refactored
+
+- **DRY**: Extracted `RuleParams::test()` and `test_with_tokens()` helpers into
+  `types/rule.rs`, removing 25 duplicate `make_params()` functions across test
+  modules (−243 lines net)
+- **DRY**: Consolidated inline code-fence detection (`starts_with("```") ||
+  starts_with("~~~")`) into `helpers::is_code_fence()`, used across 20 rule files
+
+### Fixed
+
+- **Text formatter**: Suppress emojis (💡/🔧) when color is disabled via
+  `--no-color`, `NO_COLOR` env, or non-TTY output — falls back to `*` prefix
+
+### Tests
+
+- Expanded unit test coverage for MD009, MD012, MD019, MD045, MD047 — from 3
+  tests each to 7–9 tests each, covering fix_info validation, boundary
+  conditions, and edge cases
+
 ## [0.11.6] - 2026-02-17
 
 ### Added
@@ -794,7 +833,15 @@ This release makes existing auto-fixes discoverable by properly tagging them. No
 - Parallel file processing
 - Inline configuration comments support
 
-[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.10.3...HEAD
+[Unreleased]: https://github.com/192d-Wing/mkdlint/compare/v0.11.7...HEAD
+[0.11.7]: https://github.com/192d-Wing/mkdlint/compare/v0.11.6...v0.11.7
+[0.11.6]: https://github.com/192d-Wing/mkdlint/compare/v0.11.5...v0.11.6
+[0.11.5]: https://github.com/192d-Wing/mkdlint/compare/v0.11.4...v0.11.5
+[0.11.4]: https://github.com/192d-Wing/mkdlint/compare/v0.11.3...v0.11.4
+[0.11.3]: https://github.com/192d-Wing/mkdlint/compare/v0.11.2...v0.11.3
+[0.11.2]: https://github.com/192d-Wing/mkdlint/compare/v0.11.1...v0.11.2
+[0.11.1]: https://github.com/192d-Wing/mkdlint/compare/v0.11.0...v0.11.1
+[0.11.0]: https://github.com/192d-Wing/mkdlint/compare/v0.10.3...v0.11.0
 [0.10.3]: https://github.com/192d-Wing/mkdlint/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/192d-Wing/mkdlint/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/192d-Wing/mkdlint/compare/v0.10.0...v0.10.1
