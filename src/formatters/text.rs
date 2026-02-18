@@ -18,6 +18,9 @@ pub fn format_text_with_context(
     let mut files: Vec<_> = results.results.keys().collect();
     files.sort();
 
+    // Suppress emojis when color is disabled (--no-color, NO_COLOR env, or piped output)
+    let use_emoji = colored::control::SHOULD_COLORIZE.should_colorize();
+
     for file in &files {
         if let Some(errors) = results.results.get(*file) {
             let source_lines: Option<Vec<&str>> = sources.get(*file).map(|s| s.lines().collect());
@@ -56,18 +59,20 @@ pub fn format_text_with_context(
 
                 // Show suggestion if available
                 if let Some(suggestion) = &error.suggestion {
+                    let prefix = if use_emoji { "💡 " } else { "* " };
                     output.push(format!(
-                        "  {} {}",
-                        "💡".cyan(),
+                        "  {}{}",
+                        prefix.cyan(),
                         format!("Suggestion: {}", suggestion).cyan()
                     ));
                 }
 
                 // Show "fix available" indicator
                 if error.fix_info.is_some() {
+                    let prefix = if use_emoji { "🔧 " } else { "* " };
                     output.push(format!(
-                        "  {} {}",
-                        "🔧".green(),
+                        "  {}{}",
+                        prefix.green(),
                         "Fix available - use --fix to apply automatically".green()
                     ));
                 }
