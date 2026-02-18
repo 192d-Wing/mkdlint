@@ -37,20 +37,20 @@ fn kramdown_slug(text: &str) -> String {
     };
 
     let mut slug = String::with_capacity(text.len());
+    let mut prev_hyphen = false;
     for ch in text.chars() {
         if ch.is_alphanumeric() {
             for c in ch.to_lowercase() {
                 slug.push(c);
             }
-        } else if ch == ' ' || ch == '-' {
+            prev_hyphen = false;
+        } else if (ch == ' ' || ch == '-') && !prev_hyphen {
             slug.push('-');
+            prev_hyphen = true;
         }
         // All other chars are stripped
     }
 
-    // Collapse multiple consecutive hyphens
-    let re = Regex::new(r"-{2,}").expect("valid regex");
-    let slug = re.replace_all(&slug, "-").into_owned();
     slug.trim_matches('-').to_string()
 }
 
