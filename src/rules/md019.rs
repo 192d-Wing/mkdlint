@@ -75,35 +75,83 @@ mod tests {
 
     #[test]
     fn test_md019_single_space() {
-        let lines: Vec<&str> = "# Heading\n".lines().collect();
-        let tokens = vec![];
+        let lines = vec!["# Heading\n"];
         let config = HashMap::new();
-        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
-        let rule = MD019;
-        let errors = rule.lint(&params);
-        assert_eq!(errors.len(), 0);
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD019.lint(&params).len(), 0);
     }
 
     #[test]
     fn test_md019_multiple_spaces() {
-        let lines: Vec<&str> = "#  Heading\n".lines().collect();
-        let tokens = vec![];
+        let lines = vec!["#  Heading\n"];
         let config = HashMap::new();
-        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
-        let rule = MD019;
-        let errors = rule.lint(&params);
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD019.lint(&params);
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 1);
     }
 
     #[test]
     fn test_md019_many_spaces_h2() {
-        let lines: Vec<&str> = "##   Heading 2\n".lines().collect();
-        let tokens = vec![];
+        let lines = vec!["##   Heading 2\n"];
         let config = HashMap::new();
-        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
-        let rule = MD019;
-        let errors = rule.lint(&params);
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD019.lint(&params).len(), 1);
+    }
+
+    #[test]
+    fn test_md019_fix_info() {
+        let lines = vec!["#   Title\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD019.lint(&params);
         assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().expect("fix_info");
+        assert_eq!(fix.edit_column, Some(3)); // after "# ", delete extra spaces
+        assert_eq!(fix.delete_count, Some(2)); // 3 spaces - 1 = 2 extra
+        assert_eq!(fix.insert_text, None);
+    }
+
+    #[test]
+    fn test_md019_all_heading_levels() {
+        for level in 1..=6 {
+            let hashes = "#".repeat(level);
+            let line = format!("{}  Heading\n", hashes);
+            let lines = vec![line.as_str()];
+            let config = HashMap::new();
+            let params = crate::types::RuleParams::test(&lines, &config);
+            let errors = MD019.lint(&params);
+            assert_eq!(errors.len(), 1, "level {} should trigger", level);
+        }
+    }
+
+    #[test]
+    fn test_md019_seven_hashes_ignored() {
+        // ####### is not a valid heading (max 6)
+        let lines = vec!["#######  Not a heading\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD019.lint(&params).len(), 0);
+    }
+
+    #[test]
+    fn test_md019_no_space_no_error() {
+        // No space at all (e.g. "#Heading") — not MD019's concern
+        let lines = vec!["#Heading\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD019.lint(&params).len(), 0);
+    }
+
+    #[test]
+    fn test_md019_error_detail() {
+        let lines = vec!["#    Title\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD019.lint(&params);
+        assert_eq!(
+            errors[0].error_detail.as_deref(),
+            Some("Expected: 1; Actual: 4")
+        );
     }
 }

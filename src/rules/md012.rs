@@ -102,63 +102,90 @@ mod tests {
     #[test]
     fn test_md012_single_blank_lines() {
         let lines = vec!["# Heading\n", "\n", "Content\n"];
-
-        let params = RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines: &lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config: &HashMap::new(),
-        };
-
-        let rule = MD012;
-        let errors = rule.lint(&params);
-        assert_eq!(errors.len(), 0);
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD012.lint(&params).len(), 0);
     }
 
     #[test]
     fn test_md012_multiple_blank_lines() {
         let lines = vec!["# Heading\n", "\n", "\n", "\n", "Content\n"];
-
-        let params = RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines: &lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config: &HashMap::new(),
-        };
-
-        let rule = MD012;
-        let errors = rule.lint(&params);
-
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD012.lint(&params);
         assert_eq!(errors.len(), 1);
-        assert_eq!(errors[0].line_number, 3); // Second blank line
-        assert!(
-            errors[0]
-                .error_detail
-                .as_ref()
-                .unwrap()
-                .contains("Expected: 1; Actual: 3")
+        assert_eq!(errors[0].line_number, 3);
+        assert_eq!(
+            errors[0].error_detail.as_deref(),
+            Some("Expected: 1; Actual: 3")
         );
     }
 
     #[test]
     fn test_md012_no_blank_lines() {
         let lines = vec!["# Heading\n", "Content\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD012.lint(&params).len(), 0);
+    }
 
-        let params = RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines: &lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config: &HashMap::new(),
-        };
+    #[test]
+    fn test_md012_two_blank_lines() {
+        let lines = vec!["A\n", "\n", "\n", "B\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD012.lint(&params);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(
+            errors[0].error_detail.as_deref(),
+            Some("Expected: 1; Actual: 2")
+        );
+    }
 
-        let rule = MD012;
-        let errors = rule.lint(&params);
-        assert_eq!(errors.len(), 0);
+    #[test]
+    fn test_md012_multiple_groups() {
+        // Two separate groups of multiple blanks
+        let lines = vec!["A\n", "\n", "\n", "B\n", "\n", "\n", "\n", "C\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD012.lint(&params);
+        assert_eq!(errors.len(), 2, "should flag both groups");
+        assert_eq!(errors[0].line_number, 3);
+        assert_eq!(errors[1].line_number, 6);
+    }
+
+    #[test]
+    fn test_md012_trailing_multiple_blanks() {
+        // File ends with multiple blank lines
+        let lines = vec!["Content\n", "\n", "\n", "\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD012.lint(&params);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(
+            errors[0].error_detail.as_deref(),
+            Some("Expected: 1; Actual: 3")
+        );
+    }
+
+    #[test]
+    fn test_md012_fix_info_present() {
+        let lines = vec!["A\n", "\n", "\n", "B\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD012.lint(&params);
+        assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().expect("fix_info");
+        assert_eq!(fix.line_number, Some(3));
+        assert_eq!(fix.delete_count, Some(-1)); // whole-line delete
+    }
+
+    #[test]
+    fn test_md012_only_blank_lines() {
+        let lines = vec!["\n", "\n", "\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD012.lint(&params);
+        assert_eq!(errors.len(), 1);
     }
 }

@@ -79,34 +79,78 @@ mod tests {
 
     #[test]
     fn test_md045_with_alt_text() {
-        let rule = MD045;
-        let lines: Vec<&str> = vec!["![alt text](image.png)\n"];
-        let tokens = vec![];
+        let lines = vec!["![alt text](image.png)\n"];
         let config = HashMap::new();
-        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
-        let errors = rule.lint(&params);
-        assert_eq!(errors.len(), 0);
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD045.lint(&params).len(), 0);
     }
 
     #[test]
     fn test_md045_no_alt_text() {
-        let rule = MD045;
-        let lines: Vec<&str> = vec!["![](image.png)\n"];
-        let tokens = vec![];
+        let lines = vec!["![](image.png)\n"];
         let config = HashMap::new();
-        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
-        let errors = rule.lint(&params);
-        assert_eq!(errors.len(), 1);
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD045.lint(&params).len(), 1);
     }
 
     #[test]
     fn test_md045_whitespace_only_alt() {
-        let rule = MD045;
-        let lines: Vec<&str> = vec!["![  ](image.png)\n"];
-        let tokens = vec![];
+        let lines = vec!["![  ](image.png)\n"];
         let config = HashMap::new();
-        let params = crate::types::RuleParams::test_with_tokens(&lines, &tokens, &config);
-        let errors = rule.lint(&params);
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD045.lint(&params).len(), 1);
+    }
+
+    #[test]
+    fn test_md045_multiple_images_one_line() {
+        let lines = vec!["![](a.png) and ![](b.png)\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD045.lint(&params).len(), 2);
+    }
+
+    #[test]
+    fn test_md045_mixed_valid_and_missing() {
+        let lines = vec!["![ok](a.png) ![](b.png)\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD045.lint(&params).len(), 1);
+    }
+
+    #[test]
+    fn test_md045_special_chars_in_alt() {
+        let lines = vec!["![diagram: A -> B](flow.png)\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD045.lint(&params).len(), 0);
+    }
+
+    #[test]
+    fn test_md045_fix_info() {
+        let lines = vec!["![](photo.jpg)\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD045.lint(&params);
         assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().expect("fix_info");
+        assert_eq!(fix.edit_column, Some(3));
+        assert_eq!(fix.delete_count, Some(0));
+        assert_eq!(fix.insert_text, Some("image".to_string()));
+    }
+
+    #[test]
+    fn test_md045_url_image() {
+        let lines = vec!["![](https://example.com/img.png)\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD045.lint(&params).len(), 1);
+    }
+
+    #[test]
+    fn test_md045_regular_link_ignored() {
+        let lines = vec!["[text](link.html)\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD045.lint(&params).len(), 0);
     }
 }

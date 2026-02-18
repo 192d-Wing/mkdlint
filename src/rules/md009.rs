@@ -74,37 +74,17 @@ mod tests {
     #[test]
     fn test_md009_no_trailing_spaces() {
         let lines = vec!["# Heading\n", "This is content\n"];
-
-        let params = RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines: &lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config: &HashMap::new(),
-        };
-
-        let rule = MD009;
-        let errors = rule.lint(&params);
-        assert_eq!(errors.len(), 0);
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD009.lint(&params).len(), 0);
     }
 
     #[test]
     fn test_md009_with_trailing_spaces() {
         let lines = vec!["# Heading  \n", "This is content   \n"];
-
-        let params = RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines: &lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config: &HashMap::new(),
-        };
-
-        let rule = MD009;
-        let errors = rule.lint(&params);
-
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD009.lint(&params);
         assert_eq!(errors.len(), 2);
         assert_eq!(errors[0].line_number, 1);
         assert_eq!(errors[1].line_number, 2);
@@ -114,18 +94,62 @@ mod tests {
     #[test]
     fn test_md009_with_tabs() {
         let lines = vec!["Content\t\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD009.lint(&params).len(), 1);
+    }
 
-        let params = RuleParams {
-            name: "test.md",
-            version: "0.1.0",
-            lines: &lines,
-            front_matter_lines: &[],
-            tokens: &[],
-            config: &HashMap::new(),
-        };
-
-        let rule = MD009;
-        let errors = rule.lint(&params);
+    #[test]
+    fn test_md009_single_trailing_space() {
+        let lines = vec!["Hello \n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD009.lint(&params);
         assert_eq!(errors.len(), 1);
+        let fix = errors[0].fix_info.as_ref().expect("fix_info");
+        assert_eq!(fix.edit_column, Some(6));
+        assert_eq!(fix.delete_count, Some(1));
+        assert_eq!(fix.insert_text, None);
+    }
+
+    #[test]
+    fn test_md009_mixed_spaces_and_tabs() {
+        let lines = vec!["Text \t \n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD009.lint(&params);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(
+            errors[0].error_detail.as_deref(),
+            Some("Expected: 0; Actual: 3")
+        );
+    }
+
+    #[test]
+    fn test_md009_blank_line_with_spaces() {
+        // A line that is only spaces should still trigger
+        let lines = vec!["   \n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        let errors = MD009.lint(&params);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].error_range, Some((1, 3)));
+    }
+
+    #[test]
+    fn test_md009_no_newline_trailing_spaces() {
+        // Last line without newline but with trailing spaces
+        let lines = vec!["Content   "];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD009.lint(&params).len(), 1);
+    }
+
+    #[test]
+    fn test_md009_empty_lines_no_error() {
+        let lines = vec!["\n", "\n"];
+        let config = HashMap::new();
+        let params = crate::types::RuleParams::test(&lines, &config);
+        assert_eq!(MD009.lint(&params).len(), 0);
     }
 }
