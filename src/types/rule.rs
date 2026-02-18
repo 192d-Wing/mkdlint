@@ -37,6 +37,11 @@ pub struct RuleParams<'a> {
 
     /// Rule-specific configuration
     pub config: &'a HashMap<String, serde_json::Value>,
+
+    /// Workspace heading index for cross-file link validation.
+    /// Maps normalized file paths to their heading anchor IDs.
+    /// None when workspace context is unavailable (e.g., stdin, single-file lint).
+    pub workspace_headings: Option<&'a HashMap<String, Vec<String>>>,
 }
 
 #[cfg(test)]
@@ -54,6 +59,7 @@ impl<'a> RuleParams<'a> {
             front_matter_lines: &[],
             tokens,
             config,
+            workspace_headings: None,
         }
     }
 

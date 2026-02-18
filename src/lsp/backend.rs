@@ -10,7 +10,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use std::time::Duration;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
@@ -63,7 +63,7 @@ fn walk_recursive(dir: &Path, out: &mut Vec<PathBuf>) {
 pub struct MkdlintLanguageServer {
     client: Client,
     document_manager: Arc<DocumentManager>,
-    config_manager: Arc<Mutex<ConfigManager>>,
+    config_manager: Arc<RwLock<ConfigManager>>,
     debouncer: Arc<Debouncer>,
 }
 
@@ -74,7 +74,7 @@ impl MkdlintLanguageServer {
         Self {
             client,
             document_manager: Arc::new(DocumentManager::new()),
-            config_manager: Arc::new(Mutex::new(ConfigManager::new(vec![]))),
+            config_manager: Arc::new(RwLock::new(ConfigManager::new(vec![]))),
             debouncer: Arc::new(Debouncer::new(Duration::from_millis(300))),
         }
     }
@@ -84,7 +84,7 @@ impl MkdlintLanguageServer {
     /// Called once after initialization to populate the Problems panel with
     /// errors from files the user hasn't opened yet.
     async fn scan_workspace(&self) {
-        let roots: Vec<PathBuf> = self.config_manager.lock().unwrap().workspace_roots.clone();
+        let roots: Vec<PathBuf> = self.config_manager.read().unwrap().workspace_roots.clone();
 
         if roots.is_empty() {
             return;
@@ -108,6 +108,8 @@ impl MkdlintLanguageServer {
             )
             .await;
 
+        // Phase 1: Sequential I/O — read files and discover configs
+        let mut scan_inputs: Vec<(Url, String, String, Option<crate::config::Config>)> = Vec::new();
         for path in md_files {
             let content = match std::fs::read_to_string(&path) {
                 Ok(c) => c,
@@ -121,42 +123,54 @@ impl MkdlintLanguageServer {
             };
 
             // Skip files already open (they have fresher diagnostics)
-            if self.document_manager.get(&uri).is_some() {
+            if self.document_manager.contains(&uri) {
                 continue;
             }
 
-            let config = self.config_manager.lock().unwrap().discover_config(&uri);
+            let config = self.config_manager.read().unwrap().discover_config(&uri);
 
-            let mut options = LintOptions::default();
-            options.strings.insert(file_name.clone(), content.clone());
-            if let Some(config) = config {
-                options.config = Some(config);
-            }
+            scan_inputs.push((uri, file_name, content, config));
+        }
 
-            let results = match lint_sync(&options) {
-                Ok(r) => r,
-                Err(_) => continue,
-            };
+        // Phase 2: Parallel lint using rayon
+        use rayon::prelude::*;
+        let lint_results: Vec<(Url, Vec<Diagnostic>)> = scan_inputs
+            .par_iter()
+            .filter_map(|(uri, file_name, content, config)| {
+                let mut options = LintOptions::default();
+                options.strings.insert(file_name.clone(), content.clone());
+                if let Some(config) = config {
+                    options.config = Some(config.clone());
+                }
 
-            let errors = results.get(&file_name).unwrap_or(&[]).to_vec();
-            let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
-            let diags: Vec<Diagnostic> = errors
-                .iter()
-                .filter(|err| !err.fix_only)
-                .map(|err| diagnostics::lint_error_to_diagnostic(err, &lines))
-                .collect();
+                let results = lint_sync(&options).ok()?;
+                let errors = results.get(file_name).unwrap_or(&[]).to_vec();
+                let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
+                let diags: Vec<Diagnostic> = errors
+                    .iter()
+                    .filter(|err| !err.fix_only)
+                    .map(|err| diagnostics::lint_error_to_diagnostic(err, &lines))
+                    .collect();
 
-            if !diags.is_empty() {
-                self.client.publish_diagnostics(uri, diags, None).await;
-            }
+                if diags.is_empty() {
+                    None
+                } else {
+                    Some((uri.clone(), diags))
+                }
+            })
+            .collect();
+
+        // Phase 3: Sequential publish (async — can't run inside rayon)
+        for (uri, diags) in lint_results {
+            self.client.publish_diagnostics(uri, diags, None).await;
         }
     }
 
     /// Lint a document and publish diagnostics
     async fn lint_and_publish(&self, uri: Url) {
-        // Get document content
-        let doc = match self.document_manager.get(&uri) {
-            Some(doc) => doc,
+        // Get document content (Ref guard drops at the semicolon, before any .await)
+        let content = match self.document_manager.get(&uri) {
+            Some(doc) => doc.content.clone(),
             None => return,
         };
 
@@ -168,13 +182,11 @@ impl MkdlintLanguageServer {
             .unwrap_or_else(|| uri.to_string());
 
         // Discover config for this file
-        let config = self.config_manager.lock().unwrap().discover_config(&uri);
+        let config = self.config_manager.read().unwrap().discover_config(&uri);
 
         // Lint the document using string content
         let mut options = LintOptions::default();
-        options
-            .strings
-            .insert(file_name.clone(), doc.content.clone());
+        options.strings.insert(file_name.clone(), content.clone());
 
         // Apply config if found
         if let Some(config) = config {
@@ -195,7 +207,7 @@ impl MkdlintLanguageServer {
         let errors = results.get(&file_name).unwrap_or(&[]).to_vec();
 
         // Convert errors to diagnostics
-        let lines: Vec<String> = doc.content.lines().map(|s| s.to_string()).collect();
+        let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
         let diagnostics: Vec<Diagnostic> = errors
             .iter()
             .filter(|err| !err.fix_only)
@@ -247,7 +259,7 @@ impl LanguageServer for MkdlintLanguageServer {
             .map(|s| s.to_string());
 
         // Update config manager with workspace roots and optional preset override
-        *self.config_manager.lock().unwrap() =
+        *self.config_manager.write().unwrap() =
             ConfigManager::with_preset(workspace_roots, preset_override);
 
         self.client
@@ -255,7 +267,7 @@ impl LanguageServer for MkdlintLanguageServer {
                 MessageType::INFO,
                 format!(
                     "mkdlint LSP initialized with {} workspace root(s)",
-                    self.config_manager.lock().unwrap().workspace_roots.len()
+                    self.config_manager.read().unwrap().workspace_roots.len()
                 ),
             )
             .await;
@@ -436,7 +448,7 @@ impl LanguageServer for MkdlintLanguageServer {
             )
             .await;
 
-        self.config_manager.lock().unwrap().clear_cache();
+        self.config_manager.read().unwrap().clear_cache();
 
         // Re-lint all open documents
         let uris = self.document_manager.all_uris();
@@ -470,7 +482,7 @@ impl LanguageServer for MkdlintLanguageServer {
 
         // Update the preset override and clear cache so next lint picks it up
         {
-            let mut mgr = self.config_manager.lock().unwrap();
+            let mut mgr = self.config_manager.write().unwrap();
             mgr.preset_override = new_preset.clone();
             mgr.clear_cache();
         }
@@ -657,7 +669,7 @@ impl LanguageServer for MkdlintLanguageServer {
                     .ok()
                     .and_then(|p| p.parent().map(|d| d.to_path_buf()));
 
-                let roots = self.config_manager.lock().unwrap().workspace_roots.clone();
+                let roots = self.config_manager.read().unwrap().workspace_roots.clone();
                 let mut items: Vec<CompletionItem> = Vec::new();
 
                 for root in &roots {
@@ -1372,9 +1384,15 @@ impl LanguageServer for MkdlintLanguageServer {
                     }
                 };
 
-                // Get document
-                let doc = match self.document_manager.get(&uri) {
-                    Some(doc) => doc,
+                // Get document fields (Ref guard drops before any .await)
+                let doc_data = match self.document_manager.get(&uri) {
+                    Some(doc) => {
+                        Some((doc.content.clone(), doc.cached_errors.clone(), doc.version))
+                    }
+                    None => None,
+                };
+                let (content, cached_errors, version) = match doc_data {
+                    Some(data) => data,
                     None => {
                         self.client
                             .log_message(MessageType::ERROR, format!("Document not found: {}", uri))
@@ -1384,7 +1402,7 @@ impl LanguageServer for MkdlintLanguageServer {
                 };
 
                 // Apply all fixes
-                let fixed_content = apply_fixes(&doc.content, &doc.cached_errors);
+                let fixed_content = apply_fixes(&content, &cached_errors);
 
                 // Create workspace edit to replace entire document
                 let text_edit = TextEdit {
@@ -1418,7 +1436,7 @@ impl LanguageServer for MkdlintLanguageServer {
 
                         // Update document content
                         self.document_manager
-                            .update(&uri, fixed_content, doc.version + 1);
+                            .update(&uri, fixed_content, version + 1);
 
                         // Re-lint the document
                         self.lint_and_publish(uri).await;

@@ -2,6 +2,7 @@
 
 use crate::types::LintError;
 use dashmap::DashMap;
+use dashmap::mapref::one::Ref;
 use std::sync::Arc;
 use std::time::Instant;
 use tower_lsp::lsp_types::Url;
@@ -65,9 +66,9 @@ impl DocumentManager {
         self.documents.insert(uri, doc);
     }
 
-    /// Get a document by URI
-    pub fn get(&self, uri: &Url) -> Option<Document> {
-        self.documents.get(uri).map(|entry| entry.clone())
+    /// Get a document by URI (returns a zero-copy Ref guard)
+    pub fn get(&self, uri: &Url) -> Option<Ref<'_, Url, Document>> {
+        self.documents.get(uri)
     }
 
     /// Update a document's content
@@ -186,5 +187,26 @@ mod tests {
         assert_eq!(uris.len(), 2);
         assert!(uris.contains(&uri1));
         assert!(uris.contains(&uri2));
+    }
+
+    #[test]
+    fn test_document_manager_get_returns_ref() {
+        let manager = DocumentManager::new();
+        let uri = Url::parse("file:///tmp/test.md").unwrap();
+        manager.insert(uri.clone(), "# Test".to_string(), 1);
+
+        // Verify Ref guard provides read access via Deref
+        {
+            let doc_ref = manager.get(&uri).unwrap();
+            assert_eq!(doc_ref.content, "# Test");
+            assert_eq!(doc_ref.version, 1);
+            assert!(doc_ref.cached_errors.is_empty());
+        }
+
+        // After dropping the Ref, mutation is unblocked
+        manager.update(&uri, "# Updated".to_string(), 2);
+        let doc_ref = manager.get(&uri).unwrap();
+        assert_eq!(doc_ref.content, "# Updated");
+        assert_eq!(doc_ref.version, 2);
     }
 }

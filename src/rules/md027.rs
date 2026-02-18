@@ -80,6 +80,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &[],
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD027;
@@ -98,6 +99,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &[],
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD027;
@@ -116,6 +118,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &[],
             config: &HashMap::new(),
+            workspace_headings: None,
         };
         let rule = MD027;
         let errors = rule.lint(&params);
@@ -132,6 +135,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &[],
             config: &HashMap::new(),
+            workspace_headings: None,
         };
         let rule = MD027;
         let errors = rule.lint(&params);

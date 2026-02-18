@@ -1,6 +1,7 @@
 //! CLI entry point — module declarations and the `run()` dispatcher
 
 mod args;
+mod explain;
 mod files;
 mod init;
 mod lint;
@@ -48,6 +49,11 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     if args.list_rules {
         rules::list_rules(&args.preset);
         return Ok(());
+    }
+
+    // Handle --explain <RULE> flag
+    if let Some(ref rule_name) = args.explain {
+        return explain::explain_rule(rule_name);
     }
 
     // Validate files are provided

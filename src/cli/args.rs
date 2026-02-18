@@ -60,6 +60,10 @@ pub(crate) struct Args {
     #[arg(long, global = true)]
     pub(crate) list_presets: bool,
 
+    /// Show detailed documentation for a specific rule (e.g., --explain MD013)
+    #[arg(long, global = true, value_name = "RULE")]
+    pub(crate) explain: Option<String>,
+
     /// Read input from stdin (use '-' as filename)
     #[arg(long, global = true)]
     pub(crate) stdin: bool,

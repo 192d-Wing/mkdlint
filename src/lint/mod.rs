@@ -6,6 +6,7 @@ use crate::types::{
     BoxedRule, LintError, LintOptions, LintResults, MarkdownlintError, ParserType, Result,
 };
 use rayon::prelude::*;
+use std::collections::HashMap;
 
 /// Default maximum number of fix passes for convergence
 pub const DEFAULT_FIX_PASSES: usize = 10;
@@ -70,6 +71,20 @@ fn prepare_rules<'a>(
     }
 }
 
+/// Build a workspace heading index from input files.
+///
+/// Maps file path (String) to a list of heading anchor IDs, used for
+/// cross-file link validation in MD051.
+fn build_workspace_headings(inputs: &[(String, String)]) -> HashMap<String, Vec<String>> {
+    let mut index: HashMap<String, Vec<String>> = HashMap::new();
+    for (name, content) in inputs {
+        let lines: Vec<&str> = content.split_inclusive('\n').collect();
+        let ids = crate::helpers::collect_heading_ids(&lines);
+        index.insert(name.clone(), ids);
+    }
+    index
+}
+
 /// Lint markdown content synchronously
 ///
 /// Files are read sequentially (for proper error reporting) then linted
@@ -94,6 +109,14 @@ pub fn lint_sync(options: &LintOptions) -> Result<LintResults> {
     // Precompute enabled rules once (avoids per-file HashMap lookups)
     let prepared = prepare_rules(&config, &options.custom_rules, options.front_matter.clone());
 
+    // Build workspace heading index for cross-file MD051 validation
+    let workspace_headings =
+        if inputs.len() > 1 && prepared.enabled.iter().any(|r| r.names()[0] == "MD051") {
+            Some(build_workspace_headings(&inputs))
+        } else {
+            None
+        };
+
     // Lint all inputs in parallel
     let file_results: Vec<(
         String,
@@ -101,7 +124,13 @@ pub fn lint_sync(options: &LintOptions) -> Result<LintResults> {
     )> = inputs
         .par_iter()
         .map(|(name, content)| {
-            let errors = lint_content(content, &config, name, &prepared);
+            let errors = lint_content(
+                content,
+                &config,
+                name,
+                &prepared,
+                workspace_headings.as_ref(),
+            );
             (name.clone(), errors)
         })
         .collect();
@@ -167,7 +196,7 @@ pub async fn lint_async(options: &LintOptions) -> Result<LintResults> {
                 let config = Arc::clone(&config);
                 let prepared = Arc::clone(&prepared);
                 tokio::task::spawn_blocking(move || {
-                    let errors = lint_content(&content, &config, &name, &prepared);
+                    let errors = lint_content(&content, &config, &name, &prepared, None);
                     (name, errors)
                 })
             })
@@ -183,7 +212,7 @@ pub async fn lint_async(options: &LintOptions) -> Result<LintResults> {
         // Sequential path for custom rules (non-'static lifetime)
         let prepared = prepare_rules(&config, &options.custom_rules, options.front_matter.clone());
         for (name, content) in &inputs {
-            let errors = lint_content(content, &config, name, &prepared)?;
+            let errors = lint_content(content, &config, name, &prepared, None)?;
             results.add(name.clone(), errors);
         }
     }
@@ -252,9 +281,9 @@ fn lint_content(
     config: &Config,
     name: &str,
     prepared: &PreparedRules<'_>,
+    workspace_headings: Option<&HashMap<String, Vec<String>>>,
 ) -> Result<Vec<LintError>> {
     use crate::config::RuleConfig;
-    use std::collections::HashMap;
     use std::sync::LazyLock;
 
     static EMPTY_CONFIG: LazyLock<HashMap<String, serde_json::Value>> = LazyLock::new(HashMap::new);
@@ -295,6 +324,7 @@ fn lint_content(
             front_matter_lines,
             tokens: &tokens,
             config: rule_config,
+            workspace_headings,
         };
 
         // Run the rule

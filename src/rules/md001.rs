@@ -194,6 +194,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD001;
@@ -217,6 +218,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD001;
@@ -253,6 +255,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD001;
@@ -282,6 +285,7 @@ mod tests {
             front_matter_lines: &front_matter,
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD001;
@@ -308,6 +312,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD001;
@@ -332,6 +337,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD001;
@@ -358,6 +364,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD001;
@@ -387,6 +394,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD001;

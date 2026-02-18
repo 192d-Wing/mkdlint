@@ -140,6 +140,29 @@ pub fn parse_heading_line(trimmed: &str) -> Option<(usize, &str)> {
     Some((level, text))
 }
 
+/// Collect all heading IDs from lines, handling duplicate IDs by appending `-1`, `-2`, etc.
+///
+/// This is used by MD051 for fragment validation and by the linting pipeline
+/// for building the workspace heading index.
+pub fn collect_heading_ids(lines: &[&str]) -> Vec<String> {
+    let mut ids = Vec::new();
+    let mut id_counts: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+
+    for heading in parse_headings(lines) {
+        let base_id = heading_to_anchor_id(&heading.text);
+        let count = id_counts.entry(base_id.clone()).or_insert(0);
+        let final_id = if *count == 0 {
+            base_id
+        } else {
+            format!("{}-{}", base_id, count)
+        };
+        *count += 1;
+        ids.push(final_id);
+    }
+
+    ids
+}
+
 /// Split content into lines preserving line endings
 pub fn split_lines(content: &str) -> Vec<String> {
     let line_ending = detect_line_ending(content);

@@ -464,6 +464,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &config,
+            workspace_headings: None,
         };
 
         let rule = MD003;
@@ -487,6 +488,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &config,
+            workspace_headings: None,
         };
 
         let rule = MD003;
@@ -530,6 +532,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &config,
+            workspace_headings: None,
         };
 
         let rule = MD003;
@@ -556,6 +559,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &config,
+            workspace_headings: None,
         };
 
         let rule = MD003;
@@ -580,6 +584,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &config,
+            workspace_headings: None,
         };
 
         let rule = MD003;
@@ -621,6 +626,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &config,
+            workspace_headings: None,
         };
 
         let rule = MD003;
@@ -647,6 +653,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &config,
+            workspace_headings: None,
         };
 
         let rule = MD003;

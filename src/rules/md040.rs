@@ -103,6 +103,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &[],
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD040;
@@ -121,6 +122,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &[],
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD040;
@@ -140,6 +142,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &[],
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let rule = MD040;
@@ -170,6 +173,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &[],
             config: &config,
+            workspace_headings: None,
         };
 
         let rule = MD040;

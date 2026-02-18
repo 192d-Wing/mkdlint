@@ -120,6 +120,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let errors = MD024.lint(&params);
@@ -141,6 +142,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let errors = MD024.lint(&params);
@@ -164,6 +166,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let errors = MD024.lint(&params);
@@ -184,6 +187,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let errors = MD024.lint(&params);
@@ -205,6 +209,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let errors = MD024.lint(&params);
@@ -229,6 +234,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let errors = MD024.lint(&params);
@@ -256,6 +262,7 @@ mod tests {
             front_matter_lines: &[],
             tokens: &tokens,
             config: &HashMap::new(),
+            workspace_headings: None,
         };
 
         let errors = MD024.lint(&params);
