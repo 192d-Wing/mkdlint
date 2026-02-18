@@ -32,6 +32,7 @@ mod code_actions;
 mod config;
 mod diagnostics;
 mod document;
+mod heading;
 mod utils;
 
 pub use backend::MkdlintLanguageServer;
