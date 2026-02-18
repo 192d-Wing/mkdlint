@@ -12,18 +12,19 @@ pub struct MD051;
 /// Convert heading text to a GitHub-style anchor ID
 fn heading_to_id(text: &str) -> String {
     let lower = text.to_lowercase();
-    let mut id = String::new();
+    let mut id = String::with_capacity(lower.len());
+    let mut prev_hyphen = false;
     for ch in lower.chars() {
         if ch.is_alphanumeric() {
             id.push(ch);
+            prev_hyphen = false;
         } else if ch == ' ' || ch == '-' {
-            id.push('-');
+            if !prev_hyphen {
+                id.push('-');
+                prev_hyphen = true;
+            }
         }
         // Skip other characters (punctuation, etc.)
-    }
-    // Collapse multiple hyphens
-    while id.contains("--") {
-        id = id.replace("--", "-");
     }
     // Trim leading/trailing hyphens
     id.trim_matches('-').to_string()
@@ -69,7 +70,7 @@ fn collect_heading_ids(lines: &[&str]) -> Vec<String> {
             let base_id = heading_to_id(&text);
             let count = id_counts.entry(base_id.clone()).or_insert(0);
             let final_id = if *count == 0 {
-                base_id.clone()
+                base_id
             } else {
                 format!("{}-{}", base_id, count)
             };
