@@ -73,6 +73,7 @@ impl Rule for MD024 {
                                 new_text
                             )),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }

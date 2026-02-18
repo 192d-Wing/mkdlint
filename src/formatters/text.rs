@@ -23,6 +23,9 @@ pub fn format_text_with_context(
             let source_lines: Option<Vec<&str>> = sources.get(*file).map(|s| s.lines().collect());
 
             for error in errors {
+                if error.fix_only {
+                    continue;
+                }
                 let rule_moniker = error.rule_names.join("/");
 
                 let colored_rule = match error.severity {
@@ -147,6 +150,7 @@ mod tests {
                 rule_names: &["MD001", "heading-increment"],
                 rule_description: "Heading levels should increment by one",
                 severity: Severity::Error,
+                fix_only: false,
                 ..Default::default()
             }],
         );
@@ -167,6 +171,7 @@ mod tests {
                     rule_names: &["MD001"],
                     rule_description: "test",
                     severity: Severity::Error,
+                    fix_only: false,
                     ..Default::default()
                 },
                 LintError {
@@ -174,6 +179,7 @@ mod tests {
                     rule_names: &["MD059"],
                     rule_description: "test",
                     severity: Severity::Warning,
+                    fix_only: false,
                     ..Default::default()
                 },
             ],
@@ -194,6 +200,7 @@ mod tests {
                 rule_description: "Trailing spaces",
                 error_range: Some((12, 3)),
                 severity: Severity::Error,
+                fix_only: false,
                 ..Default::default()
             }],
         );
@@ -221,6 +228,7 @@ mod tests {
                 rule_description: "Trailing spaces",
                 error_range: Some((5, 3)),
                 severity: Severity::Error,
+                fix_only: false,
                 ..Default::default()
             }],
         );
@@ -242,6 +250,7 @@ mod tests {
                 rule_description: "Headings should be surrounded by blank lines",
                 error_range: None,
                 severity: Severity::Error,
+                fix_only: false,
                 ..Default::default()
             }],
         );

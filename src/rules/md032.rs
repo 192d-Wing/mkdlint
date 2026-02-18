@@ -197,6 +197,7 @@ impl Rule for MD032 {
                                 "Lists should be surrounded by blank lines".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }
@@ -259,6 +260,7 @@ impl Rule for MD032 {
                         }),
                         suggestion: Some("Lists should be surrounded by blank lines".to_string()),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

@@ -76,6 +76,7 @@ impl Rule for MD040 {
                                 "Specify a language for fenced code blocks".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }

@@ -99,6 +99,7 @@ impl Rule for KMD002 {
                 rule_description: self.description(),
                 error_detail: Some(format!("Footnote reference '[^{label}]' has no definition")),
                 severity: Severity::Error,
+                fix_only: false,
                 fix_info: Some(FixInfo {
                     line_number: Some(last_line),
                     edit_column: Some(last_line_len + 1),

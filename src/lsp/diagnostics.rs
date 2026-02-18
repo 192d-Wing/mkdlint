@@ -91,6 +91,7 @@ mod tests {
             fix_info: None,
             suggestion: Some("Fix this issue".to_string()),
             severity,
+            fix_only: false,
         }
     }
 

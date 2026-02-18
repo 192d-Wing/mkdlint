@@ -101,6 +101,7 @@ impl Rule for KMD009 {
                     "ALD '{{:{name}:}}' is defined but never referenced"
                 )),
                 severity: Severity::Error,
+                fix_only: false,
                 fix_info: Some(FixInfo {
                     line_number: Some(line_number),
                     edit_column: Some(1),

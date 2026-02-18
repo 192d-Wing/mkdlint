@@ -35,7 +35,7 @@ impl LintResults {
             .map(|errors| {
                 errors
                     .iter()
-                    .filter(|e| e.severity == crate::types::Severity::Error)
+                    .filter(|e| !e.fix_only && e.severity == crate::types::Severity::Error)
                     .count()
             })
             .sum()
@@ -48,7 +48,7 @@ impl LintResults {
             .map(|errors| {
                 errors
                     .iter()
-                    .filter(|e| e.severity == crate::types::Severity::Warning)
+                    .filter(|e| !e.fix_only && e.severity == crate::types::Severity::Warning)
                     .count()
             })
             .sum()
@@ -82,6 +82,9 @@ impl LintResults {
         for file in files {
             if let Some(errors) = self.results.get(file) {
                 for error in errors {
+                    if error.fix_only {
+                        continue;
+                    }
                     let rule_moniker = if use_alias && error.rule_names.len() > 1 {
                         error.rule_names[1].to_string()
                     } else {
@@ -150,6 +153,7 @@ mod tests {
                 rule_names: &["MD001"],
                 rule_description: "Test error",
                 severity: Severity::Error,
+                fix_only: false,
                 ..Default::default()
             }],
         );
@@ -161,6 +165,7 @@ mod tests {
                 rule_names: &["MD003"],
                 rule_description: "Test warning",
                 severity: Severity::Warning,
+                fix_only: false,
                 ..Default::default()
             }],
         );

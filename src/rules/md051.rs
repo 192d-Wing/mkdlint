@@ -141,6 +141,7 @@ impl Rule for MD051 {
                             "Ensure link fragments point to valid headings".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

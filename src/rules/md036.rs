@@ -165,6 +165,7 @@ impl Rule for MD036 {
                                     .to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }

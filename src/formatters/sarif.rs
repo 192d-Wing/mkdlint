@@ -37,9 +37,8 @@ pub fn format_sarif(results: &LintResults) -> String {
 
             for error in errors {
                 // Skip internal fix-only errors (e.g. setext underline deletion
-                // in MD003) that have no rule name or description.  These are
-                // not real diagnostics and would produce invalid SARIF results.
-                if error.rule_names.is_empty() || error.rule_description.is_empty() {
+                // in MD003) — not real diagnostics and would produce invalid SARIF.
+                if error.fix_only {
                     continue;
                 }
 
@@ -217,6 +216,7 @@ mod tests {
                 rule_description: "Heading levels should increment by one",
                 error_range: Some((1, 4)),
                 severity: Severity::Error,
+                fix_only: false,
                 ..Default::default()
             }],
         );
@@ -267,6 +267,7 @@ mod tests {
                 rule_names: &["MD018", "no-missing-space-atx"],
                 rule_description: "No space after hash on ATX heading",
                 severity: Severity::Error,
+                fix_only: false,
                 fix_info: Some(FixInfo {
                     line_number: Some(1),
                     edit_column: Some(2),
@@ -300,6 +301,7 @@ mod tests {
                 rule_names: &["MD047"],
                 rule_description: "Files should end with a single newline",
                 severity: Severity::Error,
+                fix_only: false,
                 ..Default::default()
             }],
         );

@@ -84,6 +84,7 @@ impl Rule for MD055 {
                                 .to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

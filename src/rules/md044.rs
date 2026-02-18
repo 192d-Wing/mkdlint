@@ -109,6 +109,7 @@ impl Rule for MD044 {
                                 "Use proper capitalization for this proper noun".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
 

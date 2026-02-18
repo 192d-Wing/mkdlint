@@ -32,6 +32,7 @@ mod tests {
                 rule_description: "Trailing spaces",
                 error_detail: Some("Expected: 0; Actual: 3".to_string()),
                 severity: Severity::Error,
+                fix_only: false,
                 ..Default::default()
             }],
         );

@@ -58,6 +58,7 @@ impl Rule for MD058 {
                                 "Tables should be surrounded by blank lines".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }
@@ -81,6 +82,7 @@ impl Rule for MD058 {
                         }),
                         suggestion: Some("Tables should be surrounded by blank lines".to_string()),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
                 table_start = 0;

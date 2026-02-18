@@ -57,6 +57,7 @@ impl Rule for MD039 {
                     }),
                     suggestion: Some("Remove spaces inside link text".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

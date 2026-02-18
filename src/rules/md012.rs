@@ -61,6 +61,7 @@ impl Rule for MD012 {
                         }),
                         suggestion: Some("Remove consecutive blank lines".to_string()),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
                 blank_count = 0;
@@ -85,6 +86,7 @@ impl Rule for MD012 {
                 }),
                 suggestion: Some("Remove consecutive blank lines".to_string()),
                 severity: Severity::Error,
+                fix_only: false,
             });
         }
 

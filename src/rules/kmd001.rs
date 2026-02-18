@@ -124,6 +124,7 @@ impl Rule for KMD001 {
                             rule_description: self.description(),
                             error_detail: Some("Term has no definition".to_string()),
                             severity: Severity::Error,
+                            fix_only: false,
                             fix_info: Some(FixInfo {
                                 line_number: Some(i + 1),
                                 edit_column: Some(insert_col),

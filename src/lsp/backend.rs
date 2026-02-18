@@ -80,6 +80,7 @@ impl MkdlintLanguageServer {
         let lines: Vec<String> = doc.content.lines().map(|s| s.to_string()).collect();
         let diagnostics: Vec<Diagnostic> = errors
             .iter()
+            .filter(|err| !err.fix_only)
             .map(|err| diagnostics::lint_error_to_diagnostic(err, &lines))
             .collect();
 

@@ -81,6 +81,7 @@ impl Rule for MD025 {
                             "Convert this heading to H2 (##) or restructure your document to have only one H1".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
                 found_h1 = true;

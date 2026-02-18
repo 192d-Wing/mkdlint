@@ -69,6 +69,7 @@ impl Rule for KMD011 {
                         "Odd number of '$' delimiters ({dollar_count}) on line — inline math span is not closed"
                     )),
                     severity: Severity::Error,
+                    fix_only: false,
                     ..Default::default()
                 });
             }

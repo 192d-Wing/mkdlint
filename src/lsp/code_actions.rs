@@ -142,6 +142,7 @@ mod tests {
             fix_info: Some(fix_info),
             suggestion: Some("Apply fix".to_string()),
             severity: Severity::Error,
+            fix_only: false,
         }
     }
 

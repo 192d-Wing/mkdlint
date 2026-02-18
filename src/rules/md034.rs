@@ -60,6 +60,7 @@ impl Rule for MD034 {
                         "Use angle brackets for bare URLs: <http://example.com>".to_string(),
                     ),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

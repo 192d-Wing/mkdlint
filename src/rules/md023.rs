@@ -63,6 +63,7 @@ impl Rule for MD023 {
                             "Headings must start at the beginning of the line".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

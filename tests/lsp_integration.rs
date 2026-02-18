@@ -1329,3 +1329,141 @@ async fn test_no_preset_in_initialization_options() {
         "no preset: MD034 should fire on bare URL; got: {rule_names:?}"
     );
 }
+
+// ---------------------------------------------------------------------------
+// Hover alias tests
+// ---------------------------------------------------------------------------
+
+/// Hovering over a rule's alias name in a document should show rule documentation.
+///
+/// The LSP hover handler calls `extract_word()` to find the identifier under the
+/// cursor, then looks it up in the rule registry by both primary name and aliases.
+#[tokio::test]
+async fn test_hover_on_rule_alias_shows_docs() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///alias_test.md").unwrap();
+
+    // The document body doesn't matter for this test; we just need it open.
+    // We hover over a position where the word "no-missing-space-atx" starts —
+    // that is the alias for MD018.  We craft a line that contains the alias
+    // as a word so that extract_word() can pick it up.
+    let doc_text = "no-missing-space-atx is the alias for MD018.\n".to_string();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: doc_text,
+            },
+        })
+        .await;
+
+    // Wait for lint (this file has no violations so diagnostics will be empty)
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    // Hover over column 0 — the start of "no-missing-space-atx"
+    let result = server
+        .hover(HoverParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri },
+                position: Position {
+                    line: 0,
+                    character: 0,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        })
+        .await
+        .unwrap();
+
+    // The hover handler should recognise "no-missing-space-atx" as the alias of
+    // MD018 and return documentation even though there is no diagnostic on the line.
+    assert!(
+        result.is_some(),
+        "Hovering over a rule alias should return documentation"
+    );
+    let hover = result.unwrap();
+    match hover.contents {
+        HoverContents::Markup(markup) => {
+            assert_eq!(markup.kind, MarkupKind::Markdown);
+            // Should mention the canonical rule ID and/or the alias
+            assert!(
+                markup.value.contains("MD018") || markup.value.contains("no-missing-space-atx"),
+                "Hover content should reference the rule. Got: {}",
+                markup.value
+            );
+        }
+        _ => panic!("Expected MarkupContent"),
+    }
+}
+
+/// Hovering over a canonical rule name (e.g., "MD009") that has no diagnostic
+/// on that line should still produce documentation via the alias lookup path.
+#[tokio::test]
+async fn test_hover_on_rule_name_without_diagnostic_shows_docs() {
+    let server = create_test_server().await;
+
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///name_test.md").unwrap();
+
+    // A line that contains "MD009" as a word — no trailing-space violation here.
+    let doc_text = "MD009 is the trailing-spaces rule.\n".to_string();
+
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: doc_text,
+            },
+        })
+        .await;
+
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
+    let result = server
+        .hover(HoverParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri },
+                position: Position {
+                    line: 0,
+                    character: 0,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(
+        result.is_some(),
+        "Hovering over a rule ID in text should return documentation"
+    );
+    let hover = result.unwrap();
+    match hover.contents {
+        HoverContents::Markup(markup) => {
+            assert_eq!(markup.kind, MarkupKind::Markdown);
+            assert!(
+                markup.value.contains("MD009"),
+                "Hover content should reference MD009. Got: {}",
+                markup.value
+            );
+        }
+        _ => panic!("Expected MarkupContent"),
+    }
+}

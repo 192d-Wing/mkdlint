@@ -184,6 +184,7 @@ impl Rule for MD049 {
                     }),
                     suggestion: Some("Use consistent emphasis style".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

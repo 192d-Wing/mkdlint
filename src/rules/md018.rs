@@ -72,6 +72,7 @@ impl Rule for MD018 {
                                 after_hash.trim()
                             )),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }

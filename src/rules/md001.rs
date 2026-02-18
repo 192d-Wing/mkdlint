@@ -142,6 +142,7 @@ impl Rule for MD001 {
                         "Heading levels should increment by one level at a time".to_string(),
                     ),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
 

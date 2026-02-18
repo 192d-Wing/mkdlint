@@ -57,6 +57,7 @@ impl Rule for MD019 {
                                 "Remove multiple spaces after hash on ATX heading".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }

@@ -57,6 +57,7 @@ impl Rule for MD056 {
                             "Ensure all table rows have the same number of columns".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             } else if !trimmed.is_empty() {

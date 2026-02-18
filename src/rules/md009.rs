@@ -57,6 +57,7 @@ impl Rule for MD009 {
                     }),
                     suggestion: Some("Remove trailing spaces".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

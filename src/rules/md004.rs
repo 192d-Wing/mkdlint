@@ -225,6 +225,7 @@ impl Rule for MD004 {
                         }),
                         suggestion: Some("Use consistent list marker style".to_string()),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

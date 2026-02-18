@@ -136,6 +136,7 @@ impl Rule for KMD005 {
                                     "Duplicate heading ID '{id}' (first defined on line {first_line})"
                                 )),
                                 severity: Severity::Error,
+                                fix_only: false,
                                 fix_info: Some(FixInfo {
                                     line_number: Some(heading_line),
                                     edit_column: Some(insert_col),
@@ -184,6 +185,7 @@ impl Rule for KMD005 {
                             "Duplicate heading ID '{id}' (first defined on line {first_line})"
                         )),
                         severity: Severity::Error,
+                        fix_only: false,
                         fix_info: Some(FixInfo {
                             line_number: Some(line_number),
                             edit_column: Some(insert_col),

@@ -55,6 +55,7 @@ impl Rule for MD022 {
                             "Headings should be surrounded by blank lines".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }
@@ -81,6 +82,7 @@ impl Rule for MD022 {
                             "Headings should be surrounded by blank lines".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

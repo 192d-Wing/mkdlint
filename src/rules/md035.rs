@@ -68,6 +68,7 @@ impl Rule for MD035 {
                     }),
                     suggestion: Some("Use consistent horizontal rule style".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

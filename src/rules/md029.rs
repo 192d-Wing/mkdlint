@@ -222,6 +222,7 @@ impl Rule for MD029 {
                             }),
                             suggestion: Some("Use consistent list numbering style".to_string()),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
 

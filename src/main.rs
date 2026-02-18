@@ -1216,8 +1216,11 @@ fn lint_files_once(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
                 would_fix_count += 1;
                 if !args.quiet {
                     println!("{} {}", "Would fix:".yellow().bold(), file_path);
-                    // Show per-error breakdown
-                    for error in errors.iter().filter(|e| e.fix_info.is_some()) {
+                    // Show per-error breakdown (skip fix-only helpers)
+                    for error in errors
+                        .iter()
+                        .filter(|e| e.fix_info.is_some() && !e.fix_only)
+                    {
                         let rule = error.rule_names.first().copied().unwrap_or("?");
                         println!(
                             "  line {}: {} {}",
@@ -1242,7 +1245,7 @@ fn lint_files_once(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
                 println!("{}", "No fixable issues found.".dimmed());
             }
         }
-        // Exit with error code if there are fixable issues (useful for CI)
+        // Exit 1 if there are fixable issues (useful for CI), 0 if clean
         if would_fix_count > 0 {
             std::process::exit(1);
         }
@@ -1467,7 +1470,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 would_fix_count += 1;
                 if !args.quiet {
                     println!("{} {}", "Would fix:".yellow().bold(), file_path);
-                    for error in errors.iter().filter(|e| e.fix_info.is_some()) {
+                    for error in errors
+                        .iter()
+                        .filter(|e| e.fix_info.is_some() && !e.fix_only)
+                    {
                         let rule = error.rule_names.first().copied().unwrap_or("?");
                         println!(
                             "  line {}: {} {}",

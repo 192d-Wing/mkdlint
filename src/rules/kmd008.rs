@@ -91,6 +91,7 @@ impl Rule for KMD008 {
                                 "Mismatched block extension: opened '{{::{open_name}}}' but closed with '{{:/{close_name}}}'"
                             )),
                             severity: Severity::Error,
+                            fix_only: false,
                             ..Default::default()
                         });
                     }
@@ -103,6 +104,7 @@ impl Rule for KMD008 {
                             "Unexpected closing tag '{{:/{close_name}}}' with no matching opening tag"
                         )),
                         severity: Severity::Error,
+                        fix_only: false,
                         ..Default::default()
                     });
                 }
@@ -123,6 +125,7 @@ impl Rule for KMD008 {
                     "Unclosed block extension '{{::{name}}}' opened on line {open_line}"
                 )),
                 severity: Severity::Error,
+                fix_only: false,
                 fix_info: Some(FixInfo {
                     line_number: Some(lines.len()),
                     edit_column: Some(last_line_len + 1),

@@ -83,6 +83,7 @@ impl Rule for KMD004 {
                         "Abbreviation '{term}' is defined but never used in text"
                     )),
                     severity: Severity::Error,
+                    fix_only: false,
                     fix_info: Some(FixInfo {
                         line_number: Some(line_number),
                         edit_column: Some(1),

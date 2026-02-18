@@ -153,6 +153,7 @@ impl Rule for MD054 {
                             "Use consistent link and image reference style".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             } else {
@@ -179,6 +180,7 @@ impl Rule for MD054 {
                                 "Use consistent link and image reference style".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }
@@ -226,6 +228,7 @@ impl Rule for MD054 {
                                 "Use consistent link and image reference style".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }
@@ -255,6 +258,7 @@ impl Rule for MD054 {
                                 "Use consistent link and image reference style".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }
@@ -307,6 +311,7 @@ impl Rule for MD054 {
                                 "Use consistent link and image reference style".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }

@@ -92,6 +92,7 @@ impl Rule for MD048 {
                     }),
                     suggestion: Some("Use consistent code fence style".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

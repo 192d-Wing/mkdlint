@@ -102,6 +102,7 @@ impl Rule for KMD006 {
                          (expected: {{: #id .class key=\"val\"}})"
                     )),
                     severity: Severity::Error,
+                    fix_only: false,
                     fix_info: Some(FixInfo {
                         line_number: Some(idx + 1),
                         edit_column: Some(1),

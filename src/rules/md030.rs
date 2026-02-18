@@ -139,6 +139,7 @@ impl Rule for MD030 {
                                 "Use consistent spacing after list marker".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }

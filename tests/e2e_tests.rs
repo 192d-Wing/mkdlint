@@ -345,3 +345,60 @@ fn test_fixture_source_context_in_output() {
         stdout
     );
 }
+
+// ---- --fix-dry-run exit code tests ----
+
+#[test]
+fn test_fix_dry_run_exits_one_when_fixable() {
+    // fixable_errors.md contains fixable violations; --fix-dry-run should exit 1
+    let (code, stdout, _) = run_mkdlint(&[
+        "--fix-dry-run",
+        "--no-color",
+        &fixture_path("fixable_errors.md"),
+    ]);
+    assert_eq!(
+        code, 1,
+        "--fix-dry-run should exit 1 when fixable issues exist. Output: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("Would fix:") || stdout.contains("would be fixed"),
+        "--fix-dry-run output should mention files to fix. Output: {}",
+        stdout
+    );
+}
+
+#[test]
+fn test_fix_dry_run_exits_zero_when_clean() {
+    // clean.md has no violations; --fix-dry-run should exit 0
+    let (code, stdout, _) =
+        run_mkdlint(&["--fix-dry-run", "--no-color", &fixture_path("clean.md")]);
+    assert_eq!(
+        code, 0,
+        "--fix-dry-run should exit 0 when no fixable issues exist. Output: {}",
+        stdout
+    );
+    assert!(
+        stdout.contains("No fixable") || stdout.is_empty(),
+        "--fix-dry-run should report no fixable issues. Output: {}",
+        stdout
+    );
+}
+
+#[test]
+fn test_fix_dry_run_does_not_modify_files() {
+    let dir = tempfile::tempdir().unwrap();
+    let src = fixture_path("fixable_errors.md");
+    let dest = dir.path().join("test.md");
+    std::fs::copy(&src, &dest).unwrap();
+    let original_content = std::fs::read_to_string(&dest).unwrap();
+
+    // --fix-dry-run should NOT modify the file
+    let _ = run_mkdlint(&["--fix-dry-run", dest.to_str().unwrap()]);
+
+    let after_content = std::fs::read_to_string(&dest).unwrap();
+    assert_eq!(
+        original_content, after_content,
+        "--fix-dry-run must not modify files"
+    );
+}

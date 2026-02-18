@@ -562,6 +562,7 @@ mod tests {
             rule_description: "test",
             fix_info: Some(fix),
             severity: Severity::Error,
+            fix_only: false,
             ..Default::default()
         }
     }
@@ -699,6 +700,7 @@ mod tests {
             rule_description: "test",
             fix_info: None,
             severity: Severity::Error,
+            fix_only: false,
             ..Default::default()
         }];
         let result = apply_fixes(content, &errors);

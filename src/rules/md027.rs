@@ -54,6 +54,7 @@ impl Rule for MD027 {
                             "Remove multiple spaces after blockquote symbol".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

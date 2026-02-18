@@ -72,6 +72,7 @@ impl Rule for MD026 {
                                 "Remove trailing punctuation from heading".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }

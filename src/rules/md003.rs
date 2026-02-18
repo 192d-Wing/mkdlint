@@ -270,6 +270,7 @@ impl Rule for MD003 {
                                 first.as_str()
                             )),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
 
                         // If converting FROM setext, also delete the underline
@@ -296,6 +297,7 @@ impl Rule for MD003 {
                                         .to_string(),
                                 ),
                                 severity: Severity::Error,
+                                fix_only: false,
                             });
                         }
                     }
@@ -383,17 +385,19 @@ impl Rule for MD003 {
                         fix_info,
                         suggestion: Some(format!("Convert heading to {} style", expected)),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
 
-                    // If converting FROM setext, also delete the underline
+                    // If converting FROM setext, also delete the underline.
+                    // This is a fix-only helper error (not shown to users).
                     if actual == HeadingStyle::Setext && heading.end_line > heading.start_line {
                         errors.push(LintError {
                             line_number: heading.end_line,
-                            rule_names: &[],
-                            rule_description: "",
+                            rule_names: self.names(),
+                            rule_description: self.description(),
                             error_detail: None,
                             error_context: None,
-                            rule_information: None,
+                            rule_information: self.information(),
                             error_range: None,
                             fix_info: Some(FixInfo {
                                 line_number: Some(heading.end_line),
@@ -401,10 +405,9 @@ impl Rule for MD003 {
                                 delete_count: Some(-1),
                                 insert_text: None,
                             }),
-                            suggestion: Some(
-                                "Use consistent heading style throughout the document".to_string(),
-                            ),
+                            suggestion: None,
                             severity: Severity::Error,
+                            fix_only: true,
                         });
                     }
                 }
@@ -531,11 +534,8 @@ mod tests {
 
         let rule = MD003;
         let all_errors = rule.lint(&params);
-        // Filter out underline deletion errors (helper errors with empty rule_names)
-        let errors: Vec<_> = all_errors
-            .iter()
-            .filter(|e| !e.rule_names.is_empty())
-            .collect();
+        // Filter out fix-only helper errors (setext underline deletion)
+        let errors: Vec<_> = all_errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 3);
     }
@@ -584,11 +584,8 @@ mod tests {
 
         let rule = MD003;
         let all_errors = rule.lint(&params);
-        // Filter out underline deletion errors (helper errors with empty rule_names)
-        let errors: Vec<_> = all_errors
-            .iter()
-            .filter(|e| !e.rule_names.is_empty())
-            .collect();
+        // Filter out fix-only helper errors (setext underline deletion)
+        let errors: Vec<_> = all_errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].line_number, 3);
     }

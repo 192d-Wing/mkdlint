@@ -74,6 +74,7 @@ impl Rule for MD013 {
                         "Consider breaking long lines for better readability".to_string(),
                     ),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

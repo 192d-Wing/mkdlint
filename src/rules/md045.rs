@@ -61,6 +61,7 @@ impl Rule for MD045 {
                             "Add descriptive alt text, e.g., ![description](image.png)".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

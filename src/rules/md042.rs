@@ -128,6 +128,7 @@ impl Rule for MD042 {
                                 .to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }
@@ -173,6 +174,7 @@ impl Rule for MD042 {
                         fix_info: None,
                         suggestion: None,
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

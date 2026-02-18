@@ -1,0 +1,1451 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": {
+    "description": "Rule ID or alias (true/false/severity/options)",
+    "oneOf": [
+      {
+        "type": "boolean"
+      },
+      {
+        "enum": [
+          "error",
+          "warning"
+        ],
+        "type": "string"
+      },
+      {
+        "additionalProperties": true,
+        "type": "object"
+      }
+    ]
+  },
+  "description": "Configuration file for mkdlint (https://github.com/192d-Wing/mkdlint)",
+  "properties": {
+    "KMD001": {
+      "description": "Definition list terms must be followed by a definition [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "KMD002": {
+      "description": "Footnote references must have matching definitions [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "KMD003": {
+      "description": "Footnote definitions must be referenced in the document [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "KMD004": {
+      "description": "Abbreviation definitions should be used in document text [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "KMD005": {
+      "description": "Heading IDs must be unique within the document [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "KMD006": {
+      "description": "IAL (Inline Attribute List) syntax must be well-formed [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "KMD007": {
+      "description": "Math block '$$' delimiters must be matched [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "KMD008": {
+      "description": "Block extensions must be properly opened and closed [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "KMD009": {
+      "description": "Attribute List Definitions must be referenced in the document [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "KMD010": {
+      "description": "Inline IAL syntax must be well-formed [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "KMD011": {
+      "description": "Inline math spans must have balanced '$' delimiters",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD001": {
+      "description": "Heading levels should only increment by one level at a time [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD003": {
+      "description": "Heading style [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD004": {
+      "description": "Unordered list style [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD005": {
+      "description": "Inconsistent indentation for list items at the same level [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD007": {
+      "description": "Unordered list indentation [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD009": {
+      "description": "Trailing spaces [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD010": {
+      "description": "Hard tabs [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD011": {
+      "description": "Reversed link syntax [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD012": {
+      "description": "Multiple consecutive blank lines [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD013": {
+      "description": "Line length",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD014": {
+      "description": "Dollar signs used before commands without showing output [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD018": {
+      "description": "No space after hash on atx style heading [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD019": {
+      "description": "Multiple spaces after hash on atx style heading [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD020": {
+      "description": "No space inside hashes on closed atx style heading [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD021": {
+      "description": "Multiple spaces inside hashes on closed atx style heading [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD022": {
+      "description": "Headings should be surrounded by blank lines [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD023": {
+      "description": "Headings must start at the beginning of the line [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD024": {
+      "description": "Multiple headings with the same content [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD025": {
+      "description": "Multiple top-level headings in the same document [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD026": {
+      "description": "Trailing punctuation in heading [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD027": {
+      "description": "Multiple spaces after blockquote symbol [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD028": {
+      "description": "Blank line inside blockquote [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD029": {
+      "description": "Ordered list item prefix [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD030": {
+      "description": "Spaces after list markers [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD031": {
+      "description": "Fenced code blocks should be surrounded by blank lines [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD032": {
+      "description": "Lists should be surrounded by blank lines [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD033": {
+      "description": "Inline HTML",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD034": {
+      "description": "Bare URL used [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD035": {
+      "description": "Horizontal rule style [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD036": {
+      "description": "Emphasis used instead of a heading [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD037": {
+      "description": "Spaces inside emphasis markers [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD038": {
+      "description": "Spaces inside code span elements [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD039": {
+      "description": "Spaces inside link text [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD040": {
+      "description": "Fenced code blocks should have a language specified [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD041": {
+      "description": "First line in a file should be a top-level heading [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD042": {
+      "description": "No empty links [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD043": {
+      "description": "Required heading structure",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD044": {
+      "description": "Proper names should have the correct capitalization [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD045": {
+      "description": "Images should have alternate text (alt text) [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD046": {
+      "description": "Code block style [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD047": {
+      "description": "Files should end with a single newline character [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD048": {
+      "description": "Code fence style [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD049": {
+      "description": "Emphasis style should be consistent [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD050": {
+      "description": "Strong style should be consistent [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD051": {
+      "description": "Link fragments should be valid",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD052": {
+      "description": "Reference links and images should use a label that is defined [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD053": {
+      "description": "Link and image reference definitions should be needed [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD054": {
+      "description": "Link and image style [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD055": {
+      "description": "Table pipe style [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD056": {
+      "description": "Table column count",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD058": {
+      "description": "Tables should be surrounded by blank lines [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD059": {
+      "description": "Emphasis marker style should not conflict with math syntax [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "MD060": {
+      "description": "Dollar signs used before commands in fenced code blocks without output [auto-fixable]",
+      "oneOf": [
+        {
+          "description": "Enable or disable the rule",
+          "type": "boolean"
+        },
+        {
+          "description": "Set severity level",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "type": "string"
+        },
+        {
+          "additionalProperties": true,
+          "description": "Rule-specific options",
+          "type": "object"
+        }
+      ]
+    },
+    "default": {
+      "description": "Default enabled/disabled state for all rules not explicitly configured",
+      "type": "boolean"
+    },
+    "extends": {
+      "description": "Path to another config file to extend",
+      "type": "string"
+    },
+    "preset": {
+      "description": "Named preset to apply (e.g. 'kramdown', 'github')",
+      "enum": [
+        "kramdown",
+        "github"
+      ],
+      "type": "string"
+    }
+  },
+  "title": "mkdlint configuration",
+  "type": "object"
+}

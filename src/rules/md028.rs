@@ -52,6 +52,7 @@ impl Rule for MD028 {
                         }),
                         suggestion: Some("Remove blank lines inside blockquote".to_string()),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
                 in_blockquote = true;

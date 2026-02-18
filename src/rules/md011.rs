@@ -62,6 +62,7 @@ impl Rule for MD011 {
                         "Use correct link syntax: [text](url) or [text][ref]".to_string(),
                     ),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

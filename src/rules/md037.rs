@@ -60,6 +60,7 @@ impl Rule for MD037 {
                     }),
                     suggestion: Some("Remove spaces inside emphasis markers".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

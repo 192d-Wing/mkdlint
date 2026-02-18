@@ -53,6 +53,7 @@ impl Rule for MD010 {
                         }),
                         suggestion: Some("Replace hard tabs with spaces".to_string()),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
                 column += 1;

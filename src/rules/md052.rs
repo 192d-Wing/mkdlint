@@ -120,6 +120,7 @@ impl Rule for MD052 {
                             "Define all link reference labels that are used".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }
@@ -167,6 +168,7 @@ impl Rule for MD052 {
                             "Define all link reference labels that are used".to_string(),
                         ),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

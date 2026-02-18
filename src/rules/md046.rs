@@ -105,18 +105,19 @@ impl Rule for MD046 {
                     fix_info,
                     suggestion: Some(format!("Use {} code block style", expected_label)),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
 
-                // Emit helper delete-line errors for remaining lines of the block
-                // (the primary fix replaces the first line with the full new block)
+                // Emit helper delete-line errors for remaining lines of the block.
+                // These are fix-only helpers (not shown to users).
                 for line_num in (block.start_line + 1)..=block.end_line {
                     errors.push(LintError {
                         line_number: line_num,
-                        rule_names: &[],
-                        rule_description: "",
+                        rule_names: self.names(),
+                        rule_description: self.description(),
                         error_detail: None,
                         error_context: None,
-                        rule_information: None,
+                        rule_information: self.information(),
                         error_range: None,
                         fix_info: Some(FixInfo {
                             line_number: Some(line_num),
@@ -126,6 +127,7 @@ impl Rule for MD046 {
                         }),
                         suggestion: None,
                         severity: Severity::Error,
+                        fix_only: true,
                     });
                 }
             }
@@ -378,7 +380,7 @@ mod tests {
         let params = make_params(&lines, &config);
         let errors = MD046.lint(&params);
         // Primary error + 0 helper deletes (single-line indented block)
-        let main_errors: Vec<_> = errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(
             main_errors.len(),
             1,
@@ -402,7 +404,7 @@ mod tests {
         );
         let params = make_params(&lines, &config);
         let errors = MD046.lint(&params);
-        let main_errors: Vec<_> = errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
         assert_eq!(main_errors[0].line_number, 3);
     }
@@ -418,7 +420,7 @@ mod tests {
         );
         let params = make_params(&lines, &config);
         let errors = MD046.lint(&params);
-        let main_errors: Vec<_> = errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
         assert_eq!(main_errors[0].line_number, 3);
     }
@@ -429,7 +431,7 @@ mod tests {
         let config = HashMap::new();
         let params = make_params(&lines, &config);
         let errors = MD046.lint(&params);
-        let main_errors: Vec<_> = errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(
             main_errors.len(),
             1,
@@ -479,7 +481,7 @@ mod tests {
         );
         let params = make_params(&lines, &config);
         let errors = MD046.lint(&params);
-        let main_errors: Vec<_> = errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(
             main_errors.len(),
             2,
@@ -493,7 +495,7 @@ mod tests {
         let config = HashMap::new();
         let params = make_params(&lines, &config);
         let errors = MD046.lint(&params);
-        let main_errors: Vec<_> = errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
         assert!(
             main_errors[0].fix_info.is_some(),
@@ -512,7 +514,7 @@ mod tests {
         );
         let params = make_params(&lines, &config);
         let errors = MD046.lint(&params);
-        let main_errors: Vec<_> = errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
         let fix = main_errors[0]
             .fix_info
@@ -544,7 +546,7 @@ mod tests {
         );
         let params = make_params(&lines, &config);
         let errors = MD046.lint(&params);
-        let main_errors: Vec<_> = errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
         let fix = main_errors[0]
             .fix_info
@@ -571,7 +573,7 @@ mod tests {
         let params = make_params(&lines, &config);
         let errors = MD046.lint(&params);
         // 1 primary + 3 helper deletes (lines 4, 5, 6)
-        let helper_errors: Vec<_> = errors.iter().filter(|e| e.rule_names.is_empty()).collect();
+        let helper_errors: Vec<_> = errors.iter().filter(|e| e.fix_only).collect();
         assert_eq!(helper_errors.len(), 3);
         for (i, helper) in helper_errors.iter().enumerate() {
             let fix = helper.fix_info.as_ref().unwrap();
@@ -591,7 +593,7 @@ mod tests {
         );
         let params = make_params(&lines, &config);
         let errors = MD046.lint(&params);
-        let main_errors: Vec<_> = errors.iter().filter(|e| !e.rule_names.is_empty()).collect();
+        let main_errors: Vec<_> = errors.iter().filter(|e| !e.fix_only).collect();
         assert_eq!(main_errors.len(), 1);
         let fix = main_errors[0]
             .fix_info

@@ -170,6 +170,7 @@ impl Rule for MD050 {
                     }),
                     suggestion: Some("Use consistent strong emphasis style".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

@@ -62,6 +62,7 @@ impl Rule for MD060 {
                     }),
                     suggestion: Some("Remove the $ prefix from this command".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

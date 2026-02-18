@@ -60,6 +60,7 @@ impl Rule for MD021 {
                             }),
                             suggestion: Some("Remove extra spaces after opening #".to_string()),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
 
@@ -81,6 +82,7 @@ impl Rule for MD021 {
                             }),
                             suggestion: Some("Remove extra spaces before closing #".to_string()),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }

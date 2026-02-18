@@ -156,6 +156,7 @@ impl Rule for MD031 {
                                     .to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 } else if current_fence_char == fence_char {
@@ -213,6 +214,7 @@ impl Rule for MD031 {
                                         .to_string(),
                                 ),
                                 severity: Severity::Error,
+                                fix_only: false,
                             });
                         }
                     }

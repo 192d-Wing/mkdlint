@@ -82,6 +82,7 @@ impl Rule for KMD007 {
                     "Unclosed math block: opening '$$' on line {open_line} has no matching closing '$$'"
                 )),
                 severity: Severity::Error,
+                fix_only: false,
                 fix_info: Some(FixInfo {
                     line_number: Some(lines.len()),
                     edit_column: Some(last_line_len + 1),

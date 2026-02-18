@@ -120,6 +120,7 @@ impl Rule for MD043 {
                     fix_info: None,
                     suggestion: Some("Follow the required heading structure".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
                 continue;
             }
@@ -142,6 +143,7 @@ impl Rule for MD043 {
                     fix_info: None,
                     suggestion: Some("Follow the required heading structure".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
             actual_idx += 1;
@@ -161,6 +163,7 @@ impl Rule for MD043 {
                 fix_info: None,
                 suggestion: Some("Follow the required heading structure".to_string()),
                 severity: Severity::Error,
+                fix_only: false,
             });
             actual_idx += 1;
         }

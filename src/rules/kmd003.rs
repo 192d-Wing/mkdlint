@@ -89,6 +89,7 @@ impl Rule for KMD003 {
                     "Footnote definition '[^{label}]' is never referenced"
                 )),
                 severity: Severity::Error,
+                fix_only: false,
                 fix_info: Some(FixInfo {
                     line_number: Some(line_number),
                     edit_column: Some(1),

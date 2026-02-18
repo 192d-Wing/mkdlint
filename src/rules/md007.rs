@@ -82,6 +82,7 @@ impl Rule for MD007 {
                         }),
                         suggestion: Some("Use consistent indentation for nested lists".to_string()),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }

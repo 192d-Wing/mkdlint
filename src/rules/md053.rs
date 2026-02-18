@@ -142,6 +142,7 @@ impl Rule for MD053 {
                     }),
                     suggestion: Some("Remove this unused link definition".to_string()),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         }

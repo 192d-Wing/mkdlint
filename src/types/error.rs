@@ -84,6 +84,10 @@ pub struct LintError {
 
     /// Severity level
     pub severity: Severity,
+
+    /// If true, this error is only used internally for auto-fix (not shown to users)
+    #[serde(skip)]
+    pub fix_only: bool,
 }
 
 /// Severity level for lint errors
@@ -133,6 +137,7 @@ impl Default for LintError {
             fix_info: None,
             suggestion: None,
             severity: Severity::Error,
+            fix_only: false,
         }
     }
 }

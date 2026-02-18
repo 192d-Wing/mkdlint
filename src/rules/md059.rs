@@ -100,6 +100,7 @@ impl MD059 {
                 }),
                 suggestion: Some("Escape underscores with backslash in math context".to_string()),
                 severity: Severity::Warning,
+                fix_only: false,
             });
         }
     }

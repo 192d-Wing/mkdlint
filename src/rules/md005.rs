@@ -76,6 +76,7 @@ impl Rule for MD005 {
                                 "Match list item indentation to previous items".to_string(),
                             ),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 } else {
@@ -136,6 +137,7 @@ impl Rule for MD005 {
                                     "Match list item indentation to previous items".to_string(),
                                 ),
                                 severity: Severity::Error,
+                                fix_only: false,
                             });
                         }
                     }

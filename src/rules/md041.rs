@@ -68,6 +68,7 @@ impl Rule for MD041 {
                         "Start your document with a top-level heading (# Title)".to_string(),
                     ),
                     severity: Severity::Error,
+                    fix_only: false,
                 });
             }
         } else {
@@ -88,6 +89,7 @@ impl Rule for MD041 {
                 }),
                 suggestion: Some("Add a top-level heading as the first line".to_string()),
                 severity: Severity::Error,
+                fix_only: false,
             });
         }
 

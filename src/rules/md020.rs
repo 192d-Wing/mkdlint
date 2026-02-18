@@ -60,6 +60,7 @@ impl Rule for MD020 {
                             }),
                             suggestion: Some("Add space after opening #".to_string()),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
 
@@ -81,6 +82,7 @@ impl Rule for MD020 {
                             }),
                             suggestion: Some("Add space before closing #".to_string()),
                             severity: Severity::Error,
+                            fix_only: false,
                         });
                     }
                 }

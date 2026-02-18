@@ -143,6 +143,7 @@ impl Rule for MD033 {
                         fix_info: None,
                         suggestion: Some("Avoid using raw HTML in Markdown".to_string()),
                         severity: Severity::Error,
+                        fix_only: false,
                     });
                 }
             }
