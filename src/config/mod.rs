@@ -172,6 +172,29 @@ impl Config {
             None => self.default.unwrap_or(true),
         }
     }
+
+    /// Get the configured severity for a rule, if set.
+    ///
+    /// Returns None if no explicit severity is configured (rule uses its default).
+    /// Supports both `"MD001": "warning"` and `"MD001": {"severity": "warning"}` formats.
+    pub fn get_rule_severity(&self, rule_name: &str) -> Option<crate::types::Severity> {
+        match self.get_rule_config(rule_name) {
+            Some(RuleConfig::Severity(s)) => match s.to_lowercase().as_str() {
+                "warning" | "warn" => Some(crate::types::Severity::Warning),
+                "error" => Some(crate::types::Severity::Error),
+                _ => None,
+            },
+            Some(RuleConfig::Options(opts)) => opts
+                .get("severity")
+                .and_then(|v| v.as_str())
+                .and_then(|s| match s.to_lowercase().as_str() {
+                    "warning" | "warn" => Some(crate::types::Severity::Warning),
+                    "error" => Some(crate::types::Severity::Error),
+                    _ => None,
+                }),
+            _ => None,
+        }
+    }
 }
 
 /// Configuration parser trait for custom formats
@@ -260,5 +283,46 @@ mod tests {
         let config = Config::new();
         let resolved = config.resolve_extends().unwrap();
         assert!(resolved.extends.is_none());
+    }
+
+    #[test]
+    fn test_get_rule_severity_warning() {
+        let json = r#"{"MD001": "warning"}"#;
+        let config: Config = serde_json::from_str(json).unwrap();
+        assert_eq!(
+            config.get_rule_severity("MD001"),
+            Some(crate::types::Severity::Warning)
+        );
+        assert_eq!(config.get_rule_severity("MD002"), None);
+    }
+
+    #[test]
+    fn test_get_rule_severity_error_string() {
+        let json = r#"{"MD001": "error"}"#;
+        let config: Config = serde_json::from_str(json).unwrap();
+        assert_eq!(
+            config.get_rule_severity("MD001"),
+            Some(crate::types::Severity::Error)
+        );
+    }
+
+    #[test]
+    fn test_get_rule_severity_in_options() {
+        let json = r#"{"MD013": {"severity": "warning", "line_length": 100}}"#;
+        let config: Config = serde_json::from_str(json).unwrap();
+        assert_eq!(
+            config.get_rule_severity("MD013"),
+            Some(crate::types::Severity::Warning)
+        );
+    }
+
+    #[test]
+    fn test_get_rule_severity_warn_alias() {
+        let json = r#"{"MD001": "warn"}"#;
+        let config: Config = serde_json::from_str(json).unwrap();
+        assert_eq!(
+            config.get_rule_severity("MD001"),
+            Some(crate::types::Severity::Warning)
+        );
     }
 }

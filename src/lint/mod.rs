@@ -226,7 +226,15 @@ fn lint_content(
         };
 
         // Run the rule
-        let errors = rule.lint(&params);
+        let mut errors = rule.lint(&params);
+
+        // Apply per-rule severity override from config (if set)
+        if let Some(severity) = config.get_rule_severity(rule_name) {
+            for error in &mut errors {
+                error.severity = severity;
+            }
+        }
+
         all_errors.extend(errors);
     }
 

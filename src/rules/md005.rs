@@ -4,6 +4,9 @@
 //! For unordered lists, all items at the same level must start at the same column.
 //! For ordered lists, either all items must start at the same column, or all items
 //! must have their markers right-aligned (end at the same column).
+//!
+//! Note: Auto-fix is only supported for ordered lists. For unordered lists,
+//! use MD007 (ul-indent) which handles indentation correction more precisely.
 
 use crate::parser::TokenExt;
 use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
@@ -20,7 +23,7 @@ impl Rule for MD005 {
     }
 
     fn tags(&self) -> &[&'static str] {
-        &["bullet", "ul", "indentation", "fixable"]
+        &["bullet", "ul", "indentation"]
     }
 
     fn parser_type(&self) -> ParserType {

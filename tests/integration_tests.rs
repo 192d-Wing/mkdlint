@@ -2154,3 +2154,58 @@ fn test_format_github_skips_fix_only_errors() {
         "fix_only errors should be omitted from github output"
     );
 }
+
+#[test]
+fn test_severity_override_from_config() {
+    use mkdlint::types::Severity;
+
+    // MD047: files should end with a single newline. "hello" is missing one.
+    let config: Config = serde_json::from_str(r#"{"MD047": "warning"}"#).unwrap();
+    let errors = lint_string_with_config("hello", config);
+
+    assert!(!errors.is_empty(), "MD047 should fire");
+
+    // Find the MD047 error
+    let md047_error = errors.iter().find(|e| e.rule_names.contains(&"MD047"));
+    assert!(md047_error.is_some(), "MD047 error should exist");
+
+    assert_eq!(
+        md047_error.unwrap().severity,
+        Severity::Warning,
+        "MD047 should be downgraded to warning from config"
+    );
+}
+
+#[test]
+fn test_severity_override_in_options() {
+    use mkdlint::types::Severity;
+
+    // MD013 with custom line_length and severity as "warning"
+    let config: Config =
+        serde_json::from_str(r#"{"MD013": {"severity": "warning", "line_length": 10}}"#).unwrap();
+    let errors = lint_string_with_config("This is a very long line that exceeds the limit", config);
+
+    assert!(!errors.is_empty(), "MD013 should fire");
+    assert_eq!(
+        errors[0].severity,
+        Severity::Warning,
+        "MD013 should be warning from config options"
+    );
+}
+
+#[test]
+fn test_severity_default_error_when_not_configured() {
+    use mkdlint::types::Severity;
+
+    let config = Config::new();
+    let errors = lint_string_with_config("hello", config);
+
+    // Find the MD047 error
+    let md047_error = errors.iter().find(|e| e.rule_names.contains(&"MD047"));
+    assert!(md047_error.is_some(), "MD047 should fire");
+    assert_eq!(
+        md047_error.unwrap().severity,
+        Severity::Error,
+        "Default severity should be Error"
+    );
+}
