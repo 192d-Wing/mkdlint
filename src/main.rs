@@ -1206,24 +1206,39 @@ fn lint_files_once(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     if args.fix_dry_run {
         let mut would_fix_count = 0;
         for file_path in &files {
-            let errors = match results.get(file_path) {
-                Some(errors) if !errors.is_empty() => errors,
-                _ => continue,
-            };
+            let content = std::fs::read_to_string(file_path)?;
+            let mut current = content.clone();
 
-            let has_fixes = errors.iter().any(|e| e.fix_info.is_some());
-            if !has_fixes {
-                continue;
+            // Multi-pass fix convergence for dry-run preview
+            for _pass in 0..10 {
+                // DEFAULT_FIX_PASSES = 10
+                let pass_options = LintOptions {
+                    files: vec![],
+                    strings: [(file_path.clone(), current.clone())].into(),
+                    config: options.config.clone(),
+                    no_inline_config: args.no_inline_config,
+                    ..Default::default()
+                };
+
+                let pass_results = lint_sync(&pass_options)?;
+                let pass_errors = pass_results.get(file_path).unwrap_or(&[]);
+
+                let next = apply_fixes(&current, pass_errors);
+                if next == current {
+                    break; // Converged
+                }
+                current = next;
             }
 
-            let content = std::fs::read_to_string(file_path)?;
-            let fixed = apply_fixes(&content, errors);
-            if fixed != content {
+            if current != content {
                 would_fix_count += 1;
                 if !args.quiet {
                     println!("{} {}", "Would fix:".yellow().bold(), file_path);
-                    // Show per-error breakdown (skip fix-only helpers)
-                    for error in errors
+                    // Re-lint final result to show what errors would be fixed
+                    let original_errors = results.get(file_path).unwrap_or(&[]);
+
+                    // Show errors that had fixes
+                    for error in original_errors
                         .iter()
                         .filter(|e| e.fix_info.is_some() && !e.fix_only)
                     {
@@ -1262,20 +1277,32 @@ fn lint_files_once(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     if args.fix {
         let mut fixed_count = 0;
         for file_path in &files {
-            let errors = match results.get(file_path) {
-                Some(errors) if !errors.is_empty() => errors,
-                _ => continue,
-            };
+            let content = std::fs::read_to_string(file_path)?;
+            let mut current = content.clone();
 
-            let has_fixes = errors.iter().any(|e| e.fix_info.is_some());
-            if !has_fixes {
-                continue;
+            // Multi-pass fix convergence: re-lint and re-fix until stable
+            for _pass in 0..10 {
+                // DEFAULT_FIX_PASSES = 10
+                let pass_options = LintOptions {
+                    files: vec![],
+                    strings: [(file_path.clone(), current.clone())].into(),
+                    config: options.config.clone(),
+                    no_inline_config: args.no_inline_config,
+                    ..Default::default()
+                };
+
+                let pass_results = lint_sync(&pass_options)?;
+                let pass_errors = pass_results.get(file_path).unwrap_or(&[]);
+
+                let next = apply_fixes(&current, pass_errors);
+                if next == current {
+                    break; // Converged
+                }
+                current = next;
             }
 
-            let content = std::fs::read_to_string(file_path)?;
-            let fixed = apply_fixes(&content, errors);
-            if fixed != content {
-                std::fs::write(file_path, &fixed)?;
+            if current != content {
+                std::fs::write(file_path, &current)?;
                 fixed_count += 1;
                 if args.verbose || !args.quiet {
                     println!("{} {}", "Fixed:".green().bold(), file_path);
@@ -1463,14 +1490,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             files.clone()
         };
         for file_path in &file_list {
-            let errors = match results.get(file_path) {
-                Some(errors) if !errors.is_empty() => errors,
-                _ => continue,
-            };
-            let has_fixes = errors.iter().any(|e| e.fix_info.is_some());
-            if !has_fixes {
-                continue;
-            }
             let content = if file_path == "-" {
                 options
                     .strings
@@ -1480,12 +1499,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 std::fs::read_to_string(file_path)?
             };
-            let fixed = apply_fixes(&content, errors);
-            if fixed != content {
+
+            let mut current = content.clone();
+
+            // Multi-pass fix convergence for dry-run preview
+            for _pass in 0..10 {
+                // DEFAULT_FIX_PASSES = 10
+                let pass_options = LintOptions {
+                    files: vec![],
+                    strings: [(file_path.clone(), current.clone())].into(),
+                    config: options.config.clone(),
+                    no_inline_config: options.no_inline_config,
+                    front_matter: options.front_matter.clone(),
+                    ..Default::default()
+                };
+
+                let pass_results = lint_sync(&pass_options)?;
+                let pass_errors = pass_results.get(file_path).unwrap_or(&[]);
+
+                let next = apply_fixes(&current, pass_errors);
+                if next == current {
+                    break; // Converged
+                }
+                current = next;
+            }
+
+            if current != content {
                 would_fix_count += 1;
                 if !args.quiet {
                     println!("{} {}", "Would fix:".yellow().bold(), file_path);
-                    for error in errors
+                    // Show errors from original lint
+                    let original_errors = results.get(file_path).unwrap_or(&[]);
+                    for error in original_errors
                         .iter()
                         .filter(|e| e.fix_info.is_some() && !e.fix_only)
                     {
@@ -1547,13 +1592,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 std::fs::read_to_string(file_path)?
             };
 
-            let fixed = apply_fixes(&content, errors);
-            if fixed != content {
+            // Multi-pass fix convergence: re-lint and re-fix until stable
+            let mut current = content.clone();
+            for _pass in 0..10 {
+                // DEFAULT_FIX_PASSES = 10
+                // Re-lint the current content
+                let pass_options = LintOptions {
+                    files: vec![],
+                    strings: [(file_path.clone(), current.clone())].into(),
+                    config: options.config.clone(),
+                    no_inline_config: options.no_inline_config,
+                    front_matter: options.front_matter.clone(),
+                    ..Default::default()
+                };
+
+                let pass_results = lint_sync(&pass_options)?;
+                let pass_errors = pass_results.get(file_path).unwrap_or(&[]);
+
+                // Apply fixes
+                let next = apply_fixes(&current, pass_errors);
+                if next == current {
+                    break; // Converged
+                }
+                current = next;
+            }
+
+            if current != content {
                 if file_path == "-" {
                     // Output to stdout
-                    print!("{}", fixed);
+                    print!("{}", current);
                 } else {
-                    std::fs::write(file_path, &fixed)?;
+                    std::fs::write(file_path, &current)?;
                     fixed_count += 1;
                     if args.verbose || !args.quiet {
                         println!("Fixed: {}", file_path);

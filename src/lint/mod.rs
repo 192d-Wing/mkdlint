@@ -7,6 +7,9 @@ use crate::types::{
 };
 use rayon::prelude::*;
 
+/// Default maximum number of fix passes for convergence
+pub const DEFAULT_FIX_PASSES: usize = 10;
+
 /// Pre-computed rule state for a given configuration.
 ///
 /// Built once per lint invocation and shared across all files,
