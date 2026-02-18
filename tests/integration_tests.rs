@@ -2240,3 +2240,114 @@ fn test_front_matter_no_extraction_by_default() {
     // MD041 WILL fire because there's no h1 at the top
     assert!(errors.iter().any(|e| e.rule_names.contains(&"MD041")));
 }
+
+#[test]
+fn test_custom_rule_fires() {
+    use mkdlint::types::{LintError, ParserType, Rule, RuleParams, Severity};
+
+    struct AlwaysErrorRule;
+    impl Rule for AlwaysErrorRule {
+        fn names(&self) -> &'static [&'static str] {
+            &["CUSTOM001", "always-error"]
+        }
+        fn description(&self) -> &'static str {
+            "Always fires an error for testing"
+        }
+        fn tags(&self) -> &[&'static str] {
+            &["test"]
+        }
+        fn is_enabled_by_default(&self) -> bool {
+            true
+        }
+        fn parser_type(&self) -> ParserType {
+            ParserType::None
+        }
+        fn lint(&self, _params: &RuleParams) -> Vec<LintError> {
+            vec![LintError {
+                line_number: 1,
+                rule_names: self.names(),
+                rule_description: self.description(),
+                severity: Severity::Error,
+                error_detail: Some("Custom rule triggered".to_string()),
+                error_context: None,
+                rule_information: None,
+                error_range: None,
+                fix_info: None,
+                fix_only: false,
+                suggestion: None,
+            }]
+        }
+    }
+
+    let mut options = LintOptions::new();
+    options
+        .strings
+        .insert("test.md".to_string(), "# Hello\n".to_string());
+    options.custom_rules.push(Box::new(AlwaysErrorRule));
+
+    let results = lint_sync(&options).unwrap();
+    let errors = results.get("test.md").unwrap();
+
+    assert!(!errors.is_empty(), "Custom rule should fire");
+    assert!(
+        errors.iter().any(|e| e.rule_names.contains(&"CUSTOM001")),
+        "Custom rule error should be present"
+    );
+}
+
+#[test]
+fn test_custom_rule_respects_config() {
+    use mkdlint::types::{LintError, ParserType, Rule, RuleParams, Severity};
+
+    struct TestRule;
+    impl Rule for TestRule {
+        fn names(&self) -> &'static [&'static str] {
+            &["CUSTOM002"]
+        }
+        fn description(&self) -> &'static str {
+            "Test rule"
+        }
+        fn tags(&self) -> &[&'static str] {
+            &[]
+        }
+        fn is_enabled_by_default(&self) -> bool {
+            true
+        }
+        fn parser_type(&self) -> ParserType {
+            ParserType::None
+        }
+        fn lint(&self, _params: &RuleParams) -> Vec<LintError> {
+            vec![LintError {
+                line_number: 1,
+                rule_names: self.names(),
+                rule_description: self.description(),
+                severity: Severity::Error,
+                error_detail: None,
+                error_context: None,
+                rule_information: None,
+                error_range: None,
+                fix_info: None,
+                fix_only: false,
+                suggestion: None,
+            }]
+        }
+    }
+
+    // Config disables CUSTOM002
+    let config: Config = serde_json::from_str(r#"{"CUSTOM002": false}"#).unwrap();
+
+    let mut options = LintOptions::new();
+    options
+        .strings
+        .insert("test.md".to_string(), "# Test\n".to_string());
+    options.custom_rules.push(Box::new(TestRule));
+    options.config = Some(config);
+
+    let results = lint_sync(&options).unwrap();
+    let errors = results.get("test.md").unwrap();
+
+    assert!(
+        !errors.iter().any(|e| e.rule_names.contains(&"CUSTOM002")),
+        "Disabled custom rule should not fire"
+    );
+}

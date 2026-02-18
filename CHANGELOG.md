@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Heading parsing helpers**: `ParsedHeading` struct and `parse_headings()` / `parse_heading_line()` functions in `src/helpers/mod.rs` extract ATX headings with code-fence skipping (eliminates 7+ duplicated implementations across LSP and rules)
 - **Front matter extraction**: `extract_front_matter_line_count()` function supports custom regex patterns via `LintOptions.front_matter` field
 - **Multi-pass fix convergence**: `--fix` and `--fix-dry-run` now apply fixes iteratively (up to 10 passes) until content stabilizes, resolving multi-rule interaction bugs
+- **Custom rules integration**: `LintOptions.custom_rules` now fully functional — custom rules are properly integrated into `prepare_rules()` and linted alongside built-in rules
 
 ### Changed
 
@@ -19,7 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation counts updated**: src/lib.rs and src/rules/mod.rs now correctly state "64 rules" (was "54")
 - **Severity-per-rule support**: `RuleConfig::Severity` is now properly applied to `LintError.severity` — configs like `{"MD001": "warning"}` or `{"MD013": {"severity": "warning", "line_length": 120}}` now work correctly
 - **MD005 tags**: Removed `"fixable"` tag to reflect that only ordered lists get auto-fix (unordered list indentation handled by MD007)
-- **PreparedRules struct**: Now includes `front_matter_pattern` field threaded from `LintOptions`
+- **PreparedRules struct**: Changed from `Vec<&'a BoxedRule>` to `Vec<&'a dyn Rule>` to support custom rules; added `front_matter_pattern` field
+- **`prepare_rules()` signature**: Now accepts `custom_rules: &'a [BoxedRule]` parameter; lifetime is non-static when custom rules present
+- **`lint_async()` behavior**: Uses sequential processing path when custom rules present (non-'static lifetime constraint); parallel path for static rules only
 
 ### Fixed
 

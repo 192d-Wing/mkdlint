@@ -15,32 +15,49 @@ pub const DEFAULT_FIX_PASSES: usize = 10;
 /// Built once per lint invocation and shared across all files,
 /// avoiding redundant HashMap lookups and Vec allocations per file.
 struct PreparedRules<'a> {
-    enabled: Vec<&'a BoxedRule>,
+    enabled: Vec<&'a dyn crate::types::Rule>,
     needs_parser: bool,
     front_matter_pattern: Option<String>,
 }
 
 /// Build the enabled-rules list and parser flag from the config.
 ///
-/// Returns `'static` because rule references come from the global registry.
-fn prepare_rules(config: &Config, front_matter_pattern: Option<String>) -> PreparedRules<'static> {
+/// Accepts both static rules (from the global registry) and custom rules.
+/// The lifetime `'a` is tied to custom_rules when present, otherwise it's `'static`.
+fn prepare_rules<'a>(
+    config: &Config,
+    custom_rules: &'a [BoxedRule],
+    front_matter_pattern: Option<String>,
+) -> PreparedRules<'a> {
     use crate::rules;
+    use crate::types::Rule;
 
-    let enabled: Vec<&BoxedRule> = rules::get_rules()
+    // Helper to check if a rule is enabled based on config
+    let rule_is_enabled = |rule: &dyn Rule| {
+        let explicitly_configured = config.get_rule_config(rule.names()[0]).is_some();
+        if explicitly_configured {
+            config.is_rule_enabled(rule.names()[0])
+        } else {
+            config
+                .default
+                .unwrap_or_else(|| rule.is_enabled_by_default())
+        }
+    };
+
+    // Combine static rules (coerced to 'a) and custom rules
+    let static_enabled: Vec<&'a dyn Rule> = rules::get_rules()
         .iter()
-        .filter(|rule| {
-            let explicitly_configured = config.get_rule_config(rule.names()[0]).is_some();
-            if explicitly_configured {
-                config.is_rule_enabled(rule.names()[0])
-            } else {
-                // No explicit config entry: use the rule's own default,
-                // but still respect the global `default` override if set.
-                config
-                    .default
-                    .unwrap_or_else(|| rule.is_enabled_by_default())
-            }
-        })
+        .filter(|r| rule_is_enabled(r.as_ref()))
+        .map(|r| r.as_ref() as &'a dyn Rule)
         .collect();
+
+    let custom_enabled: Vec<&'a dyn Rule> = custom_rules
+        .iter()
+        .filter(|r| rule_is_enabled(r.as_ref()))
+        .map(|r| r.as_ref() as &'a dyn Rule)
+        .collect();
+
+    let enabled: Vec<&'a dyn Rule> = static_enabled.into_iter().chain(custom_enabled).collect();
 
     let needs_parser = enabled
         .iter()
@@ -75,7 +92,7 @@ pub fn lint_sync(options: &LintOptions) -> Result<LintResults> {
     }
 
     // Precompute enabled rules once (avoids per-file HashMap lookups)
-    let prepared = prepare_rules(&config, options.front_matter.clone());
+    let prepared = prepare_rules(&config, &options.custom_rules, options.front_matter.clone());
 
     // Lint all inputs in parallel
     let file_results: Vec<(
@@ -138,27 +155,37 @@ pub async fn lint_async(options: &LintOptions) -> Result<LintResults> {
         inputs.push((name.clone(), content.clone()));
     }
 
-    // Precompute enabled rules once
-    let prepared = Arc::new(prepare_rules(&config, options.front_matter.clone()));
+    // Handle custom rules: they require sequential processing due to lifetime constraints
+    if options.custom_rules.is_empty() {
+        // Fast path: static rules only, can use spawn_blocking in parallel
+        let prepared = Arc::new(prepare_rules(&config, &[], options.front_matter.clone()));
 
-    // Lint all inputs concurrently using spawn_blocking (CPU-bound)
-    let lint_handles: Vec<_> = inputs
-        .into_iter()
-        .map(|(name, content)| {
-            let config = Arc::clone(&config);
-            let prepared = Arc::clone(&prepared);
-            tokio::task::spawn_blocking(move || {
-                let errors = lint_content(&content, &config, &name, &prepared);
-                (name, errors)
+        // Lint all inputs concurrently using spawn_blocking (CPU-bound)
+        let lint_handles: Vec<_> = inputs
+            .into_iter()
+            .map(|(name, content)| {
+                let config = Arc::clone(&config);
+                let prepared = Arc::clone(&prepared);
+                tokio::task::spawn_blocking(move || {
+                    let errors = lint_content(&content, &config, &name, &prepared);
+                    (name, errors)
+                })
             })
-        })
-        .collect();
+            .collect();
 
-    for handle in lint_handles {
-        let (name, error_result) = handle
-            .await
-            .map_err(|e| MarkdownlintError::AsyncRuntime(format!("Task join error: {}", e)))?;
-        results.add(name, error_result?);
+        for handle in lint_handles {
+            let (name, error_result) = handle
+                .await
+                .map_err(|e| MarkdownlintError::AsyncRuntime(format!("Task join error: {}", e)))?;
+            results.add(name, error_result?);
+        }
+    } else {
+        // Sequential path for custom rules (non-'static lifetime)
+        let prepared = prepare_rules(&config, &options.custom_rules, options.front_matter.clone());
+        for (name, content) in &inputs {
+            let errors = lint_content(content, &config, name, &prepared)?;
+            results.add(name.clone(), errors);
+        }
     }
 
     Ok(results)
