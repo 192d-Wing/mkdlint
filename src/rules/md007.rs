@@ -8,7 +8,7 @@ use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-static UL_MARKER_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)[*+\-]\s").unwrap());
+static UL_MARKER_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)[*+\-]\s").expect("valid regex"));
 
 pub struct MD007;
 

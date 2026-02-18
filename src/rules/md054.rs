@@ -5,25 +5,25 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 
 // Inline link: [text](url)
-static INLINE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\(([^)]*)\)").unwrap());
+static INLINE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\(([^)]*)\)").expect("valid regex"));
 
 // Full reference link: [text][label]
-static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").unwrap());
+static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").expect("valid regex"));
 
 // Collapsed reference link: [text][]
-static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").unwrap());
+static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").expect("valid regex"));
 
 // Shortcut reference link: [text] not followed by ( or [
-static SHORTCUT_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\](?:[^(\[])").unwrap());
+static SHORTCUT_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\](?:[^(\[])").expect("valid regex"));
 
 // Autolink: <http://...> or <https://...>
-static AUTOLINK_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"<(https?://[^>]+)>").unwrap());
+static AUTOLINK_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"<(https?://[^>]+)>").expect("valid regex"));
 
 // Inline code span regex for stripping
-static INLINE_CODE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"`[^`]+`").unwrap());
+static INLINE_CODE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"`[^`]+`").expect("valid regex"));
 
 // Code fence opening/closing
-static CODE_FENCE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(`{3,}|~{3,})").unwrap());
+static CODE_FENCE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(`{3,}|~{3,})").expect("valid regex"));
 
 pub struct MD054;
 

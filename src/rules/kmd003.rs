@@ -9,10 +9,10 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
 /// Matches footnote definitions: `[^label]:` at the start of a line
-static DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\[\^([^\]]+)\]:").unwrap());
+static DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\[\^([^\]]+)\]:").expect("valid regex"));
 
 /// Matches any `[^label]` occurrence (both refs and defs — we filter in code)
-static REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[\^([^\]]+)\]").unwrap());
+static REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[\^([^\]]+)\]").expect("valid regex"));
 
 pub struct KMD003;
 

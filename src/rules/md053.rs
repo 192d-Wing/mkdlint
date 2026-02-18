@@ -6,17 +6,17 @@ use regex::Regex;
 use std::collections::HashSet;
 
 /// Regex for reference link definitions: `[label]: url`
-static DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\s*\[([^\]]+)\]:\s+").unwrap());
+static DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\s*\[([^\]]+)\]:\s+").expect("valid regex"));
 
 /// Regex for full reference links: `[text][label]`
-static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").unwrap());
+static FULL_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]*)\]\[([^\]]+)\]").expect("valid regex"));
 
 /// Regex for collapsed reference links: `[label][]`
-static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").unwrap());
+static COLLAPSED_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[([^\]]+)\]\[\]").expect("valid regex"));
 
 /// Regex for shortcut reference links: `[label]` (not followed by `[` or `(` or `:`)
 static SHORTCUT_REF_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"\[([^\]]+)\](?:[^(\[:]|$)").unwrap());
+    Lazy::new(|| Regex::new(r"\[([^\]]+)\](?:[^(\[:]|$)").expect("valid regex"));
 
 pub struct MD053;
 

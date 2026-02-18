@@ -8,7 +8,7 @@ use regex::Regex;
 // Uses a non-backslash char (or start) before the opening _, and the closing _
 // must also not be preceded by a backslash.
 static EMPHASIS_UNDERSCORE_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?:^|[^\\])(_[^_\\]+_)").unwrap());
+    Lazy::new(|| Regex::new(r"(?:^|[^\\])(_[^_\\]+_)").expect("valid regex"));
 
 pub struct MD059;
 

@@ -5,7 +5,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 
 static EMPHASIS_SPACE_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(\*|_)( +[^*_]+?[^ *_]+ +)(\*|_)").unwrap());
+    Lazy::new(|| Regex::new(r"(\*|_)( +[^*_]+?[^ *_]+ +)(\*|_)").expect("valid regex"));
 
 pub struct MD037;
 

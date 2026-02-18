@@ -11,7 +11,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 
 /// Matches abbreviation definitions: `*[TERM]: expansion`
-static ABBR_DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\*\[([^\]]+)\]:").unwrap());
+static ABBR_DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\*\[([^\]]+)\]:").expect("valid regex"));
 
 pub struct KMD004;
 

@@ -9,7 +9,7 @@ use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-static CODE_FENCE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)(`{3,}|~{3,})").unwrap());
+static CODE_FENCE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\s*)(`{3,}|~{3,})").expect("valid regex"));
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum BlockStyle {

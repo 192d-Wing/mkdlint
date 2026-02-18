@@ -7,7 +7,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 
 static REVERSED_LINK_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"\(([^)]+)\)\[([^\]]+)\]").unwrap());
+    Lazy::new(|| Regex::new(r"\(([^)]+)\)\[([^\]]+)\]").expect("valid regex"));
 
 pub struct MD011;
 

@@ -12,7 +12,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 
 /// Finds all `{:...}` occurrences within a line (inline IALs)
-static INLINE_IAL_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\{:[^}]*\}").unwrap());
+static INLINE_IAL_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\{:[^}]*\}").expect("valid regex"));
 
 /// A valid IAL body: zero or more valid attributes
 static VALID_IAL_RE: Lazy<Regex> = Lazy::new(|| {
@@ -23,7 +23,7 @@ static VALID_IAL_RE: Lazy<Regex> = Lazy::new(|| {
 });
 
 /// An empty IAL `{:}` is also valid
-static EMPTY_IAL_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:\s*\}$").unwrap());
+static EMPTY_IAL_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:\s*\}$").expect("valid regex"));
 
 pub struct KMD010;
 

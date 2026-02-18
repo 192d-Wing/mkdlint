@@ -10,19 +10,19 @@ use std::collections::HashMap;
 static INLINE_LINK_RE: Lazy<Regex> = Lazy::new(|| {
     // Match inline links: [text](url)
     // Captures the link text and the URL part
-    Regex::new(r"\[([^\]]*)\]\(([^)]*)\)").unwrap()
+    Regex::new(r"\[([^\]]*)\]\(([^)]*)\)").expect("valid regex")
 });
 
 static REFERENCE_LINK_RE: Lazy<Regex> = Lazy::new(|| {
     // Match reference links: [text][ref] or [text][] or [text]
     // Note: We can't use negative lookahead (?!\() in Rust regex, so we'll filter inline links manually
-    Regex::new(r"\[([^\]]+)\](?:\[([^\]]*)\])?").unwrap()
+    Regex::new(r"\[([^\]]+)\](?:\[([^\]]*)\])?").expect("valid regex")
 });
 
 static LINK_DEFINITION_RE: Lazy<Regex> = Lazy::new(|| {
     // Match link definitions: [ref]: url
     // Note: no $ anchor because lines may have trailing \n
-    Regex::new(r"^\s*\[([^\]]+)\]:\s*(\S*)").unwrap()
+    Regex::new(r"^\s*\[([^\]]+)\]:\s*(\S*)").expect("valid regex")
 });
 
 pub struct MD042;

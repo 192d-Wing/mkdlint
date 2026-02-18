@@ -17,13 +17,13 @@ use regex::Regex;
 
 /// Matches an opening block extension tag: `{::name}` or `{::name attrs}`
 /// Does NOT match self-closing (those end with `/}`).
-static OPEN_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{::(\w+)(?:\s[^}]*)?\}$").unwrap());
+static OPEN_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{::(\w+)(?:\s[^}]*)?\}$").expect("valid regex"));
 
 /// Matches a self-closing block extension: `{::name .../}`
-static SELF_CLOSING_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{::(\w+)[^}]*/\}$").unwrap());
+static SELF_CLOSING_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{::(\w+)[^}]*/\}$").expect("valid regex"));
 
 /// Matches a closing block extension tag: `{:/name}`
-static CLOSE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:/(\w+)\}$").unwrap());
+static CLOSE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:/(\w+)\}$").expect("valid regex"));
 
 pub struct KMD008;
 

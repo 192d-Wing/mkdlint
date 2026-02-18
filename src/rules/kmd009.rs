@@ -21,11 +21,11 @@ use std::collections::HashMap;
 
 /// Matches an ALD definition: `{:identifier: attrs}` at start of line.
 /// Captures the identifier name.
-static ALD_DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:([A-Za-z][\w-]*):\s").unwrap());
+static ALD_DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:([A-Za-z][\w-]*):\s").expect("valid regex"));
 
 /// Matches an ALD reference: `{:identifier}` anywhere in a line.
 /// Captures the identifier name.
-static ALD_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\{:([A-Za-z][\w-]*)\}").unwrap());
+static ALD_REF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\{:([A-Za-z][\w-]*)\}").expect("valid regex"));
 
 pub struct KMD009;
 

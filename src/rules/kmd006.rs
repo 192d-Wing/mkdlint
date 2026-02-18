@@ -14,13 +14,13 @@ use regex::Regex;
 ///
 /// Excludes block extensions (`{::name}`, `{:/name}`) and ALD definitions
 /// (`{:identifier:`) — those are handled by KMD008 and KMD009 respectively.
-static IAL_LINE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:").unwrap());
+static IAL_LINE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:").expect("valid regex"));
 
 /// Matches a block extension tag: `{::name}` or `{:/name}` — skip in KMD006
-static BLOCK_EXT_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:[:/]").unwrap());
+static BLOCK_EXT_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:[:/]").expect("valid regex"));
 
 /// Matches an ALD definition: `{:identifier:` — skip in KMD006
-static ALD_DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:[A-Za-z][\w-]*:").unwrap());
+static ALD_DEF_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:[A-Za-z][\w-]*:").expect("valid regex"));
 
 /// A valid IAL: `{:` followed by zero or more valid attributes, then `}`
 ///
@@ -38,7 +38,7 @@ static VALID_IAL_RE: Lazy<Regex> = Lazy::new(|| {
 });
 
 /// An empty IAL `{:}` is also valid (no attributes)
-static EMPTY_IAL_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:\s*\}\s*$").unwrap());
+static EMPTY_IAL_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{:\s*\}\s*$").expect("valid regex"));
 
 pub struct KMD006;
 

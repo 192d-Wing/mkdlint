@@ -4,7 +4,7 @@ use crate::types::{FixInfo, LintError, ParserType, Rule, RuleParams, Severity};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
-static URL_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"https?://[^\s<>]+").unwrap());
+static URL_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"https?://[^\s<>]+").expect("valid regex"));
 
 pub struct MD034;
 

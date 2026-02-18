@@ -14,11 +14,11 @@ use std::collections::HashMap;
 
 /// Matches ATX headings (with optional trailing IAL): `## Title {#custom-id}`
 static ATX_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^(#{1,6})\s+(.+?)(?:\s*\{[^}]*\})?\s*$").unwrap());
+    Lazy::new(|| Regex::new(r"^(#{1,6})\s+(.+?)(?:\s*\{[^}]*\})?\s*$").expect("valid regex"));
 
 /// Matches an explicit `{#id}` attribute in an IAL or inline heading suffix
 static EXPLICIT_ID_RE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"\{[^}]*#([A-Za-z][\w-]*)[^}]*\}").unwrap());
+    Lazy::new(|| Regex::new(r"\{[^}]*#([A-Za-z][\w-]*)[^}]*\}").expect("valid regex"));
 
 /// Generate a Kramdown-style heading slug from heading text.
 ///
@@ -49,7 +49,7 @@ fn kramdown_slug(text: &str) -> String {
     }
 
     // Collapse multiple consecutive hyphens
-    let re = Regex::new(r"-{2,}").unwrap();
+    let re = Regex::new(r"-{2,}").expect("valid regex");
     let slug = re.replace_all(&slug, "-").into_owned();
     slug.trim_matches('-').to_string()
 }
