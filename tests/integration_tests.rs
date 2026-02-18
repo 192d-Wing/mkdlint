@@ -2042,3 +2042,115 @@ fn test_heading_to_anchor_id_basic() {
         "api-reference"
     );
 }
+
+// ---- --stdin-filename tests (item 7) ----
+
+/// When a custom key is used (simulating --stdin-filename), errors appear under that key.
+#[test]
+fn test_stdin_filename_appears_in_results() {
+    let custom_name = "my-doc.md".to_string();
+    let markdown = "# Title\n\nTrailing spaces:   \n";
+    let mut strings = HashMap::new();
+    strings.insert(custom_name.clone(), markdown.to_string());
+
+    let options = LintOptions {
+        strings,
+        ..Default::default()
+    };
+
+    let results = lint_sync(&options).unwrap();
+    assert!(
+        results.get(custom_name.as_str()).is_some(),
+        "Results should be keyed by the custom stdin filename"
+    );
+    assert!(
+        results.get("-").is_none(),
+        "Results should NOT be keyed by '-' when custom filename is used"
+    );
+}
+
+// ---- GitHub formatter tests (item 6) ----
+
+#[test]
+fn test_format_github_error_output() {
+    use mkdlint::formatters::format_github;
+    use mkdlint::types::{LintError, LintResults, Severity};
+
+    let mut results = LintResults::new();
+    results.add(
+        "foo.md".to_string(),
+        vec![LintError {
+            line_number: 3,
+            rule_names: &["MD009", "no-trailing-spaces"],
+            rule_description: "Trailing spaces",
+            error_detail: Some("Expected: 0; Actual: 2".to_string()),
+            error_range: Some((1, 5)),
+            severity: Severity::Error,
+            fix_only: false,
+            ..Default::default()
+        }],
+    );
+
+    let output = format_github(&results);
+    assert!(
+        output.contains("::error "),
+        "Should contain ::error. Got: {output}"
+    );
+    assert!(output.contains("file=foo.md"), "Should include filename");
+    assert!(output.contains("line=3"), "Should include line number");
+    assert!(output.contains("title=MD009"), "Should include rule");
+    assert!(
+        output.contains("Trailing spaces"),
+        "Should include description"
+    );
+}
+
+#[test]
+fn test_format_github_warning_output() {
+    use mkdlint::formatters::format_github;
+    use mkdlint::types::{LintError, LintResults, Severity};
+
+    let mut results = LintResults::new();
+    results.add(
+        "bar.md".to_string(),
+        vec![LintError {
+            line_number: 1,
+            rule_names: &["MD001"],
+            rule_description: "Heading levels should only increment by one level at a time",
+            severity: Severity::Warning,
+            fix_only: false,
+            ..Default::default()
+        }],
+    );
+
+    let output = format_github(&results);
+    assert!(
+        output.contains("::warning "),
+        "Should contain ::warning. Got: {output}"
+    );
+}
+
+#[test]
+fn test_format_github_skips_fix_only_errors() {
+    use mkdlint::formatters::format_github;
+    use mkdlint::types::{LintError, LintResults, Severity};
+
+    let mut results = LintResults::new();
+    results.add(
+        "baz.md".to_string(),
+        vec![LintError {
+            line_number: 1,
+            rule_names: &["MD003"],
+            rule_description: "Heading style",
+            severity: Severity::Error,
+            fix_only: true, // ghost error
+            ..Default::default()
+        }],
+    );
+
+    let output = format_github(&results);
+    assert!(
+        output.is_empty(),
+        "fix_only errors should be omitted from github output"
+    );
+}

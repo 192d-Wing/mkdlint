@@ -13,6 +13,8 @@ enum OutputFormat {
     Text,
     Json,
     Sarif,
+    /// GitHub Actions workflow command annotations (::error file=...)
+    Github,
 }
 
 #[cfg(feature = "cli")]
@@ -99,6 +101,10 @@ struct Args {
     /// Print the JSON Schema for the configuration file to stdout
     #[arg(long, global = true)]
     generate_schema: bool,
+
+    /// Filename to use for stdin content in error output (requires --stdin)
+    #[arg(long, global = true)]
+    stdin_filename: Option<String>,
 }
 
 #[cfg(feature = "cli")]
@@ -1313,6 +1319,7 @@ fn lint_files_once(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
                 }
                 OutputFormat::Json => formatters::format_json(&results),
                 OutputFormat::Sarif => formatters::format_sarif(&results),
+                OutputFormat::Github => formatters::format_github(&results),
             };
             print!("{}", output);
         }
@@ -1429,7 +1436,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut strings = std::collections::HashMap::new();
     if let Some(content) = stdin_content {
-        strings.insert("-".to_string(), content);
+        let stdin_key = args
+            .stdin_filename
+            .clone()
+            .unwrap_or_else(|| "-".to_string());
+        strings.insert(stdin_key, content);
     }
 
     let options = LintOptions {
@@ -1577,8 +1588,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     // Read source files for context display
                     let mut sources = std::collections::HashMap::new();
                     if args.stdin {
-                        if let Some(content) = options.strings.get("-") {
-                            sources.insert("-".to_string(), content.clone());
+                        let stdin_key = args
+                            .stdin_filename
+                            .clone()
+                            .unwrap_or_else(|| "-".to_string());
+                        if let Some(content) = options.strings.get(&stdin_key) {
+                            sources.insert(stdin_key, content.clone());
                         }
                     } else {
                         for file_path in &files {
@@ -1604,6 +1619,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 OutputFormat::Json => formatters::format_json(&results),
                 OutputFormat::Sarif => formatters::format_sarif(&results),
+                OutputFormat::Github => formatters::format_github(&results),
             };
             println!("{}", output);
         }

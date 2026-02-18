@@ -6,6 +6,8 @@ use super::{
     code_actions, config::ConfigManager, diagnostics, document::DocumentManager, utils::Debouncer,
 };
 use crate::{LintOptions, apply_fixes, lint_sync};
+use once_cell::sync::Lazy;
+use regex::Regex;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -13,6 +15,10 @@ use std::time::Duration;
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types::*;
 use tower_lsp::{Client, LanguageServer};
+
+/// Regex that captures the fragment portion in a markdown anchor link `(#fragment)`.
+/// Matches `(#` followed by the fragment up to `)`, `"`, `'`, or whitespace.
+static ANCHOR_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r#"\(#([^)"'\s]+)"#).expect("valid regex"));
 
 /// Walk a directory recursively and collect `.md`/`.markdown` files.
 ///
@@ -279,6 +285,8 @@ impl LanguageServer for MkdlintLanguageServer {
                 document_formatting_provider: Some(OneOf::Left(true)),
                 folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
                 rename_provider: Some(OneOf::Left(true)),
+                references_provider: Some(OneOf::Left(true)),
+                definition_provider: Some(OneOf::Left(true)),
                 // Declare that we handle workspace/didChangeConfiguration
                 workspace: Some(WorkspaceServerCapabilities {
                     workspace_folders: None,
@@ -650,6 +658,81 @@ impl LanguageServer for MkdlintLanguageServer {
                 }
 
                 return Ok(Some(CompletionResponse::Array(items)));
+            }
+        }
+
+        // ── Cross-file link completion: [text](./ or [text]( ────────────────
+        // Detect if the cursor is inside a file link href (not starting with `#`)
+        if let Some(href_start) = prefix.rfind("](")
+            && !prefix[href_start..].contains(')')
+        {
+            let typed_path = &prefix[href_start + 2..]; // text after `](`
+            // Only handle file links (not anchors — those are handled above)
+            if !typed_path.starts_with('#') {
+                    let doc_uri = uri.clone();
+                    let doc_dir = doc_uri
+                        .to_file_path()
+                        .ok()
+                        .and_then(|p| p.parent().map(|d| d.to_path_buf()));
+
+                    let roots = self.config_manager.lock().unwrap().workspace_roots.clone();
+                    let mut items: Vec<CompletionItem> = Vec::new();
+
+                    for root in &roots {
+                        if let Ok(files) = walkdir_md(root) {
+                            for file_path in files {
+                                // Compute a relative path from the document's directory
+                                let rel = if let Some(ref dir) = doc_dir {
+                                    file_path
+                                        .strip_prefix(dir)
+                                        .map(|p| p.to_string_lossy().replace('\\', "/"))
+                                        .or_else(|_| {
+                                            // Cross-directory: try relative from workspace root
+                                            file_path
+                                                .strip_prefix(root)
+                                                .map(|p| {
+                                                    format!(
+                                                        "/{}",
+                                                        p.to_string_lossy().replace('\\', "/")
+                                                    )
+                                                })
+                                        })
+                                        .unwrap_or_else(|_| {
+                                            file_path.to_string_lossy().into_owned()
+                                        })
+                                } else {
+                                    file_path.to_string_lossy().into_owned()
+                                };
+
+                                if rel.starts_with(typed_path) {
+                                    let replace_start = (href_start as u32 + 2).min(col as u32);
+                                    let replace_range = Range {
+                                        start: Position {
+                                            line: position.line,
+                                            character: replace_start,
+                                        },
+                                        end: Position {
+                                            line: position.line,
+                                            character: col as u32,
+                                        },
+                                    };
+                                    items.push(CompletionItem {
+                                        label: rel.clone(),
+                                        kind: Some(CompletionItemKind::FILE),
+                                        text_edit: Some(CompletionTextEdit::Edit(TextEdit {
+                                            range: replace_range,
+                                            new_text: rel,
+                                        })),
+                                        ..Default::default()
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                if !items.is_empty() {
+                    return Ok(Some(CompletionResponse::Array(items)));
+                }
             }
         }
 
@@ -1064,11 +1147,7 @@ impl LanguageServer for MkdlintLanguageServer {
 
         // 2. Update same-document anchor links `[label](#old-slug)` and
         //    `[label](#old-slug "title")` — replace only the fragment part.
-        use once_cell::sync::Lazy;
-        use regex::Regex;
-        static ANCHOR_RE: Lazy<Regex> =
-            Lazy::new(|| Regex::new(r#"\(#([^)"'\s]+)"#).expect("valid regex"));
-
+        // (ANCHOR_RE is declared at module level)
         for (idx, l) in lines.iter().enumerate() {
             if idx == line_idx {
                 continue; // skip the heading line we already handled
@@ -1102,6 +1181,174 @@ impl LanguageServer for MkdlintLanguageServer {
             changes: Some(changes),
             ..Default::default()
         }))
+    }
+
+    async fn references(&self, params: ReferenceParams) -> Result<Option<Vec<Location>>> {
+        let uri = params.text_document_position.text_document.uri.clone();
+        let line_idx = params.text_document_position.position.line as usize;
+        let col = params.text_document_position.position.character as usize;
+
+        let doc = match self.document_manager.get(&uri) {
+            Some(doc) => doc,
+            None => return Ok(None),
+        };
+
+        let lines: Vec<&str> = doc.content.lines().collect();
+        let raw_line = match lines.get(line_idx) {
+            Some(l) => *l,
+            None => return Ok(None),
+        };
+        let trimmed = raw_line.trim();
+
+        // Determine the target anchor slug from the cursor position:
+        //   1. Cursor on a heading → use that heading's slug
+        //   2. Cursor inside (#anchor) → use that anchor
+        //   3. Otherwise → no references
+        let target_slug: String;
+
+        if trimmed.starts_with('#') {
+            let level = trimmed.chars().take_while(|&c| c == '#').count();
+            if level <= 6 {
+                let text = trimmed[level..].trim().trim_end_matches('#').trim();
+                if text.is_empty() {
+                    return Ok(None);
+                }
+                target_slug = crate::helpers::heading_to_anchor_id(text);
+            } else {
+                return Ok(None);
+            }
+        } else {
+            // Try to find an anchor link under the cursor
+            let mut found = None;
+            for cap in ANCHOR_RE.captures_iter(raw_line) {
+                let frag_match = cap.get(1).unwrap();
+                // The `(#` starts one char before the captured group
+                let anchor_start = frag_match.start().saturating_sub(1);
+                let anchor_end = frag_match.end();
+                if col >= anchor_start && col <= anchor_end {
+                    found = Some(frag_match.as_str().to_string());
+                    break;
+                }
+            }
+            match found {
+                Some(slug) => target_slug = slug,
+                None => return Ok(None),
+            }
+        }
+
+        // Scan all lines for (#target_slug) references
+        let mut locations: Vec<Location> = Vec::new();
+        for (idx, l) in lines.iter().enumerate() {
+            for cap in ANCHOR_RE.captures_iter(l) {
+                if cap[1] == *target_slug {
+                    let frag_match = cap.get(1).unwrap();
+                    // Range covers the full `(#slug)` — start at `(`
+                    let char_start = (frag_match.start() as u32).saturating_sub(1);
+                    let char_end = frag_match.end() as u32 + 1; // past `)`
+                    locations.push(Location {
+                        uri: uri.clone(),
+                        range: Range {
+                            start: Position {
+                                line: idx as u32,
+                                character: char_start,
+                            },
+                            end: Position {
+                                line: idx as u32,
+                                character: char_end,
+                            },
+                        },
+                    });
+                }
+            }
+        }
+
+        if locations.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(locations))
+        }
+    }
+
+    async fn goto_definition(
+        &self,
+        params: GotoDefinitionParams,
+    ) -> Result<Option<GotoDefinitionResponse>> {
+        let uri = params
+            .text_document_position_params
+            .text_document
+            .uri
+            .clone();
+        let line_idx = params.text_document_position_params.position.line as usize;
+        let col = params.text_document_position_params.position.character as usize;
+
+        let doc = match self.document_manager.get(&uri) {
+            Some(doc) => doc,
+            None => return Ok(None),
+        };
+
+        let lines: Vec<&str> = doc.content.lines().collect();
+        let raw_line = match lines.get(line_idx) {
+            Some(l) => *l,
+            None => return Ok(None),
+        };
+
+        // Find the anchor slug the cursor is hovering over in `(#slug)`
+        let mut target_slug: Option<String> = None;
+        for cap in ANCHOR_RE.captures_iter(raw_line) {
+            let frag_match = cap.get(1).unwrap();
+            let anchor_start = frag_match.start().saturating_sub(1); // includes `#`
+            let anchor_end = frag_match.end();
+            if col >= anchor_start && col <= anchor_end {
+                target_slug = Some(cap[1].to_string());
+                break;
+            }
+        }
+
+        let slug = match target_slug {
+            Some(s) => s,
+            None => return Ok(None),
+        };
+
+        // Find the heading whose slug matches
+        let mut in_code_block = false;
+        for (idx, l) in lines.iter().enumerate() {
+            let trimmed = l.trim();
+            if crate::helpers::is_code_fence(trimmed) {
+                in_code_block = !in_code_block;
+                continue;
+            }
+            if in_code_block {
+                continue;
+            }
+            if trimmed.starts_with('#') {
+                let level = trimmed.chars().take_while(|&c| c == '#').count();
+                if level > 6 {
+                    continue;
+                }
+                let text = trimmed[level..].trim().trim_end_matches('#').trim();
+                if text.is_empty() {
+                    continue;
+                }
+                if crate::helpers::heading_to_anchor_id(text) == slug {
+                    let heading_end = l.len() as u32;
+                    return Ok(Some(GotoDefinitionResponse::Scalar(Location {
+                        uri,
+                        range: Range {
+                            start: Position {
+                                line: idx as u32,
+                                character: 0,
+                            },
+                            end: Position {
+                                line: idx as u32,
+                                character: heading_end,
+                            },
+                        },
+                    })));
+                }
+            }
+        }
+
+        Ok(None)
     }
 
     async fn code_action(&self, params: CodeActionParams) -> Result<Option<CodeActionResponse>> {

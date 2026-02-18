@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.9] - 2026-02-18
+
+### Added
+
+- **LSP `textDocument/references`**: when cursor is on a heading or inside a
+  `(#anchor)` link, returns all locations in the document that reference that
+  heading's slug
+- **LSP `textDocument/definition`**: when cursor is inside `[text](#anchor)`,
+  jumps to the heading whose slug matches the anchor
+- **LSP cross-file link completion**: when typing `[text](` the server
+  completes with relative paths to `.md` files in the workspace (filtered by
+  prefix); same-file anchors `[text](#` take priority and are handled first
+- **`--format github`** (`-o github`): outputs GitHub Actions workflow command
+  annotations (`::error file=...,line=...,title=...::message`) so violations
+  appear as PR annotations when run in a GitHub Actions workflow
+- **`--stdin-filename <name>`**: when used with `--stdin`, shows the given
+  filename in error output instead of `-` — useful for pre-commit hooks that
+  need a real filename (e.g. `mkdlint --stdin --stdin-filename README.md`)
+- `ANCHOR_RE` promoted to module-level static in `src/lsp/backend.rs` —
+  shared by rename, references, and definition handlers without re-declaration
+
+### Tests
+
+- +7 LSP integration tests: references capability, references from heading,
+  references from anchor link, references on body text, definition capability,
+  goto-definition from anchor link, goto-definition on body text
+- +7 integration/unit tests: GitHub formatter error/warning/fix-only,
+  stdin-filename key, `format_github` column range, plus 4 inline unit tests
+  inside `src/formatters/github.rs`
+
 ## [0.11.8] - 2026-02-18
 
 ### Added

@@ -2053,3 +2053,282 @@ async fn test_completion_heading_anchor_prefix_filter() {
         "beta-section should be filtered out"
     );
 }
+
+// ── References capability tests (item 4) ─────────────────────────────────────
+
+#[tokio::test]
+async fn test_capabilities_include_references() {
+    let server = create_test_server().await;
+    let result = server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    assert!(
+        result.capabilities.references_provider.is_some(),
+        "references_provider capability should be declared"
+    );
+}
+
+#[tokio::test]
+async fn test_references_from_heading() {
+    let server = create_test_server().await;
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "## My Heading\n\nSee [link](#my-heading) and [other](#my-heading).\n"
+                    .to_string(),
+            },
+        })
+        .await;
+
+    // Cursor on the heading line (line 0)
+    let result = server
+        .references(ReferenceParams {
+            text_document_position: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 0,
+                    character: 5,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+            context: ReferenceContext {
+                include_declaration: false,
+            },
+        })
+        .await
+        .unwrap();
+
+    assert!(
+        result.is_some(),
+        "references from heading should return locations"
+    );
+    let locations = result.unwrap();
+    assert_eq!(
+        locations.len(),
+        2,
+        "Should find 2 references to #my-heading"
+    );
+    for loc in &locations {
+        assert_eq!(loc.uri, uri, "All refs should be in the same document");
+    }
+}
+
+#[tokio::test]
+async fn test_references_from_anchor_link() {
+    let server = create_test_server().await;
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "## My Heading\n\nSee [link](#my-heading) and [x](#my-heading).\n"
+                    .to_string(),
+            },
+        })
+        .await;
+
+    // Cursor inside `(#my-heading)` on line 2
+    // "See [link](#my-heading)" → `(` at col 10, `#` at 11, fragment starts at 12
+    let result = server
+        .references(ReferenceParams {
+            text_document_position: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 2,
+                    character: 13, // inside `my-heading`
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+            context: ReferenceContext {
+                include_declaration: false,
+            },
+        })
+        .await
+        .unwrap();
+
+    assert!(
+        result.is_some(),
+        "references from anchor link should return locations"
+    );
+    let locations = result.unwrap();
+    assert_eq!(locations.len(), 2, "Should find 2 references");
+}
+
+#[tokio::test]
+async fn test_references_returns_none_on_body_text() {
+    let server = create_test_server().await;
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Heading\n\nPlain body text here.\n".to_string(),
+            },
+        })
+        .await;
+
+    let result = server
+        .references(ReferenceParams {
+            text_document_position: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 2,
+                    character: 5,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+            context: ReferenceContext {
+                include_declaration: false,
+            },
+        })
+        .await
+        .unwrap();
+
+    assert!(
+        result.is_none(),
+        "references on plain body text should return None"
+    );
+}
+
+// ── Definition capability tests (item 5) ─────────────────────────────────────
+
+#[tokio::test]
+async fn test_capabilities_include_definition() {
+    let server = create_test_server().await;
+    let result = server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    assert!(
+        result.capabilities.definition_provider.is_some(),
+        "definition_provider capability should be declared"
+    );
+}
+
+#[tokio::test]
+async fn test_goto_definition_from_anchor_link() {
+    let server = create_test_server().await;
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "## My Heading\n\nSee [link](#my-heading).\n".to_string(),
+            },
+        })
+        .await;
+
+    // Cursor inside `(#my-heading)` on line 2 — col 13 = inside the fragment
+    let result = server
+        .goto_definition(GotoDefinitionParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 2,
+                    character: 13, // inside `my-heading`
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(
+        result.is_some(),
+        "goto_definition from anchor link should return a location"
+    );
+    let response = result.unwrap();
+    let location = match response {
+        GotoDefinitionResponse::Scalar(loc) => loc,
+        GotoDefinitionResponse::Array(locs) => locs.into_iter().next().expect("at least one"),
+        GotoDefinitionResponse::Link(links) => {
+            panic!("Expected Scalar, got Link: {:?}", links)
+        }
+    };
+    assert_eq!(location.uri, uri, "Definition should be in the same file");
+    assert_eq!(
+        location.range.start.line, 0,
+        "Heading is on line 0 (## My Heading)"
+    );
+}
+
+#[tokio::test]
+async fn test_goto_definition_returns_none_on_body_text() {
+    let server = create_test_server().await;
+    server
+        .initialize(InitializeParams::default())
+        .await
+        .unwrap();
+    server.initialized(InitializedParams {}).await;
+
+    let uri = Url::parse("file:///test.md").unwrap();
+    server
+        .did_open(DidOpenTextDocumentParams {
+            text_document: TextDocumentItem {
+                uri: uri.clone(),
+                language_id: "markdown".to_string(),
+                version: 1,
+                text: "# Heading\n\nPlain body text.\n".to_string(),
+            },
+        })
+        .await;
+
+    let result = server
+        .goto_definition(GotoDefinitionParams {
+            text_document_position_params: TextDocumentPositionParams {
+                text_document: TextDocumentIdentifier { uri: uri.clone() },
+                position: Position {
+                    line: 2,
+                    character: 3,
+                },
+            },
+            work_done_progress_params: WorkDoneProgressParams::default(),
+            partial_result_params: PartialResultParams::default(),
+        })
+        .await
+        .unwrap();
+
+    assert!(
+        result.is_none(),
+        "goto_definition on plain text should return None"
+    );
+}
