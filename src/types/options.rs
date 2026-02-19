@@ -33,6 +33,12 @@ pub struct LintOptions {
 
     /// Handle errors during rule execution
     pub handle_rule_failures: bool,
+
+    /// Pre-built workspace heading index for cross-file MD051 validation.
+    ///
+    /// When provided, `lint_sync()` uses this instead of rebuilding the index
+    /// from inputs. Useful for multi-pass fix convergence and watch mode.
+    pub cached_workspace_headings: Option<HashMap<String, Vec<String>>>,
 }
 
 impl LintOptions {

@@ -65,6 +65,8 @@ globset = { version = "0.4", optional = true }
 dialoguer = { version = "0.12", optional = true }
 notify = { version = "8.2", optional = true }
 notify-debouncer-full = { version = "0.7", optional = true }
+terminal_size = { version = "0.4", optional = true }
+textwrap = { version = "0.16", optional = true }
 
 # LSP dependencies (optional)
 tower-lsp = { version = "0.20", optional = true }
@@ -91,6 +93,8 @@ cli = [
     "dep:dialoguer",
     "dep:notify",
     "dep:notify-debouncer-full",
+    "dep:terminal_size",
+    "dep:textwrap",
 ]
 async = ["dep:tokio"]
 lsp = [

@@ -149,6 +149,27 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             files.clone()
         };
+
+        // Pre-build workspace heading index once for all convergence passes
+        let cached_headings = if file_list.len() > 1 {
+            let inputs: Vec<(String, String)> = file_list
+                .iter()
+                .filter_map(|f| {
+                    if f == "-" {
+                        options
+                            .strings
+                            .get("-")
+                            .map(|c| ("-".to_string(), c.clone()))
+                    } else {
+                        std::fs::read_to_string(f).ok().map(|c| (f.clone(), c))
+                    }
+                })
+                .collect();
+            Some(mkdlint::build_workspace_headings(&inputs))
+        } else {
+            None
+        };
+
         for file_path in &file_list {
             let content = if file_path == "-" {
                 options
@@ -171,6 +192,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                     config: options.config.clone(),
                     no_inline_config: options.no_inline_config,
                     front_matter: options.front_matter.clone(),
+                    cached_workspace_headings: cached_headings.clone(),
                     ..Default::default()
                 };
 
@@ -231,6 +253,26 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
             files.clone()
         };
 
+        // Pre-build workspace heading index once for all convergence passes
+        let cached_headings = if file_list.len() > 1 {
+            let inputs: Vec<(String, String)> = file_list
+                .iter()
+                .filter_map(|f| {
+                    if f == "-" {
+                        options
+                            .strings
+                            .get("-")
+                            .map(|c| ("-".to_string(), c.clone()))
+                    } else {
+                        std::fs::read_to_string(f).ok().map(|c| (f.clone(), c))
+                    }
+                })
+                .collect();
+            Some(mkdlint::build_workspace_headings(&inputs))
+        } else {
+            None
+        };
+
         for file_path in &file_list {
             let errors = match results.get(file_path) {
                 Some(errors) if !errors.is_empty() => errors,
@@ -263,6 +305,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
                     config: options.config.clone(),
                     no_inline_config: options.no_inline_config,
                     front_matter: options.front_matter.clone(),
+                    cached_workspace_headings: cached_headings.clone(),
                     ..Default::default()
                 };
 

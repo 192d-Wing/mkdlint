@@ -75,7 +75,10 @@ fn prepare_rules<'a>(
 ///
 /// Maps file path (String) to a list of heading anchor IDs, used for
 /// cross-file link validation in MD051.
-fn build_workspace_headings(inputs: &[(String, String)]) -> HashMap<String, Vec<String>> {
+///
+/// Public so CLI callers can pre-build the index once for multi-pass
+/// fix convergence loops instead of rebuilding on every `lint_sync()` call.
+pub fn build_workspace_headings(inputs: &[(String, String)]) -> HashMap<String, Vec<String>> {
     let mut index: HashMap<String, Vec<String>> = HashMap::new();
     for (name, content) in inputs {
         let lines: Vec<&str> = content.split_inclusive('\n').collect();
@@ -109,13 +112,15 @@ pub fn lint_sync(options: &LintOptions) -> Result<LintResults> {
     // Precompute enabled rules once (avoids per-file HashMap lookups)
     let prepared = prepare_rules(&config, &options.custom_rules, options.front_matter.clone());
 
-    // Build workspace heading index for cross-file MD051 validation
-    let workspace_headings =
-        if inputs.len() > 1 && prepared.enabled.iter().any(|r| r.names()[0] == "MD051") {
-            Some(build_workspace_headings(&inputs))
-        } else {
-            None
-        };
+    // Build workspace heading index for cross-file MD051 validation.
+    // Use cached version if provided (avoids rebuilds in multi-pass fix loops).
+    let workspace_headings = if let Some(ref cached) = options.cached_workspace_headings {
+        Some(cached.clone())
+    } else if inputs.len() > 1 && prepared.enabled.iter().any(|r| r.names()[0] == "MD051") {
+        Some(build_workspace_headings(&inputs))
+    } else {
+        None
+    };
 
     // Lint all inputs in parallel
     let file_results: Vec<(

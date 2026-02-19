@@ -6,6 +6,7 @@ use super::{
     code_actions, config::ConfigManager, diagnostics, document::DocumentManager, utils::Debouncer,
 };
 use crate::{LintOptions, apply_fixes, lint_sync};
+use dashmap::DashMap;
 use regex::Regex;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -65,6 +66,9 @@ pub struct MkdlintLanguageServer {
     document_manager: Arc<DocumentManager>,
     config_manager: Arc<RwLock<ConfigManager>>,
     debouncer: Arc<Debouncer>,
+    /// Workspace-wide heading index: maps file system paths to heading anchor IDs.
+    /// Updated during scan_workspace and on did_open/did_change/did_close.
+    heading_index: Arc<DashMap<String, Vec<String>>>,
 }
 
 impl MkdlintLanguageServer {
@@ -76,7 +80,26 @@ impl MkdlintLanguageServer {
             document_manager: Arc::new(DocumentManager::new()),
             config_manager: Arc::new(RwLock::new(ConfigManager::new(vec![]))),
             debouncer: Arc::new(Debouncer::new(Duration::from_millis(300))),
+            heading_index: Arc::new(DashMap::new()),
         }
+    }
+
+    /// Update the heading index for a single file.
+    fn update_heading_index(&self, file_path: &str, content: &str) {
+        let lines: Vec<&str> = content.split_inclusive('\n').collect();
+        let ids = crate::helpers::collect_heading_ids(&lines);
+        self.heading_index.insert(file_path.to_string(), ids);
+    }
+
+    /// Take a snapshot of the heading index as a plain HashMap.
+    ///
+    /// DashMap Ref guards are `!Send` and cannot be held across `.await`,
+    /// so we snapshot to a HashMap before any async boundaries.
+    fn snapshot_heading_index(&self) -> HashMap<String, Vec<String>> {
+        self.heading_index
+            .iter()
+            .map(|entry| (entry.key().clone(), entry.value().clone()))
+            .collect()
     }
 
     /// Scan workspace roots for `.md` files and publish diagnostics for each.
@@ -129,8 +152,14 @@ impl MkdlintLanguageServer {
 
             let config = self.config_manager.read().unwrap().discover_config(&uri);
 
+            // Update heading index for cross-file MD051 validation
+            self.update_heading_index(&file_name, &content);
+
             scan_inputs.push((uri, file_name, content, config));
         }
+
+        // Take heading snapshot for cross-file validation (before parallel phase)
+        let heading_snapshot = self.snapshot_heading_index();
 
         // Phase 2: Parallel lint using rayon
         use rayon::prelude::*;
@@ -139,6 +168,7 @@ impl MkdlintLanguageServer {
             .filter_map(|(uri, file_name, content, config)| {
                 let mut options = LintOptions::default();
                 options.strings.insert(file_name.clone(), content.clone());
+                options.cached_workspace_headings = Some(heading_snapshot.clone());
                 if let Some(config) = config {
                     options.config = Some(config.clone());
                 }
@@ -187,6 +217,9 @@ impl MkdlintLanguageServer {
         // Lint the document using string content
         let mut options = LintOptions::default();
         options.strings.insert(file_name.clone(), content.clone());
+
+        // Provide workspace heading index for cross-file MD051 validation
+        options.cached_workspace_headings = Some(self.snapshot_heading_index());
 
         // Apply config if found
         if let Some(config) = config {
@@ -388,6 +421,14 @@ impl LanguageServer for MkdlintLanguageServer {
         let content = params.text_document.text;
         let version = params.text_document.version;
 
+        // Update heading index for cross-file validation
+        let file_path = uri
+            .to_file_path()
+            .ok()
+            .and_then(|p| p.to_str().map(String::from))
+            .unwrap_or_else(|| uri.to_string());
+        self.update_heading_index(&file_path, &content);
+
         // Store document
         self.document_manager.insert(uri.clone(), content, version);
 
@@ -402,6 +443,14 @@ impl LanguageServer for MkdlintLanguageServer {
         // Get new content (full sync)
         if let Some(change) = params.content_changes.first() {
             let content = change.text.clone();
+
+            // Update heading index for cross-file validation
+            let file_path = uri
+                .to_file_path()
+                .ok()
+                .and_then(|p| p.to_str().map(String::from))
+                .unwrap_or_else(|| uri.to_string());
+            self.update_heading_index(&file_path, &content);
 
             // Update document
             self.document_manager.update(&uri, content, version);
@@ -425,6 +474,13 @@ impl LanguageServer for MkdlintLanguageServer {
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {
         let uri = params.text_document.uri;
+
+        // Remove from heading index
+        if let Ok(path) = uri.to_file_path()
+            && let Some(path_str) = path.to_str()
+        {
+            self.heading_index.remove(path_str);
+        }
 
         // Remove document
         self.document_manager.remove(&uri);
@@ -1625,6 +1681,7 @@ impl Clone for MkdlintLanguageServer {
             document_manager: Arc::clone(&self.document_manager),
             config_manager: Arc::clone(&self.config_manager),
             debouncer: Arc::clone(&self.debouncer),
+            heading_index: Arc::clone(&self.heading_index),
         }
     }
 }

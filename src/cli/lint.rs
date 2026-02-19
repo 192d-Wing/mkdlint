@@ -55,6 +55,17 @@ pub(crate) fn lint_files_once(args: &Args) -> Result<(), Box<dyn std::error::Err
 
     let results = lint_sync(&options)?;
 
+    // Pre-build workspace heading index once for convergence passes (fix/dry-run)
+    let cached_headings = if files.len() > 1 && (args.fix || args.fix_dry_run) {
+        let inputs: Vec<(String, String)> = files
+            .iter()
+            .filter_map(|f| std::fs::read_to_string(f).ok().map(|c| (f.clone(), c)))
+            .collect();
+        Some(mkdlint::build_workspace_headings(&inputs))
+    } else {
+        None
+    };
+
     // Handle --fix-dry-run: show what would change without writing
     if args.fix_dry_run {
         let mut would_fix_count = 0;
@@ -70,6 +81,7 @@ pub(crate) fn lint_files_once(args: &Args) -> Result<(), Box<dyn std::error::Err
                     strings: [(file_path.clone(), current.clone())].into(),
                     config: options.config.clone(),
                     no_inline_config: args.no_inline_config,
+                    cached_workspace_headings: cached_headings.clone(),
                     ..Default::default()
                 };
 
@@ -141,6 +153,7 @@ pub(crate) fn lint_files_once(args: &Args) -> Result<(), Box<dyn std::error::Err
                     strings: [(file_path.clone(), current.clone())].into(),
                     config: options.config.clone(),
                     no_inline_config: args.no_inline_config,
+                    cached_workspace_headings: cached_headings.clone(),
                     ..Default::default()
                 };
 
