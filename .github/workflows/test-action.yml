@@ -146,7 +146,7 @@ jobs:
           jq '.runs[0].results | length' results.sarif
       
       - name: Upload SARIF as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sarif-results
           path: results.sarif

@@ -154,7 +154,7 @@ jobs:
             ./${{ matrix.asset_name }}${{ matrix.os == 'windows-latest' && '.zip' || '.tar.gz' }}.sha256
 
       - name: Upload LSP binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lsp-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/${{ matrix.lsp_artifact_name }}
@@ -218,7 +218,7 @@ jobs:
           files: editors/vscode/*.vsix
 
       - name: Upload VSIX artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: vsix-${{ matrix.vscode_target }}
           path: editors/vscode/*.vsix
@@ -253,7 +253,7 @@ jobs:
           files: editors/vscode/*.vsix
 
       - name: Upload VSIX artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: vsix-universal
           path: editors/vscode/*.vsix
