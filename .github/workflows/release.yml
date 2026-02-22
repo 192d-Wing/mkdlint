@@ -199,7 +199,7 @@ jobs:
         run: npm run compile
 
       - name: Download LSP binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: lsp-${{ matrix.rust_target }}
           path: editors/vscode/server/
@@ -275,7 +275,7 @@ jobs:
         run: npm ci
 
       - name: Download all VSIX artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: vsix-*
           path: editors/vscode/vsix/
