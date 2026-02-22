@@ -25,7 +25,7 @@ jobs:
         version: [latest, '0.11.0']
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Test binary download
         id: test
@@ -72,7 +72,7 @@ jobs:
   test-cargo-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -99,7 +99,7 @@ jobs:
   test-sarif-upload:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Create test markdown with issues
         run: |
@@ -155,7 +155,7 @@ jobs:
   test-auto-fix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Create test file with fixable issues
         run: |
@@ -196,7 +196,7 @@ jobs:
   test-custom-config:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Create custom config
         run: |
@@ -237,7 +237,7 @@ jobs:
   test-disable-rules:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Create test file
         run: |
@@ -270,7 +270,7 @@ jobs:
   test-ignore-patterns:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Create test structure
         run: |
@@ -296,7 +296,7 @@ jobs:
   test-fail-on-error:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Create file with errors
         run: |
@@ -338,7 +338,7 @@ jobs:
   test-output-formats:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Create test file
         run: |
@@ -381,7 +381,7 @@ jobs:
   test-verbosity:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Test verbose mode
         uses: ./.github/actions/mkdlint
@@ -403,7 +403,7 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Create comprehensive test suite
         run: |
@@ -484,7 +484,7 @@ jobs:
   test-working-directory:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Create subdirectory structure
         run: |
@@ -503,7 +503,7 @@ jobs:
   test-job-summary:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Create test file with errors
         run: |
@@ -556,7 +556,7 @@ jobs:
   test-changed-only:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Test changed-only on push (should lint all files)
         id: push-test
